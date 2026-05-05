@@ -1,5 +1,7 @@
 # Midir Damage Meter for NA
 
+Forked version of the KR damage meter: https://gitlab.com/prilus/mabidilmeter
+
 ## Getting Started
 
 ### Install Npcap
