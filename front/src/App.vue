@@ -94,6 +94,7 @@ import {
   getSkills,
   getRaces,
   getConditions,
+  getOverrides,
 } from "@/apicall";
 import {
   activeSessionId,
@@ -235,10 +236,11 @@ export default defineComponent({
       initPlayerCache();
       try {
         loadingCount.value++;
-        const [skills, races, conditions, captureStatusResp] = await Promise.all([
+        const [skills, races, conditions, overrides, captureStatusResp] = await Promise.all([
           getSkills(),
           getRaces(),
           getConditions(),
+          getOverrides(),
           fetch("/api/setup/status").catch(() => null)
         ]);
 
@@ -265,6 +267,34 @@ export default defineComponent({
             cond.iconUrl = `/images/conditions/${cond.iconUrl}`;
           }
           condNameMap.value[parseInt(idStr, 10)] = cond;
+        }
+
+        // Apply overrides
+        if (overrides) {
+          if (overrides.skills) {
+            for (const idStr in overrides.skills) {
+              const id = parseInt(idStr, 10);
+              const override = overrides.skills[idStr];
+              const existing = skillNameMap.value[id] || { name: `Skill ${id}` };
+              if (override.name) existing.name = override.name;
+              if (override.iconUrl) {
+                existing.iconUrl = override.iconUrl.startsWith('/') ? override.iconUrl : `/images/${override.iconUrl}`;
+              }
+              skillNameMap.value[id] = existing;
+            }
+          }
+          if (overrides.conditions) {
+            for (const idStr in overrides.conditions) {
+              const id = parseInt(idStr, 10);
+              const override = overrides.conditions[idStr];
+              const existing = condNameMap.value[id] || { name: `Condition ${id}` };
+              if (override.name) existing.name = override.name;
+              if (override.iconUrl) {
+                existing.iconUrl = override.iconUrl.startsWith('/') ? override.iconUrl : `/images/${override.iconUrl}`;
+              }
+              condNameMap.value[id] = existing;
+            }
+          }
         }
 
       } catch (e) {

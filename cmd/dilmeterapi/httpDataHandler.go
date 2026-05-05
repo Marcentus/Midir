@@ -16,7 +16,7 @@ func dataRouter() http.Handler {
 func handleGetDataFile(w http.ResponseWriter, r *http.Request) {
 	fileName := chi.URLParam(r, "file")
 	// Sanitize file name to prevent directory traversal
-	if fileName != "skills.json" && fileName != "races.json" && fileName != "conditions.json" && fileName != "talents.json" && fileName != "items.json" {
+	if fileName != "skills.json" && fileName != "races.json" && fileName != "conditions.json" && fileName != "talents.json" && fileName != "items.json" && fileName != "overrides.json" {
 		http.NotFound(w, r)
 		return
 	}

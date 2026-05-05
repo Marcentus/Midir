@@ -1,0 +1,26 @@
+{
+  "conditions": {
+    "323": {
+      "name": "Rage Impact",
+      "iconUrl": "redirect/RageImpact.png"
+    }
+  },
+  "skills": {
+    "58009": {
+      "name": "Redoubled Offensive",
+      "iconUrl": "redirect/redoubled.png"
+    },
+    "58100": {
+      "name": "Blast",
+      "iconUrl": "redirect/Blast.png"
+    },
+    "58101": {
+      "name": "Flare",
+      "iconUrl": "redirect/Flare.png"
+    },
+    "58104": {
+      "name": "Veil",
+      "iconUrl": "redirect/Veil.png"
+    }
+  }
+}

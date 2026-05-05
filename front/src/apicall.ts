@@ -82,6 +82,15 @@ export async function getConditions(): Promise<Record<string, DataItem>> {
   return httpCall<Record<string, DataItem>>("/api/data/conditions.json");
 }
 
+export interface Overrides {
+  conditions: Record<string, DataItem>;
+  skills: Record<string, DataItem>;
+}
+
+export async function getOverrides(): Promise<Overrides> {
+  return httpCall<Overrides>("/api/data/overrides.json").catch(() => ({ conditions: {}, skills: {} }));
+}
+
 
 // --- HTTP HELPER FUNCTIONS ---
 
