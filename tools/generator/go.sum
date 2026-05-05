@@ -1,0 +1,4 @@
+github.com/lukegb/dds v0.0.0-20190402175749-8b7170e64003 h1:6g1XsQmpC332a2qx+qkrEVBHeNucWaiXHIUBKW4W62s=
+github.com/lukegb/dds v0.0.0-20190402175749-8b7170e64003/go.mod h1:hOrxKmZfUO2QXaqXIlrVqNdeBIFpNBb6uBzWsP9VwDw=
+golang.org/x/text v0.36.0 h1:JfKh3XmcRPqZPKevfXVpI1wXPTqbkE5f7JA92a55Yxg=
+golang.org/x/text v0.36.0/go.mod h1:NIdBknypM8iqVmPiuco0Dh6P5Jcdk8lJL0CUebqK164=

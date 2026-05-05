@@ -1,0 +1,5492 @@
+{
+  "10001": {
+    "skillId": 10001,
+    "name": "Tailoring",
+    "iconUrl": "gui_icon_skill_000_2_0.png"
+  },
+  "10002": {
+    "skillId": 10002,
+    "name": "Read in Detail",
+    "iconUrl": "gui_icon_skill_000_3_0.png"
+  },
+  "10003": {
+    "skillId": 10003,
+    "name": "Playing Instrument",
+    "iconUrl": "gui_icon_skill_002_1_8.png"
+  },
+  "10004": {
+    "skillId": 10004,
+    "name": "Rest",
+    "iconUrl": "gui_icon_skill_000_6_1.png"
+  },
+  "10005": {
+    "skillId": 10005,
+    "name": "Compose",
+    "iconUrl": "gui_icon_skill_002_2_8.png"
+  },
+  "10006": {
+    "skillId": 10006,
+    "name": "Musical Knowledge",
+    "iconUrl": "gui_icon_skill_002_3_8.png"
+  },
+  "10007": {
+    "skillId": 10007,
+    "name": "Town Cry",
+    "iconUrl": "gui_icon_skill_000_4_1.png"
+  },
+  "10008": {
+    "skillId": 10008,
+    "name": "Campfire",
+    "iconUrl": "gui_icon_skill_000_6_2.png"
+  },
+  "10009": {
+    "skillId": 10009,
+    "name": "First Aid",
+    "iconUrl": "gui_icon_skill_000_0_3.png"
+  },
+  "10010": {
+    "skillId": 10010,
+    "name": "Gathering",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "10011": {
+    "skillId": 10011,
+    "name": "Weaving",
+    "iconUrl": "gui_icon_skill_000_5_4.png"
+  },
+  "10012": {
+    "skillId": 10012,
+    "name": "Milling",
+    "iconUrl": "gui_icon_skill_000_0_1.png"
+  },
+  "10013": {
+    "skillId": 10013,
+    "name": "Handicraft",
+    "iconUrl": "gui_icon_skill_000_1_9.png"
+  },
+  "10014": {
+    "skillId": 10014,
+    "name": "방직 (사용안함)",
+    "iconUrl": "gui_icon_skill_000_5_4.png"
+  },
+  "10015": {
+    "skillId": 10015,
+    "name": "Refining",
+    "iconUrl": "gui_icon_skill_000_3_4.png"
+  },
+  "10016": {
+    "skillId": 10016,
+    "name": "Blacksmithing",
+    "iconUrl": "gui_icon_skill_000_4_4.png"
+  },
+  "10020": {
+    "skillId": 10020,
+    "name": "Cooking",
+    "iconUrl": "gui_icon_skill_000_4_7.png"
+  },
+  "10021": {
+    "skillId": 10021,
+    "name": "Herbalism",
+    "iconUrl": "gui_icon_skill_000_7_7.png"
+  },
+  "10022": {
+    "skillId": 10022,
+    "name": "Potion Making",
+    "iconUrl": "gui_icon_skill_000_6_7.png"
+  },
+  "10023": {
+    "skillId": 10023,
+    "name": "Fishing",
+    "iconUrl": "gui_icon_skill_000_3_5.png"
+  },
+  "10024": {
+    "skillId": 10024,
+    "name": "Production Mastery",
+    "iconUrl": "gui_icon_skill_000_5_9.png"
+  },
+  "10025": {
+    "skillId": 10025,
+    "name": "Open Treasure Chest",
+    "iconUrl": "gui_icon_skill_000_0_1.png"
+  },
+  "10026": {
+    "skillId": 10026,
+    "name": "Taming Wild Animals",
+    "iconUrl": "gui_icon_skill_001_1_0.png"
+  },
+  "10027": {
+    "skillId": 10027,
+    "name": "Control Paddle",
+    "iconUrl": "gui_icon_skill_001_2_0.png"
+  },
+  "10028": {
+    "skillId": 10028,
+    "name": "Metallurgy",
+    "iconUrl": "gui_icon_skill_001_4_0.png"
+  },
+  "10029": {
+    "skillId": 10029,
+    "name": "Hot-Air Balloon Control",
+    "iconUrl": "gui_icon_skill_001_0_1.png"
+  },
+  "10030": {
+    "skillId": 10030,
+    "name": "Fragmentation",
+    "iconUrl": "gui_icon_skill_001_6_5.png"
+  },
+  "10031": {
+    "skillId": 10031,
+    "name": "Synthesis",
+    "iconUrl": "gui_icon_skill_001_7_5.png"
+  },
+  "10032": {
+    "skillId": 10032,
+    "name": "Exclusive Street Artist skill",
+    "iconUrl": "gui_icon_skill_001_6_7.png"
+  },
+  "10033": {
+    "skillId": 10033,
+    "name": "Carpentry",
+    "iconUrl": "gui_icon_skill_001_5_10.png"
+  },
+  "10034": {
+    "skillId": 10034,
+    "name": "Gardening",
+    "iconUrl": "gui_icon_skill_001_2_11.png"
+  },
+  "10035": {
+    "skillId": 10035,
+    "name": "",
+    "iconUrl": "gui_icon_skill_001_7_13.png"
+  },
+  "10036": {
+    "skillId": 10036,
+    "name": "Make Theatre Mission Pass",
+    "iconUrl": "gui_icon_skill_001_2_15.png"
+  },
+  "10037": {
+    "skillId": 10037,
+    "name": "Wine Making",
+    "iconUrl": "gui_icon_skill_002_3_9.png"
+  },
+  "10038": {
+    "skillId": 10038,
+    "name": "_LT[xml.skillinfo.3002]",
+    "iconUrl": "gui_icon_skill_000_6_7.png"
+  },
+  "10039": {
+    "skillId": 10039,
+    "name": "Study: Potion Lore",
+    "iconUrl": "gui_icon_skill_002_7_13.png"
+  },
+  "10040": {
+    "skillId": 10040,
+    "name": "Hillwen Engineering",
+    "iconUrl": "gui_icon_skill_002_4_15.png"
+  },
+  "10041": {
+    "skillId": 10041,
+    "name": "Magic Craft",
+    "iconUrl": "gui_icon_skill_002_5_15.png"
+  },
+  "10042": {
+    "skillId": 10042,
+    "name": "Rare Mineralogy",
+    "iconUrl": "gui_icon_skill_002_2_15.png"
+  },
+  "10043": {
+    "skillId": 10043,
+    "name": "Shyllien Ecology",
+    "iconUrl": "gui_icon_skill_002_3_15.png"
+  },
+  "10044": {
+    "skillId": 10044,
+    "name": "Tasting",
+    "iconUrl": "gui_icon_skill_003_7_2.png"
+  },
+  "10045": {
+    "skillId": 10045,
+    "name": "Ingredient Hunting",
+    "iconUrl": "gui_icon_skill_003_0_3.png"
+  },
+  "10046": {
+    "skillId": 10046,
+    "name": "Catering",
+    "iconUrl": "gui_icon_skill_003_1_3.png"
+  },
+  "10100": {
+    "skillId": 10100,
+    "name": "Glyph Design",
+    "iconUrl": "gui_icon_skill_005_3_0.png"
+  },
+  "10101": {
+    "skillId": 10101,
+    "name": "Glyph Formulation",
+    "iconUrl": "gui_icon_skill_005_4_0.png"
+  },
+  "10102": {
+    "skillId": 10102,
+    "name": "Glyph Lore",
+    "iconUrl": "gui_icon_skill_005_5_0.png"
+  },
+  "10103": {
+    "skillId": 10103,
+    "name": "Glyph Evocation",
+    "iconUrl": "gui_icon_skill_005_6_0.png"
+  },
+  "10104": {
+    "skillId": 10104,
+    "name": "Stationery Crafting",
+    "iconUrl": "gui_icon_skill_005_7_0.png"
+  },
+  "20001": {
+    "skillId": 20001,
+    "name": "Defense",
+    "iconUrl": "gui_icon_skill_000_6_0.png"
+  },
+  "20002": {
+    "skillId": 20002,
+    "name": "Smash",
+    "iconUrl": "gui_icon_skill_000_1_1.png"
+  },
+  "20003": {
+    "skillId": 20003,
+    "name": "Counterattack",
+    "iconUrl": "gui_icon_skill_000_7_0.png"
+  },
+  "20004": {
+    "skillId": 20004,
+    "name": "Natural Shield",
+    "iconUrl": "gui_icon_skill_000_6_6.png"
+  },
+  "20005": {
+    "skillId": 20005,
+    "name": "Heavy Stander",
+    "iconUrl": "gui_icon_skill_000_4_6.png"
+  },
+  "20006": {
+    "skillId": 20006,
+    "name": "Mana Deflector",
+    "iconUrl": "gui_icon_skill_000_5_6.png"
+  },
+  "20007": {
+    "skillId": 20007,
+    "name": "풀스윙",
+    "iconUrl": "gui_icon_skill_000_4_5.png"
+  },
+  "20008": {
+    "skillId": 20008,
+    "name": "파이널 스매시",
+    "iconUrl": "gui_icon_skill_000_5_5.png"
+  },
+  "20009": {
+    "skillId": 20009,
+    "name": "퓨리 오브 바드",
+    "iconUrl": "gui_icon_skill_000_0_6.png"
+  },
+  "20010": {
+    "skillId": 20010,
+    "name": "Jump",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "20011": {
+    "skillId": 20011,
+    "name": "Charge",
+    "iconUrl": "gui_icon_skill_001_3_0.png"
+  },
+  "20012": {
+    "skillId": 20012,
+    "name": "Assault Slash",
+    "iconUrl": "gui_icon_skill_001_6_12.png"
+  },
+  "20013": {
+    "skillId": 20013,
+    "name": "",
+    "iconUrl": "gui_icon_skill_001_7_12.png"
+  },
+  "20014": {
+    "skillId": 20014,
+    "name": "",
+    "iconUrl": "gui_icon_skill_001_7_12.png"
+  },
+  "20015": {
+    "skillId": 20015,
+    "name": "",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "20016": {
+    "skillId": 20016,
+    "name": "Lance Counter",
+    "iconUrl": "gui_icon_skill_002_6_0.png"
+  },
+  "20017": {
+    "skillId": 20017,
+    "name": "Lance Charge",
+    "iconUrl": "gui_icon_skill_002_0_1.png"
+  },
+  "20018": {
+    "skillId": 20018,
+    "name": "Rage Impact",
+    "iconUrl": "gui_icon_skill_003_1_8.png"
+  },
+  "20019": {
+    "skillId": 20019,
+    "name": "Bash",
+    "iconUrl": "gui_icon_skill_003_0_8.png"
+  },
+  "20020": {
+    "skillId": 20020,
+    "name": "Final Strike",
+    "iconUrl": "gui_icon_skill_004_0_6.png"
+  },
+  "20021": {
+    "skillId": 20021,
+    "name": "Stampede",
+    "iconUrl": "gui_icon_skill_004_3_5.png"
+  },
+  "20022": {
+    "skillId": 20022,
+    "name": "Memorial Link",
+    "iconUrl": "GUI_icon_skill_005_0_3.png"
+  },
+  "21001": {
+    "skillId": 21001,
+    "name": "Ranged Attack",
+    "iconUrl": "gui_icon_skill_000_7_1.png"
+  },
+  "21002": {
+    "skillId": 21002,
+    "name": "Magnum Shot",
+    "iconUrl": "gui_icon_skill_000_1_2.png"
+  },
+  "21003": {
+    "skillId": 21003,
+    "name": "Arrow Revolver",
+    "iconUrl": "gui_icon_skill_000_6_5.png"
+  },
+  "21004": {
+    "skillId": 21004,
+    "name": "Arrow Revolver",
+    "iconUrl": "gui_icon_skill_000_6_5.png"
+  },
+  "21005": {
+    "skillId": 21005,
+    "name": "체인건",
+    "iconUrl": "gui_icon_skill_000_7_5.png"
+  },
+  "21006": {
+    "skillId": 21006,
+    "name": "Support Shot",
+    "iconUrl": "gui_icon_skill_000_0_7.png"
+  },
+  "21007": {
+    "skillId": 21007,
+    "name": "Mirage Missile",
+    "iconUrl": "gui_icon_skill_000_4_12.png"
+  },
+  "21008": {
+    "skillId": 21008,
+    "name": "Bomb Ignition",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "21009": {
+    "skillId": 21009,
+    "name": "Spirit Bow Awakening",
+    "iconUrl": "gui_icon_skill_002_6_3.png"
+  },
+  "21010": {
+    "skillId": 21010,
+    "name": "Throwing Attack",
+    "iconUrl": "gui_icon_skill_000_2_13.png"
+  },
+  "21011": {
+    "skillId": 21011,
+    "name": "Hot-Air Balloon Crossbow Shot",
+    "iconUrl": "gui_icon_skill_001_1_1.png"
+  },
+  "21012": {
+    "skillId": 21012,
+    "name": "Spider Shot",
+    "iconUrl": "gui_icon_skill_002_5_13.png"
+  },
+  "21013": {
+    "skillId": 21013,
+    "name": "Hot-Air Balloon Crossbow Shot (mini game)",
+    "iconUrl": "gui_icon_skill_001_1_1.png"
+  },
+  "21014": {
+    "skillId": 21014,
+    "name": "Urgent Shot",
+    "iconUrl": "GUI_icon_skill_003_4_8.png"
+  },
+  "21015": {
+    "skillId": 21015,
+    "name": "Lance Leap",
+    "iconUrl": "gui_icon_skill_005_6_9.png"
+  },
+  "21016": {
+    "skillId": 21016,
+    "name": "Lance Impact",
+    "iconUrl": "gui_icon_skill_005_7_9.png"
+  },
+  "22001": {
+    "skillId": 22001,
+    "name": "Windmill",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "22002": {
+    "skillId": 22002,
+    "name": "Stomp",
+    "iconUrl": "gui_icon_skill_001_3_6.png"
+  },
+  "22003": {
+    "skillId": 22003,
+    "name": "자폭스킬(액티브)",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "22004": {
+    "skillId": 22004,
+    "name": "Final Hit",
+    "iconUrl": "gui_icon_skill_000_4_11.png"
+  },
+  "22005": {
+    "skillId": 22005,
+    "name": "Spirit Sword Awakening",
+    "iconUrl": "gui_icon_skill_000_0_13.png"
+  },
+  "22006": {
+    "skillId": 22006,
+    "name": "Spirit BW Awakening",
+    "iconUrl": "gui_icon_skill_002_6_7.png"
+  },
+  "22007": {
+    "skillId": 22007,
+    "name": "Stomp",
+    "iconUrl": "gui_icon_skill_000_1_13.png"
+  },
+  "22008": {
+    "skillId": 22008,
+    "name": "Wendigo Stomp",
+    "iconUrl": "gui_icon_skill_000_1_13.png"
+  },
+  "22009": {
+    "skillId": 22009,
+    "name": "Alligator Full Swing",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "22010": {
+    "skillId": 22010,
+    "name": "Giant Lion Roar",
+    "iconUrl": "gui_icon_skill_002_3_12.png"
+  },
+  "22011": {
+    "skillId": 22011,
+    "name": "Crash Shot",
+    "iconUrl": "gui_icon_skill_001_5_12.png"
+  },
+  "23001": {
+    "skillId": 23001,
+    "name": "Instinctive Reaction",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "23002": {
+    "skillId": 23002,
+    "name": "Combat Mastery",
+    "iconUrl": "gui_icon_skill_000_5_0.png"
+  },
+  "23003": {
+    "skillId": 23003,
+    "name": "Critical Hit",
+    "iconUrl": "gui_icon_skill_000_5_1.png"
+  },
+  "23004": {
+    "skillId": 23004,
+    "name": "Natural Shield Passive",
+    "iconUrl": "gui_icon_skill_000_6_6.png"
+  },
+  "23005": {
+    "skillId": 23005,
+    "name": "Heavy Stander Passive",
+    "iconUrl": "gui_icon_skill_000_4_6.png"
+  },
+  "23006": {
+    "skillId": 23006,
+    "name": "Mana Deflector Passive",
+    "iconUrl": "gui_icon_skill_000_5_6.png"
+  },
+  "23007": {
+    "skillId": 23007,
+    "name": "Dark Lord",
+    "iconUrl": "gui_icon_skill_000_4_6.png"
+  },
+  "23008": {
+    "skillId": 23008,
+    "name": "Glas Ghaibhleann Skill",
+    "iconUrl": "gui_icon_skill_000_4_6.png"
+  },
+  "23009": {
+    "skillId": 23009,
+    "name": "Chain Casting",
+    "iconUrl": "gui_icon_skill_000_3_7.png"
+  },
+  "23010": {
+    "skillId": 23010,
+    "name": "자폭",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "23011": {
+    "skillId": 23011,
+    "name": "Sharp Mind",
+    "iconUrl": "gui_icon_skill_000_0_11.png"
+  },
+  "23012": {
+    "skillId": 23012,
+    "name": "Sword Mastery",
+    "iconUrl": "gui_icon_skill_001_6_13.png"
+  },
+  "23013": {
+    "skillId": 23013,
+    "name": "Axe Mastery",
+    "iconUrl": "gui_icon_skill_001_0_14.png"
+  },
+  "23014": {
+    "skillId": 23014,
+    "name": "Blunt Mastery",
+    "iconUrl": "gui_icon_skill_001_1_14.png"
+  },
+  "23015": {
+    "skillId": 23015,
+    "name": "",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "23016": {
+    "skillId": 23016,
+    "name": "Shield Mastery",
+    "iconUrl": "gui_icon_skill_003_3_0.png"
+  },
+  "23017": {
+    "skillId": 23017,
+    "name": "",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "23018": {
+    "skillId": 23018,
+    "name": "Heavy Armor Mastery",
+    "iconUrl": "gui_icon_skill_003_1_0.png"
+  },
+  "23019": {
+    "skillId": 23019,
+    "name": "Light Armor Mastery",
+    "iconUrl": "gui_icon_skill_003_2_0.png"
+  },
+  "23021": {
+    "skillId": 23021,
+    "name": "Dragon Tail Attack",
+    "iconUrl": "gui_icon_skill_000_4_6.png"
+  },
+  "23022": {
+    "skillId": 23022,
+    "name": "Petrifying Roar",
+    "iconUrl": "gui_icon_skill_000_4_6.png"
+  },
+  "23023": {
+    "skillId": 23023,
+    "name": "Fire Breath",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "23024": {
+    "skillId": 23024,
+    "name": "Dash",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "23025": {
+    "skillId": 23025,
+    "name": "Sandworm Melee Attack",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "23026": {
+    "skillId": 23026,
+    "name": "Bite",
+    "iconUrl": "gui_icon_skill_002_5_12.png"
+  },
+  "23027": {
+    "skillId": 23027,
+    "name": "Smack",
+    "iconUrl": "gui_icon_skill_002_4_12.png"
+  },
+  "23028": {
+    "skillId": 23028,
+    "name": "Wind Guard",
+    "iconUrl": "gui_icon_skill_001_2_4.png"
+  },
+  "23029": {
+    "skillId": 23029,
+    "name": "Taunt",
+    "iconUrl": "gui_icon_skill_001_4_4.png"
+  },
+  "23030": {
+    "skillId": 23030,
+    "name": "Final Shot",
+    "iconUrl": "gui_icon_skill_001_3_4.png"
+  },
+  "23031": {
+    "skillId": 23031,
+    "name": "Shadow Breath",
+    "iconUrl": "gui_icon_skill_000_7_9.png"
+  },
+  "23032": {
+    "skillId": 23032,
+    "name": "Dark Flame",
+    "iconUrl": "gui_icon_skill_000_3_6.png"
+  },
+  "23033": {
+    "skillId": 23033,
+    "name": "Light of Sword",
+    "iconUrl": "gui_icon_skill_000_0_9.png"
+  },
+  "23034": {
+    "skillId": 23034,
+    "name": "Claimh Solas Dash",
+    "iconUrl": "gui_icon_skill_000_4_11.png"
+  },
+  "23035": {
+    "skillId": 23035,
+    "name": "Claimh Solas Full Swing",
+    "iconUrl": "gui_icon_skill_000_1_1.png"
+  },
+  "23036": {
+    "skillId": 23036,
+    "name": "허수아비의 저주",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "23037": {
+    "skillId": 23037,
+    "name": "Roar",
+    "iconUrl": "gui_icon_skill_001_5_9.png"
+  },
+  "23038": {
+    "skillId": 23038,
+    "name": "Wall Decoration Fire Bolt",
+    "iconUrl": "gui_icon_skill_000_4_2.png"
+  },
+  "23039": {
+    "skillId": 23039,
+    "name": "Wall Decoration Ice Bolt",
+    "iconUrl": "gui_icon_skill_000_3_2.png"
+  },
+  "23040": {
+    "skillId": 23040,
+    "name": "Wall Decoration Lightning Bolt",
+    "iconUrl": "gui_icon_skill_000_5_2.png"
+  },
+  "23041": {
+    "skillId": 23041,
+    "name": "Wall Decoration Bolt Attack",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "23042": {
+    "skillId": 23042,
+    "name": "Wall Decoration Poison Gas Attack",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "23043": {
+    "skillId": 23043,
+    "name": "Evasion",
+    "iconUrl": "gui_icon_skill_001_7_9.png"
+  },
+  "23044": {
+    "skillId": 23044,
+    "name": "Python Stone Long Range Attack",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "23045": {
+    "skillId": 23045,
+    "name": "Python Stone Short Range Attack",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "23046": {
+    "skillId": 23046,
+    "name": "Python Stone Breath",
+    "iconUrl": "gui_icon_skill_000_7_9.png"
+  },
+  "23047": {
+    "skillId": 23047,
+    "name": "Nuadha Smash",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "23048": {
+    "skillId": 23048,
+    "name": "Nuadha Spear of Light",
+    "iconUrl": "gui_icon_skill_001_7_7.png"
+  },
+  "23049": {
+    "skillId": 23049,
+    "name": "Nuadha Fury of Light",
+    "iconUrl": "gui_icon_skill_001_1_8.png"
+  },
+  "23050": {
+    "skillId": 23050,
+    "name": "Nuadha Light of Sword",
+    "iconUrl": "gui_icon_skill_000_0_9.png"
+  },
+  "23051": {
+    "skillId": 23051,
+    "name": "Nuadha Smash",
+    "iconUrl": "gui_icon_skill_000_1_1.png"
+  },
+  "23052": {
+    "skillId": 23052,
+    "name": "Roar",
+    "iconUrl": "gui_icon_skill_001_3_12.png"
+  },
+  "23053": {
+    "skillId": 23053,
+    "name": "Grim Reaper Vertical Attack",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "23054": {
+    "skillId": 23054,
+    "name": "Grim Reaper Horizontal Attack",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "23055": {
+    "skillId": 23055,
+    "name": "Grim Reaper Windmill",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "23057": {
+    "skillId": 23057,
+    "name": "Roar",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "23058": {
+    "skillId": 23058,
+    "name": "Doppelganger",
+    "iconUrl": "gui_icon_skill_002_1_13.png"
+  },
+  "23060": {
+    "skillId": 23060,
+    "name": "Bow Mastery",
+    "iconUrl": "gui_icon_skill_002_5_0.png"
+  },
+  "23061": {
+    "skillId": 23061,
+    "name": "Crossbow Mastery",
+    "iconUrl": "gui_icon_skill_002_4_0.png"
+  },
+  "23062": {
+    "skillId": 23062,
+    "name": "Lance Mastery",
+    "iconUrl": "gui_icon_skill_002_7_0.png"
+  },
+  "23063": {
+    "skillId": 23063,
+    "name": "Knuckle Mastery",
+    "iconUrl": "gui_icon_skill_002_1_4.png"
+  },
+  "23064": {
+    "skillId": 23064,
+    "name": "Dual Wield Mastery",
+    "iconUrl": "gui_icon_skill_003_7_7.png"
+  },
+  "23101": {
+    "skillId": 23101,
+    "name": "Bran's Shockwave",
+    "iconUrl": "gui_icon_skill_000_3_6.png"
+  },
+  "23102": {
+    "skillId": 23102,
+    "name": "Bran's Charge",
+    "iconUrl": "gui_icon_skill_001_5_6.png"
+  },
+  "23103": {
+    "skillId": 23103,
+    "name": "Bran's Arm Swing",
+    "iconUrl": "gui_icon_skill_000_4_6.png"
+  },
+  "23104": {
+    "skillId": 23104,
+    "name": "Loot",
+    "iconUrl": "gui_icon_skill_000_3_11.png"
+  },
+  "23105": {
+    "skillId": 23105,
+    "name": "Escape",
+    "iconUrl": "gui_icon_skill_002_3_2.png"
+  },
+  "23106": {
+    "skillId": 23106,
+    "name": "Gold Strike",
+    "iconUrl": "gui_icon_skill_002_3_3.png"
+  },
+  "23107": {
+    "skillId": 23107,
+    "name": "Berserk",
+    "iconUrl": "gui_icon_skill_002_3_13.png"
+  },
+  "23108": {
+    "skillId": 23108,
+    "name": "Shine of Eweca",
+    "iconUrl": "gui_icon_skill_003_3_12.png"
+  },
+  "23109": {
+    "skillId": 23109,
+    "name": "Breath of Ladeca",
+    "iconUrl": "gui_icon_skill_003_4_12.png"
+  },
+  "23110": {
+    "skillId": 23110,
+    "name": "Vision of Ladeca",
+    "iconUrl": "gui_icon_skill_003_5_12.png"
+  },
+  "23111": {
+    "skillId": 23111,
+    "name": "Might of Ladeca",
+    "iconUrl": "gui_icon_skill_003_6_12.png"
+  },
+  "24001": {
+    "skillId": 24001,
+    "name": "Combo Mastery",
+    "iconUrl": "gui_icon_skill_002_0_5.png"
+  },
+  "24101": {
+    "skillId": 24101,
+    "name": "Combo: Charging Strike",
+    "iconUrl": "gui_icon_skill_002_4_4.png"
+  },
+  "24102": {
+    "skillId": 24102,
+    "name": "Combo: Focused Fist",
+    "iconUrl": "gui_icon_skill_002_3_4.png"
+  },
+  "24103": {
+    "skillId": 24103,
+    "name": "Combo: Counter Punch",
+    "iconUrl": "gui_icon_skill_002_4_13.png"
+  },
+  "24201": {
+    "skillId": 24201,
+    "name": "Combo: Spinning Uppercut",
+    "iconUrl": "gui_icon_skill_002_2_4.png"
+  },
+  "24202": {
+    "skillId": 24202,
+    "name": "Combo: Somersault Kick",
+    "iconUrl": "gui_icon_skill_002_5_4.png"
+  },
+  "24301": {
+    "skillId": 24301,
+    "name": "Combo: Drop Kick",
+    "iconUrl": "gui_icon_skill_002_6_4.png"
+  },
+  "24302": {
+    "skillId": 24302,
+    "name": "Combo: Pummel",
+    "iconUrl": "gui_icon_skill_002_7_4.png"
+  },
+  "25000": {
+    "skillId": 25000,
+    "name": "Respite",
+    "iconUrl": "gui_icon_skill_002_3_5.png"
+  },
+  "25001": {
+    "skillId": 25001,
+    "name": "Tumble",
+    "iconUrl": "gui_icon_skill_002_1_5.png"
+  },
+  "26000": {
+    "skillId": 26000,
+    "name": "Shuriken Mastery",
+    "iconUrl": "gui_icon_skill_003_3_4.png"
+  },
+  "26001": {
+    "skillId": 26001,
+    "name": "Shuriken Charge",
+    "iconUrl": "gui_icon_skill_003_4_4.png"
+  },
+  "26002": {
+    "skillId": 26002,
+    "name": "Kunai Storm",
+    "iconUrl": "gui_icon_skill_003_5_4.png"
+  },
+  "26003": {
+    "skillId": 26003,
+    "name": "Shadow Bind",
+    "iconUrl": "gui_icon_skill_003_6_4.png"
+  },
+  "26004": {
+    "skillId": 26004,
+    "name": "Shadow Cloak",
+    "iconUrl": "gui_icon_skill_003_2_5.png"
+  },
+  "26005": {
+    "skillId": 26005,
+    "name": "Explosive Kunai",
+    "iconUrl": "gui_icon_skill_003_7_4.png"
+  },
+  "26006": {
+    "skillId": 26006,
+    "name": "Smokescreen",
+    "iconUrl": "gui_icon_skill_003_0_5.png"
+  },
+  "26007": {
+    "skillId": 26007,
+    "name": "Sakura Abyss",
+    "iconUrl": "gui_icon_skill_003_1_5.png"
+  },
+  "27000": {
+    "skillId": 27000,
+    "name": "Dorcha Mastery",
+    "iconUrl": "gui_icon_skill_003_7_13.png"
+  },
+  "27001": {
+    "skillId": 27001,
+    "name": "Chain Blade Mastery",
+    "iconUrl": "gui_icon_skill_003_0_14.png"
+  },
+  "27002": {
+    "skillId": 27002,
+    "name": "Dorcha Snatch",
+    "iconUrl": "gui_icon_skill_003_1_14.png"
+  },
+  "27003": {
+    "skillId": 27003,
+    "name": "Chain Impale",
+    "iconUrl": "gui_icon_skill_003_2_14.png"
+  },
+  "27004": {
+    "skillId": 27004,
+    "name": "Raging Spike",
+    "iconUrl": "gui_icon_skill_003_3_14.png"
+  },
+  "27005": {
+    "skillId": 27005,
+    "name": "Spinning Slasher",
+    "iconUrl": "gui_icon_skill_003_4_14.png"
+  },
+  "27006": {
+    "skillId": 27006,
+    "name": "Chain Crush",
+    "iconUrl": "gui_icon_skill_003_5_14.png"
+  },
+  "27007": {
+    "skillId": 27007,
+    "name": "Chain Sweep",
+    "iconUrl": "gui_icon_skill_003_6_14.png"
+  },
+  "27008": {
+    "skillId": 27008,
+    "name": "Dorcha Conversion",
+    "iconUrl": "gui_icon_skill_003_7_14.png"
+  },
+  "27009": {
+    "skillId": 27009,
+    "name": "Anchor Rush",
+    "iconUrl": "gui_icon_skill_003_0_15.png"
+  },
+  "27010": {
+    "skillId": 27010,
+    "name": "Death Mark",
+    "iconUrl": "gui_icon_skill_003_1_15.png"
+  },
+  "27011": {
+    "skillId": 27011,
+    "name": "Chain Burst",
+    "iconUrl": "gui_icon_skill_003_2_15.png"
+  },
+  "27012": {
+    "skillId": 27012,
+    "name": "Bachram Explosion",
+    "iconUrl": "gui_icon_skill_003_3_15.png"
+  },
+  "27100": {
+    "skillId": 27100,
+    "name": "Fynni Catching",
+    "iconUrl": "GUI_icon_skill_004_2_12.png"
+  },
+  "27101": {
+    "skillId": 27101,
+    "name": "Fynni Blossoming",
+    "iconUrl": "GUI_icon_skill_004_3_12.png"
+  },
+  "27102": {
+    "skillId": 27102,
+    "name": "Fynn Sync",
+    "iconUrl": "GUI_icon_skill_004_5_12.png"
+  },
+  "27103": {
+    "skillId": 27103,
+    "name": "Fynn Crafting",
+    "iconUrl": "GUI_icon_skill_004_4_12.png"
+  },
+  "27104": {
+    "skillId": 27104,
+    "name": "Fynn Bead Burnishing",
+    "iconUrl": "GUI_icon_skill_004_6_12.png"
+  },
+  "27200": {
+    "skillId": 27200,
+    "name": "Astral Reave",
+    "iconUrl": "gui_icon_skill_005_7_10.png"
+  },
+  "27201": {
+    "skillId": 27201,
+    "name": "Nova Blast",
+    "iconUrl": "gui_icon_skill_005_0_11.png"
+  },
+  "27202": {
+    "skillId": 27202,
+    "name": "Stellar Surge",
+    "iconUrl": "gui_icon_skill_005_1_11.png"
+  },
+  "27203": {
+    "skillId": 27203,
+    "name": "Meridian Sweep",
+    "iconUrl": "gui_icon_skill_005_2_11.png"
+  },
+  "27204": {
+    "skillId": 27204,
+    "name": "Orbital Pulse",
+    "iconUrl": "gui_icon_skill_005_3_11.png"
+  },
+  "27205": {
+    "skillId": 27205,
+    "name": "Starlight Veil",
+    "iconUrl": "gui_icon_skill_005_4_11.png"
+  },
+  "27206": {
+    "skillId": 27206,
+    "name": "Gravity Well",
+    "iconUrl": "gui_icon_skill_005_5_11.png"
+  },
+  "27207": {
+    "skillId": 27207,
+    "name": "Battle Astrology Mastery",
+    "iconUrl": "gui_icon_skill_005_6_11.png"
+  },
+  "27208": {
+    "skillId": 27208,
+    "name": "Celestial Conjunction",
+    "iconUrl": "gui_icon_skill_005_7_11.png"
+  },
+  "27209": {
+    "skillId": 27209,
+    "name": "Hand of Destiny",
+    "iconUrl": "gui_icon_skill_005_0_12.png"
+  },
+  "27210": {
+    "skillId": 27210,
+    "name": "Fate Foretold",
+    "iconUrl": "gui_icon_skill_005_1_12.png"
+  },
+  "27211": {
+    "skillId": 27211,
+    "name": "Stellar Citadel",
+    "iconUrl": "gui_icon_skill_005_2_12.png"
+  },
+  "27212": {
+    "skillId": 27212,
+    "name": "Stellar Handicraft",
+    "iconUrl": "gui_icon_skill_005_5_12.png"
+  },
+  "27213": {
+    "skillId": 27213,
+    "name": "Constellation Casting",
+    "iconUrl": "gui_icon_skill_005_6_12.png"
+  },
+  "27214": {
+    "skillId": 27214,
+    "name": "Cartomancy",
+    "iconUrl": "gui_icon_skill_005_7_12.png"
+  },
+  "27215": {
+    "skillId": 27215,
+    "name": "Astral Imaging",
+    "iconUrl": "gui_icon_skill_005_0_13.png"
+  },
+  "27216": {
+    "skillId": 27216,
+    "name": "Astral Imprinting",
+    "iconUrl": "gui_icon_skill_005_4_12.png"
+  },
+  "27217": {
+    "skillId": 27217,
+    "name": "Sticker",
+    "iconUrl": "gui_icon_skill_005_0_13.png"
+  },
+  "30003": {
+    "skillId": 30003,
+    "name": "Meditation",
+    "iconUrl": "gui_icon_skill_000_7_2.png"
+  },
+  "30004": {
+    "skillId": 30004,
+    "name": "인챈트 (사용안함)",
+    "iconUrl": "gui_icon_skill_000_2_3.png"
+  },
+  "30005": {
+    "skillId": 30005,
+    "name": "Enchant",
+    "iconUrl": "gui_icon_skill_000_2_3.png"
+  },
+  "30006": {
+    "skillId": 30006,
+    "name": "Healing",
+    "iconUrl": "gui_icon_skill_000_2_2.png"
+  },
+  "30007": {
+    "skillId": 30007,
+    "name": "Magic Mastery",
+    "iconUrl": "gui_icon_skill_000_3_9.png"
+  },
+  "30008": {
+    "skillId": 30008,
+    "name": "Party Healing",
+    "iconUrl": "gui_icon_skill_000_6_9.png"
+  },
+  "30009": {
+    "skillId": 30009,
+    "name": "Meditaion for Pets",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "30010": {
+    "skillId": 30010,
+    "name": "라이프 드레인 (몬스터용)",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "30011": {
+    "skillId": 30011,
+    "name": "Mirror Witch Rest",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "30012": {
+    "skillId": 30012,
+    "name": "Monster Resurrection",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "30013": {
+    "skillId": 30013,
+    "name": "Yarn Binding!",
+    "iconUrl": "gui_icon_skill_000_1_4.png"
+  },
+  "30014": {
+    "skillId": 30014,
+    "name": "Silent Move",
+    "iconUrl": "gui_icon_skill_001_0_12.png"
+  },
+  "30015": {
+    "skillId": 30015,
+    "name": "Enthralling Performance",
+    "iconUrl": "gui_icon_skill_002_0_8.png"
+  },
+  "30016": {
+    "skillId": 30016,
+    "name": "Fire Mastery",
+    "iconUrl": "gui_icon_skill_001_1_13.png"
+  },
+  "30017": {
+    "skillId": 30017,
+    "name": "Ice Mastery",
+    "iconUrl": "gui_icon_skill_001_2_13.png"
+  },
+  "30018": {
+    "skillId": 30018,
+    "name": "Lightning Mastery",
+    "iconUrl": "gui_icon_skill_001_3_13.png"
+  },
+  "30019": {
+    "skillId": 30019,
+    "name": "Bolt Mastery",
+    "iconUrl": "gui_icon_skill_001_4_13.png"
+  },
+  "30020": {
+    "skillId": 30020,
+    "name": "",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "30021": {
+    "skillId": 30021,
+    "name": "",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "30022": {
+    "skillId": 30022,
+    "name": "Magic Weapon Mastery",
+    "iconUrl": "gui_icon_skill_003_7_0.png"
+  },
+  "30101": {
+    "skillId": 30101,
+    "name": "Lightning Bolt",
+    "iconUrl": "gui_icon_skill_000_5_2.png"
+  },
+  "30102": {
+    "skillId": 30102,
+    "name": "Thunder",
+    "iconUrl": "gui_icon_skill_000_0_9.png"
+  },
+  "30103": {
+    "skillId": 30103,
+    "name": "Floating Stone Thunder",
+    "iconUrl": "gui_icon_skill_000_0_9.png"
+  },
+  "30104": {
+    "skillId": 30104,
+    "name": "Thunder",
+    "iconUrl": "gui_icon_skill_001_5_15.png"
+  },
+  "30105": {
+    "skillId": 30105,
+    "name": "Shockwave",
+    "iconUrl": "gui_icon_skill_002_2_13.png"
+  },
+  "30106": {
+    "skillId": 30106,
+    "name": "Lightning Rod",
+    "iconUrl": "gui_icon_skill_003_2_8.png"
+  },
+  "30201": {
+    "skillId": 30201,
+    "name": "Firebolt",
+    "iconUrl": "gui_icon_skill_000_4_2.png"
+  },
+  "30202": {
+    "skillId": 30202,
+    "name": "Fireball",
+    "iconUrl": "gui_icon_skill_000_2_6.png"
+  },
+  "30203": {
+    "skillId": 30203,
+    "name": "Training Fireball",
+    "iconUrl": "gui_icon_skill_000_2_6.png"
+  },
+  "30204": {
+    "skillId": 30204,
+    "name": "Floating Stone Fire Ball",
+    "iconUrl": "gui_icon_skill_000_2_6.png"
+  },
+  "30205": {
+    "skillId": 30205,
+    "name": "Meteor Strike",
+    "iconUrl": "gui_icon_skill_003_4_0.png"
+  },
+  "30301": {
+    "skillId": 30301,
+    "name": "Icebolt",
+    "iconUrl": "gui_icon_skill_000_3_2.png"
+  },
+  "30302": {
+    "skillId": 30302,
+    "name": "Ice Spear",
+    "iconUrl": "gui_icon_skill_000_3_6.png"
+  },
+  "30304": {
+    "skillId": 30304,
+    "name": "Super Ice Bolt (GM Skill)",
+    "iconUrl": "gui_icon_skill_000_3_2.png"
+  },
+  "30305": {
+    "skillId": 30305,
+    "name": "Water Spray",
+    "iconUrl": "gui_icon_skill_001_5_6.png"
+  },
+  "30306": {
+    "skillId": 30306,
+    "name": "Floating Stone Ice Spear",
+    "iconUrl": "gui_icon_skill_000_3_6.png"
+  },
+  "30307": {
+    "skillId": 30307,
+    "name": "Hail Storm",
+    "iconUrl": "gui_icon_skill_001_1_15.png"
+  },
+  "30401": {
+    "skillId": 30401,
+    "name": "Spirit Wand Awakening",
+    "iconUrl": "gui_icon_skill_002_7_3.png"
+  },
+  "30450": {
+    "skillId": 30450,
+    "name": "Lightning - Ice",
+    "iconUrl": "gui_icon_skill_005_0_9.png"
+  },
+  "30451": {
+    "skillId": 30451,
+    "name": "Ice - Fire",
+    "iconUrl": "gui_icon_skill_005_1_9.png"
+  },
+  "30452": {
+    "skillId": 30452,
+    "name": "Fire - Lightning",
+    "iconUrl": "gui_icon_skill_005_2_9.png"
+  },
+  "30453": {
+    "skillId": 30453,
+    "name": "Fusion Bolt",
+    "iconUrl": "gui_icon_skill_001_5_13.png"
+  },
+  "30460": {
+    "skillId": 30460,
+    "name": "Fire Shield",
+    "iconUrl": "gui_icon_skill_000_7_15.png"
+  },
+  "30461": {
+    "skillId": 30461,
+    "name": "Ice Shield",
+    "iconUrl": "gui_icon_skill_000_5_15.png"
+  },
+  "30462": {
+    "skillId": 30462,
+    "name": "Lightning Shield",
+    "iconUrl": "gui_icon_skill_000_6_15.png"
+  },
+  "30463": {
+    "skillId": 30463,
+    "name": "Natural Shield",
+    "iconUrl": "gui_icon_skill_001_0_0.png"
+  },
+  "30464": {
+    "skillId": 30464,
+    "name": "Mana Shield",
+    "iconUrl": "gui_icon_skill_001_5_1.png"
+  },
+  "30470": {
+    "skillId": 30470,
+    "name": "Blaze",
+    "iconUrl": "gui_icon_skill_001_7_8.png"
+  },
+  "30471": {
+    "skillId": 30471,
+    "name": "Paper Airplane Bomb",
+    "iconUrl": "gui_icon_skill_001_6_0.png"
+  },
+  "30472": {
+    "skillId": 30472,
+    "name": "Invitation of Death",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "30473": {
+    "skillId": 30473,
+    "name": "Flames of Hell",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "30480": {
+    "skillId": 30480,
+    "name": "Spellwalk",
+    "iconUrl": "gui_icon_skill_003_5_0.png"
+  },
+  "30481": {
+    "skillId": 30481,
+    "name": "Snap Cast",
+    "iconUrl": "gui_icon_skill_003_6_0.png"
+  },
+  "30482": {
+    "skillId": 30482,
+    "name": "Inspiration",
+    "iconUrl": "gui_icon_skill_003_3_8.png"
+  },
+  "35001": {
+    "skillId": 35001,
+    "name": "Mana Crystallization",
+    "iconUrl": "gui_icon_skill_001_3_5.png"
+  },
+  "35002": {
+    "skillId": 35002,
+    "name": "Life Drain",
+    "iconUrl": "gui_icon_skill_001_5_4.png"
+  },
+  "35003": {
+    "skillId": 35003,
+    "name": "Alchemy Mastery",
+    "iconUrl": "gui_icon_skill_001_5_5.png"
+  },
+  "35004": {
+    "skillId": 35004,
+    "name": "Water Cannon",
+    "iconUrl": "gui_icon_skill_001_1_6.png"
+  },
+  "35005": {
+    "skillId": 35005,
+    "name": "Crystallization",
+    "iconUrl": "gui_icon_skill_001_4_5.png"
+  },
+  "35006": {
+    "skillId": 35006,
+    "name": "Barrier Spikes",
+    "iconUrl": "gui_icon_skill_001_2_6.png"
+  },
+  "35007": {
+    "skillId": 35007,
+    "name": "Wind Blast",
+    "iconUrl": "gui_icon_skill_001_4_6.png"
+  },
+  "35008": {
+    "skillId": 35008,
+    "name": "Flame Burst",
+    "iconUrl": "gui_icon_skill_001_7_6.png"
+  },
+  "35009": {
+    "skillId": 35009,
+    "name": "Sand Burst",
+    "iconUrl": "gui_icon_skill_001_0_7.png"
+  },
+  "35010": {
+    "skillId": 35010,
+    "name": "Rain Casting",
+    "iconUrl": "gui_icon_skill_001_5_7.png"
+  },
+  "35011": {
+    "skillId": 35011,
+    "name": "Frozen Blast",
+    "iconUrl": "gui_icon_skill_001_4_7.png"
+  },
+  "35012": {
+    "skillId": 35012,
+    "name": "Metal Conversion",
+    "iconUrl": "gui_icon_skill_001_6_8.png"
+  },
+  "35013": {
+    "skillId": 35013,
+    "name": "Shock",
+    "iconUrl": "gui_icon_skill_001_1_10.png"
+  },
+  "35014": {
+    "skillId": 35014,
+    "name": "Heat Buster",
+    "iconUrl": "gui_icon_skill_001_1_11.png"
+  },
+  "35015": {
+    "skillId": 35015,
+    "name": "Chain Cylinder",
+    "iconUrl": "gui_icon_skill_001_4_12.png"
+  },
+  "35016": {
+    "skillId": 35016,
+    "name": "Fire Alchemy Mastery",
+    "iconUrl": "gui_icon_skill_001_3_14.png"
+  },
+  "35017": {
+    "skillId": 35017,
+    "name": "Water Alchemy Mastery",
+    "iconUrl": "gui_icon_skill_001_2_14.png"
+  },
+  "35018": {
+    "skillId": 35018,
+    "name": "Earth Alchemy Mastery",
+    "iconUrl": "gui_icon_skill_001_5_14.png"
+  },
+  "35019": {
+    "skillId": 35019,
+    "name": "Wind Alchemy Mastery",
+    "iconUrl": "gui_icon_skill_001_4_14.png"
+  },
+  "35020": {
+    "skillId": 35020,
+    "name": "",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "35021": {
+    "skillId": 35021,
+    "name": "Transmutation",
+    "iconUrl": "gui_icon_skill_001_6_14.png"
+  },
+  "35022": {
+    "skillId": 35022,
+    "name": "Elemental Wave",
+    "iconUrl": "gui_icon_skill_003_6_1.png"
+  },
+  "35023": {
+    "skillId": 35023,
+    "name": "Golden Time",
+    "iconUrl": "gui_icon_skill_003_7_1.png"
+  },
+  "35024": {
+    "skillId": 35024,
+    "name": "Hydra Transmutation",
+    "iconUrl": "gui_icon_skill_003_0_2.png"
+  },
+  "35025": {
+    "skillId": 35025,
+    "name": "Guard Cylinder Mastery",
+    "iconUrl": "gui_icon_skill_003_3_2.png"
+  },
+  "35101": {
+    "skillId": 35101,
+    "name": "Spirit Cylinder Awakening",
+    "iconUrl": "gui_icon_skill_002_0_4.png"
+  },
+  "35111": {
+    "skillId": 35111,
+    "name": "One-handed Spirit Sword Awakening",
+    "iconUrl": "gui_icon_skill_004_6_8.png"
+  },
+  "35112": {
+    "skillId": 35112,
+    "name": "One-handed Spirit Blunt Awakening",
+    "iconUrl": "gui_icon_skill_004_0_9.png"
+  },
+  "35113": {
+    "skillId": 35113,
+    "name": "One-handed Spirit Axe Awakening",
+    "iconUrl": "gui_icon_skill_004_7_8.png"
+  },
+  "35114": {
+    "skillId": 35114,
+    "name": "Two-handed Spirit Sword Awakening",
+    "iconUrl": "gui_icon_skill_004_1_9.png"
+  },
+  "35115": {
+    "skillId": 35115,
+    "name": "Two-handed Spirit Blunt Awakening",
+    "iconUrl": "gui_icon_skill_004_4_9.png"
+  },
+  "35116": {
+    "skillId": 35116,
+    "name": "Two-handed Spirit Axe Awakening",
+    "iconUrl": "gui_icon_skill_004_2_9.png"
+  },
+  "35117": {
+    "skillId": 35117,
+    "name": "Spirit Lance Awakening",
+    "iconUrl": "gui_icon_skill_004_3_9.png"
+  },
+  "35118": {
+    "skillId": 35118,
+    "name": "Spirit Atlatl Awakening",
+    "iconUrl": "gui_icon_skill_004_5_9.png"
+  },
+  "35119": {
+    "skillId": 35119,
+    "name": "Spirit Bow Awakening",
+    "iconUrl": "gui_icon_skill_004_7_9.png"
+  },
+  "35120": {
+    "skillId": 35120,
+    "name": "Spirit Crossbow Awakening",
+    "iconUrl": "gui_icon_skill_004_6_9.png"
+  },
+  "35121": {
+    "skillId": 35121,
+    "name": "Spirit Wand Awakening",
+    "iconUrl": "gui_icon_skill_004_0_10.png"
+  },
+  "35122": {
+    "skillId": 35122,
+    "name": "Spirit Staff Awakening",
+    "iconUrl": "gui_icon_skill_004_1_10.png"
+  },
+  "35123": {
+    "skillId": 35123,
+    "name": "Spirit Cylinder Awakening",
+    "iconUrl": "gui_icon_skill_004_2_10.png"
+  },
+  "35124": {
+    "skillId": 35124,
+    "name": "Spirit Knuckle Awakening",
+    "iconUrl": "gui_icon_skill_004_5_10.png"
+  },
+  "35125": {
+    "skillId": 35125,
+    "name": "Spirit Control Bar Awakening",
+    "iconUrl": "gui_icon_skill_004_3_10.png"
+  },
+  "35126": {
+    "skillId": 35126,
+    "name": "Spirit Shuriken Awakening",
+    "iconUrl": "gui_icon_skill_004_4_10.png"
+  },
+  "35127": {
+    "skillId": 35127,
+    "name": "Spirit Dual Gun Awakening",
+    "iconUrl": "gui_icon_skill_004_6_10.png"
+  },
+  "35128": {
+    "skillId": 35128,
+    "name": "Spirit Chain Blade Awakening",
+    "iconUrl": "gui_icon_skill_004_7_10.png"
+  },
+  "35129": {
+    "skillId": 35129,
+    "name": "Spirit Scythe Awakening",
+    "iconUrl": "gui_icon_skill_005_3_12.png"
+  },
+  "40001": {
+    "skillId": 40001,
+    "name": "Spirit of Order",
+    "iconUrl": "gui_icon_skill_000_1_8.png"
+  },
+  "40002": {
+    "skillId": 40002,
+    "name": "Power of Order",
+    "iconUrl": "gui_icon_skill_000_4_8.png"
+  },
+  "40003": {
+    "skillId": 40003,
+    "name": "Eye of Order",
+    "iconUrl": "gui_icon_skill_000_3_8.png"
+  },
+  "40004": {
+    "skillId": 40004,
+    "name": "Sword of Order",
+    "iconUrl": "gui_icon_skill_000_2_8.png"
+  },
+  "40011": {
+    "skillId": 40011,
+    "name": "Pal. Natural Shield",
+    "iconUrl": "gui_icon_skill_000_7_8.png"
+  },
+  "40012": {
+    "skillId": 40012,
+    "name": "Pal. Heavy Stander",
+    "iconUrl": "gui_icon_skill_000_5_8.png"
+  },
+  "40013": {
+    "skillId": 40013,
+    "name": "Pal. Mana Deflector",
+    "iconUrl": "gui_icon_skill_000_6_8.png"
+  },
+  "41001": {
+    "skillId": 41001,
+    "name": "Soul of Chaos",
+    "iconUrl": "gui_icon_skill_000_7_9.png"
+  },
+  "41002": {
+    "skillId": 41002,
+    "name": "Control of Darkness",
+    "iconUrl": "gui_icon_skill_000_6_10.png"
+  },
+  "41011": {
+    "skillId": 41011,
+    "name": "Body of Chaos",
+    "iconUrl": "gui_icon_skill_000_0_10.png"
+  },
+  "41012": {
+    "skillId": 41012,
+    "name": "Mind of Chaos",
+    "iconUrl": "gui_icon_skill_000_1_10.png"
+  },
+  "41013": {
+    "skillId": 41013,
+    "name": "Hands of Chaos",
+    "iconUrl": "gui_icon_skill_000_2_10.png"
+  },
+  "41021": {
+    "skillId": 41021,
+    "name": "Dark Natural Shield",
+    "iconUrl": "gui_icon_skill_000_5_10.png"
+  },
+  "41022": {
+    "skillId": 41022,
+    "name": "Dark Heavy Stander",
+    "iconUrl": "gui_icon_skill_000_3_10.png"
+  },
+  "41023": {
+    "skillId": 41023,
+    "name": "Dark Mana Deflector",
+    "iconUrl": "gui_icon_skill_000_4_10.png"
+  },
+  "42001": {
+    "skillId": 42001,
+    "name": "Race Transformation",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "42002": {
+    "skillId": 42002,
+    "name": "윈드밀 (사용안함)",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "43001": {
+    "skillId": 43001,
+    "name": "Fury of Connous",
+    "iconUrl": "gui_icon_skill_000_0_14.png"
+  },
+  "43002": {
+    "skillId": 43002,
+    "name": "Elven Magic Missile",
+    "iconUrl": "gui_icon_skill_000_4_14.png"
+  },
+  "43011": {
+    "skillId": 43011,
+    "name": "Armor of Connous",
+    "iconUrl": "gui_icon_skill_000_5_13.png"
+  },
+  "43012": {
+    "skillId": 43012,
+    "name": "Mind of Connous",
+    "iconUrl": "gui_icon_skill_000_6_13.png"
+  },
+  "43013": {
+    "skillId": 43013,
+    "name": "Sharpness of Con.",
+    "iconUrl": "gui_icon_skill_000_7_13.png"
+  },
+  "43021": {
+    "skillId": 43021,
+    "name": "Natural Shield",
+    "iconUrl": "gui_icon_skill_000_1_14.png"
+  },
+  "43022": {
+    "skillId": 43022,
+    "name": "Heavy Stander",
+    "iconUrl": "gui_icon_skill_000_2_14.png"
+  },
+  "43023": {
+    "skillId": 43023,
+    "name": "Mana Deflector",
+    "iconUrl": "gui_icon_skill_000_3_14.png"
+  },
+  "44001": {
+    "skillId": 44001,
+    "name": "Daemon of Physis",
+    "iconUrl": "gui_icon_skill_000_5_14.png"
+  },
+  "44002": {
+    "skillId": 44002,
+    "name": "Giant Full Swing",
+    "iconUrl": "gui_icon_skill_000_4_15.png"
+  },
+  "44011": {
+    "skillId": 44011,
+    "name": "Shield of Physis",
+    "iconUrl": "gui_icon_skill_000_7_14.png"
+  },
+  "44012": {
+    "skillId": 44012,
+    "name": "Life of Physis",
+    "iconUrl": "gui_icon_skill_000_0_15.png"
+  },
+  "44013": {
+    "skillId": 44013,
+    "name": "Spell of Physis",
+    "iconUrl": "gui_icon_skill_000_6_14.png"
+  },
+  "44021": {
+    "skillId": 44021,
+    "name": "Natural Shield",
+    "iconUrl": "gui_icon_skill_000_2_15.png"
+  },
+  "44022": {
+    "skillId": 44022,
+    "name": "Heavy Stander",
+    "iconUrl": "gui_icon_skill_000_3_15.png"
+  },
+  "44023": {
+    "skillId": 44023,
+    "name": "Mana Deflector",
+    "iconUrl": "gui_icon_skill_000_1_15.png"
+  },
+  "45001": {
+    "skillId": 45001,
+    "name": "Awakening of Light",
+    "iconUrl": "gui_icon_skill_001_0_8.png"
+  },
+  "45002": {
+    "skillId": 45002,
+    "name": "Spear of Light",
+    "iconUrl": "gui_icon_skill_001_7_7.png"
+  },
+  "45003": {
+    "skillId": 45003,
+    "name": "Fury of Light",
+    "iconUrl": "gui_icon_skill_001_1_8.png"
+  },
+  "45004": {
+    "skillId": 45004,
+    "name": "Awakening of Light",
+    "iconUrl": "gui_icon_skill_001_0_8.png"
+  },
+  "45005": {
+    "skillId": 45005,
+    "name": "Spear of Light",
+    "iconUrl": "gui_icon_skill_001_7_7.png"
+  },
+  "45006": {
+    "skillId": 45006,
+    "name": "Fury of Light",
+    "iconUrl": "gui_icon_skill_001_1_8.png"
+  },
+  "45007": {
+    "skillId": 45007,
+    "name": "Shadow Spirit",
+    "iconUrl": "gui_icon_skill_001_2_10.png"
+  },
+  "45008": {
+    "skillId": 45008,
+    "name": "Wings of Eclipse",
+    "iconUrl": "gui_icon_skill_001_6_11.png"
+  },
+  "45009": {
+    "skillId": 45009,
+    "name": "Wings of Rage",
+    "iconUrl": "gui_icon_skill_001_7_11.png"
+  },
+  "45010": {
+    "skillId": 45010,
+    "name": "Palalan Embrace",
+    "iconUrl": "gui_icon_skill_003_1_12.png"
+  },
+  "46001": {
+    "skillId": 46001,
+    "name": "Shield of Trust",
+    "iconUrl": "gui_icon_skill_003_5_5.png"
+  },
+  "46002": {
+    "skillId": 46002,
+    "name": "Celestial Spike",
+    "iconUrl": "gui_icon_skill_003_3_6.png"
+  },
+  "46003": {
+    "skillId": 46003,
+    "name": "Judgment Blade",
+    "iconUrl": "gui_icon_skill_003_1_7.png"
+  },
+  "46004": {
+    "skillId": 46004,
+    "name": "Divine Link",
+    "iconUrl": "gui_icon_skill_003_5_10.png"
+  },
+  "46005": {
+    "skillId": 46005,
+    "name": "Nascent Divinity",
+    "iconUrl": "gui_icon_skill_004_4_0.png"
+  },
+  "46006": {
+    "skillId": 46006,
+    "name": "Divine Blast",
+    "iconUrl": "gui_icon_skill_004_1_0.png"
+  },
+  "46007": {
+    "skillId": 46007,
+    "name": "Blink",
+    "iconUrl": "gui_icon_skill_004_2_0.png"
+  },
+  "46008": {
+    "skillId": 46008,
+    "name": "Nova Obliteration",
+    "iconUrl": "gui_icon_skill_004_3_0.png"
+  },
+  "50001": {
+    "skillId": 50001,
+    "name": "Hidden Enchant",
+    "iconUrl": "gui_icon_skill_000_2_3.png"
+  },
+  "50002": {
+    "skillId": 50002,
+    "name": "Hidden Resurrection",
+    "iconUrl": "gui_icon_skill_000_6_3.png"
+  },
+  "50003": {
+    "skillId": 50003,
+    "name": "Hidden TownBack",
+    "iconUrl": "gui_icon_skill_000_7_3.png"
+  },
+  "50004": {
+    "skillId": 50004,
+    "name": "Hidden Guild Stone Setting",
+    "iconUrl": "gui_icon_skill_000_0_2.png"
+  },
+  "50005": {
+    "skillId": 50005,
+    "name": "Web Spinning",
+    "iconUrl": "gui_icon_skill_000_2_9.png"
+  },
+  "50006": {
+    "skillId": 50006,
+    "name": "Hidden Blessing",
+    "iconUrl": "gui_icon_skill_000_2_5.png"
+  },
+  "50007": {
+    "skillId": 50007,
+    "name": "Campfire Kit",
+    "iconUrl": "gui_icon_skill_000_6_2.png"
+  },
+  "50008": {
+    "skillId": 50008,
+    "name": "Skill Reset Kit",
+    "iconUrl": "gui_icon_skill_000_4_6.png"
+  },
+  "50009": {
+    "skillId": 50009,
+    "name": "Big Blessing Water Kit",
+    "iconUrl": "gui_icon_skill_000_2_5.png"
+  },
+  "50010": {
+    "skillId": 50010,
+    "name": "Dye",
+    "iconUrl": "gui_icon_skill_000_2_7.png"
+  },
+  "50011": {
+    "skillId": 50011,
+    "name": "Elemental Enchant-All Slots",
+    "iconUrl": "gui_icon_skill_000_2_3.png"
+  },
+  "50012": {
+    "skillId": 50012,
+    "name": "Hidden Poison Lathering Skill",
+    "iconUrl": "gui_icon_skill_000_4_9.png"
+  },
+  "50013": {
+    "skillId": 50013,
+    "name": "Sketch",
+    "iconUrl": "gui_icon_skill_000_1_11.png"
+  },
+  "50014": {
+    "skillId": 50014,
+    "name": "L-Rod Exploration",
+    "iconUrl": "gui_icon_skill_000_2_11.png"
+  },
+  "50015": {
+    "skillId": 50015,
+    "name": "Hide Bomb-Use Skill",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50016": {
+    "skillId": 50016,
+    "name": "Play dead",
+    "iconUrl": "gui_icon_skill_000_7_11.png"
+  },
+  "50017": {
+    "skillId": 50017,
+    "name": "Hide",
+    "iconUrl": "gui_icon_skill_000_2_12.png"
+  },
+  "50018": {
+    "skillId": 50018,
+    "name": "Performance",
+    "iconUrl": "gui_icon_skill_000_6_11.png"
+  },
+  "50019": {
+    "skillId": 50019,
+    "name": "Land Maker",
+    "iconUrl": "gui_icon_skill_000_0_12.png"
+  },
+  "50020": {
+    "skillId": 50020,
+    "name": "Rock Throwing",
+    "iconUrl": "gui_icon_skill_000_3_12.png"
+  },
+  "50021": {
+    "skillId": 50021,
+    "name": "Dice Tossing",
+    "iconUrl": "gui_icon_skill_000_7_12.png"
+  },
+  "50022": {
+    "skillId": 50022,
+    "name": "Jam Session",
+    "iconUrl": "gui_icon_skill_000_3_13.png"
+  },
+  "50023": {
+    "skillId": 50023,
+    "name": "Throw Paper\\nAirplane",
+    "iconUrl": "gui_icon_skill_001_6_0.png"
+  },
+  "50024": {
+    "skillId": 50024,
+    "name": "초콜릿 과자 만들기",
+    "iconUrl": "gui_icon_skill_001_7_0.png"
+  },
+  "50025": {
+    "skillId": 50025,
+    "name": "Fossil Restoration",
+    "iconUrl": "gui_icon_skill_001_2_1.png"
+  },
+  "50026": {
+    "skillId": 50026,
+    "name": "널뛰기",
+    "iconUrl": "gui_icon_skill_001_4_1.png"
+  },
+  "50027": {
+    "skillId": 50027,
+    "name": "널뛰기 키트",
+    "iconUrl": "gui_icon_skill_001_4_1.png"
+  },
+  "50029": {
+    "skillId": 50029,
+    "name": "Dragon Support",
+    "iconUrl": "gui_icon_skill_001_1_4.png"
+  },
+  "50030": {
+    "skillId": 50030,
+    "name": "Ice Mine",
+    "iconUrl": "gui_icon_skill_001_6_4.png"
+  },
+  "50031": {
+    "skillId": 50031,
+    "name": "Scan",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50032": {
+    "skillId": 50032,
+    "name": "Summon Golem",
+    "iconUrl": "gui_icon_skill_001_0_6.png"
+  },
+  "50033": {
+    "skillId": 50033,
+    "name": "Mana Crystallization Counter-Transmutation",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50034": {
+    "skillId": 50034,
+    "name": "Use support items",
+    "iconUrl": "gui_icon_skill_000_2_5.png"
+  },
+  "50035": {
+    "skillId": 50035,
+    "name": "Ticking Quiz Bomb",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50036": {
+    "skillId": 50036,
+    "name": "아이템 봉인",
+    "iconUrl": "gui_icon_skill_001_2_7.png"
+  },
+  "50037": {
+    "skillId": 50037,
+    "name": "아이템 봉인 해제",
+    "iconUrl": "gui_icon_skill_001_3_7.png"
+  },
+  "50038": {
+    "skillId": 50038,
+    "name": "Use a Dungeon Pass",
+    "iconUrl": "gui_icon_skill_000_2_5.png"
+  },
+  "50039": {
+    "skillId": 50039,
+    "name": "Use an Elatha Item",
+    "iconUrl": "gui_icon_skill_001_2_8.png"
+  },
+  "50040": {
+    "skillId": 50040,
+    "name": "Throw Confetti",
+    "iconUrl": "gui_icon_skill_001_0_9.png"
+  },
+  "50041": {
+    "skillId": 50041,
+    "name": "Use Party Popper",
+    "iconUrl": "gui_icon_skill_001_0_9.png"
+  },
+  "50042": {
+    "skillId": 50042,
+    "name": "Feed Fish",
+    "iconUrl": "gui_icon_skill_001_2_9.png"
+  },
+  "50043": {
+    "skillId": 50043,
+    "name": "해머 게임",
+    "iconUrl": "gui_icon_skill_001_3_9.png"
+  },
+  "50044": {
+    "skillId": 50044,
+    "name": "Water Balloon\\nThrowing",
+    "iconUrl": "gui_icon_skill_001_6_9.png"
+  },
+  "50045": {
+    "skillId": 50045,
+    "name": "Spirit Shift",
+    "iconUrl": "gui_icon_skill_001_0_10.png"
+  },
+  "50046": {
+    "skillId": 50046,
+    "name": "B+ Bomb",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50047": {
+    "skillId": 50047,
+    "name": "Name Color Change",
+    "iconUrl": "gui_icon_skill_001_6_10.png"
+  },
+  "50048": {
+    "skillId": 50048,
+    "name": "Cylinder On/Off",
+    "iconUrl": "gui_icon_skill_001_3_11.png"
+  },
+  "50049": {
+    "skillId": 50049,
+    "name": "Holy Flame",
+    "iconUrl": "gui_icon_skill_001_4_11.png"
+  },
+  "50050": {
+    "skillId": 50050,
+    "name": "Use Morrighan's Feather",
+    "iconUrl": "gui_icon_skill_001_1_12.png"
+  },
+  "50051": {
+    "skillId": 50051,
+    "name": "Create Falias Portal",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50052": {
+    "skillId": 50052,
+    "name": "채팅 색상 변경",
+    "iconUrl": "gui_icon_skill_001_6_10.png"
+  },
+  "50053": {
+    "skillId": 50053,
+    "name": "Instal Private Farm Facility",
+    "iconUrl": "gui_icon_skill_002_1_1.png"
+  },
+  "50054": {
+    "skillId": 50054,
+    "name": "Reorient Homestead building",
+    "iconUrl": "gui_icon_skill_002_1_1.png"
+  },
+  "50055": {
+    "skillId": 50055,
+    "name": "Paint",
+    "iconUrl": "gui_icon_skill_002_0_2.png"
+  },
+  "50056": {
+    "skillId": 50056,
+    "name": "Mix Paint",
+    "iconUrl": "gui_icon_skill_002_7_1.png"
+  },
+  "50057": {
+    "skillId": 50057,
+    "name": "Continent Warp",
+    "iconUrl": "gui_icon_skill_002_4_2.png"
+  },
+  "50058": {
+    "skillId": 50058,
+    "name": "Add Seasoning",
+    "iconUrl": "gui_icon_skill_000_4_7.png"
+  },
+  "50059": {
+    "skillId": 50059,
+    "name": "Water Balloon Attack",
+    "iconUrl": "gui_icon_skill_001_6_9.png"
+  },
+  "50060": {
+    "skillId": 50060,
+    "name": "Emergency Ice Bomb",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50061": {
+    "skillId": 50061,
+    "name": "Marionette Hidden Resurrection",
+    "iconUrl": "gui_icon_skill_002_7_11.png"
+  },
+  "50063": {
+    "skillId": 50063,
+    "name": "Use Item to Share EXP",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50064": {
+    "skillId": 50064,
+    "name": "Chorus",
+    "iconUrl": "gui_icon_skill_003_4_1.png"
+  },
+  "50065": {
+    "skillId": 50065,
+    "name": "Inflate Balloon",
+    "iconUrl": "gui_icon_skill_003_1_2.png"
+  },
+  "50066": {
+    "skillId": 50066,
+    "name": "Group Gesture",
+    "iconUrl": "gui_icon_skill_003_2_2.png"
+  },
+  "50067": {
+    "skillId": 50067,
+    "name": "Touch Sand",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50068": {
+    "skillId": 50068,
+    "name": "Complete Hidden Resurrection Skill",
+    "iconUrl": "gui_icon_skill_000_6_3.png"
+  },
+  "50069": {
+    "skillId": 50069,
+    "name": "Roll the dice 2",
+    "iconUrl": "gui_icon_skill_000_7_12.png"
+  },
+  "50070": {
+    "skillId": 50070,
+    "name": "Release Sky Lantern",
+    "iconUrl": "GUI_icon_skill_003_3_11.png"
+  },
+  "50071": {
+    "skillId": 50071,
+    "name": "Release Sky Lantern (Hidden skills)",
+    "iconUrl": "GUI_icon_skill_003_3_11.png"
+  },
+  "50072": {
+    "skillId": 50072,
+    "name": "Install Prop to Repair",
+    "iconUrl": "gui_icon_skill_003_2_13.png"
+  },
+  "50073": {
+    "skillId": 50073,
+    "name": "_LT[xml.skillinfo.4975]",
+    "iconUrl": "gui_icon_skill_002_1_1.png"
+  },
+  "50074": {
+    "skillId": 50074,
+    "name": "_LT[xml.skillinfo.4976]",
+    "iconUrl": "gui_icon_skill_002_1_1.png"
+  },
+  "50075": {
+    "skillId": 50075,
+    "name": "Throw Snowball",
+    "iconUrl": "gui_icon_skill_002_0_14.png"
+  },
+  "50076": {
+    "skillId": 50076,
+    "name": "Blow Up Balloon",
+    "iconUrl": "gui_icon_skill_003_1_2.png"
+  },
+  "50077": {
+    "skillId": 50077,
+    "name": "Play With Pet",
+    "iconUrl": "gui_icon_skill_004_4_15.png"
+  },
+  "50078": {
+    "skillId": 50078,
+    "name": "Pet Parade",
+    "iconUrl": "gui_icon_skill_005_1_13.png"
+  },
+  "50079": {
+    "skillId": 50079,
+    "name": "Holy Water",
+    "iconUrl": "gui_icon_skill_005_3_13.png"
+  },
+  "50081": {
+    "skillId": 50081,
+    "name": "Transform with Equipment",
+    "iconUrl": "gui_icon_skill_001_6_10.png"
+  },
+  "50101": {
+    "skillId": 50101,
+    "name": "Pet Buffing",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50102": {
+    "skillId": 50102,
+    "name": "Swallow",
+    "iconUrl": "gui_icon_skill_000_4_13.png"
+  },
+  "50103": {
+    "skillId": 50103,
+    "name": "Bubble Blast",
+    "iconUrl": "gui_icon_skill_001_3_1.png"
+  },
+  "50104": {
+    "skillId": 50104,
+    "name": "Charge",
+    "iconUrl": "gui_icon_skill_002_3_1.png"
+  },
+  "50105": {
+    "skillId": 50105,
+    "name": "Playing Dead",
+    "iconUrl": "gui_icon_skill_001_6_6.png"
+  },
+  "50106": {
+    "skillId": 50106,
+    "name": "Master Teleport",
+    "iconUrl": "gui_icon_skill_001_7_10.png"
+  },
+  "50107": {
+    "skillId": 50107,
+    "name": "Detection",
+    "iconUrl": "gui_icon_skill_001_0_11.png"
+  },
+  "50108": {
+    "skillId": 50108,
+    "name": "펫 봉인",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50109": {
+    "skillId": 50109,
+    "name": "Hide",
+    "iconUrl": "gui_icon_skill_002_2_1.png"
+  },
+  "50110": {
+    "skillId": 50110,
+    "name": "Dragon Meteor",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50111": {
+    "skillId": 50111,
+    "name": "Red Dragon Fire Breath",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50112": {
+    "skillId": 50112,
+    "name": "Thunder Rain",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50113": {
+    "skillId": 50113,
+    "name": "Eat Volcanic Bomb",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50114": {
+    "skillId": 50114,
+    "name": "Dragon Roar",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50115": {
+    "skillId": 50115,
+    "name": "Wyvern Fire Breath",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50116": {
+    "skillId": 50116,
+    "name": "Wyvern Lightning",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50117": {
+    "skillId": 50117,
+    "name": "Wyvern Ice Breath",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50118": {
+    "skillId": 50118,
+    "name": "벚꽃놀이키트",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50119": {
+    "skillId": 50119,
+    "name": "Dragon Support Meteor",
+    "iconUrl": "gui_icon_skill_001_1_4.png"
+  },
+  "50120": {
+    "skillId": 50120,
+    "name": "Spin",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "50121": {
+    "skillId": 50121,
+    "name": "Bewilder",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50122": {
+    "skillId": 50122,
+    "name": "Rise and Dive",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50123": {
+    "skillId": 50123,
+    "name": "Neid Roar",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50124": {
+    "skillId": 50124,
+    "name": "Tail Whip",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50125": {
+    "skillId": 50125,
+    "name": "Water Bomb",
+    "iconUrl": "gui_icon_skill_000_0_9.png"
+  },
+  "50126": {
+    "skillId": 50126,
+    "name": "Watering",
+    "iconUrl": "gui_icon_skill_001_3_8.png"
+  },
+  "50127": {
+    "skillId": 50127,
+    "name": "Fertilizing",
+    "iconUrl": "gui_icon_skill_001_4_8.png"
+  },
+  "50128": {
+    "skillId": 50128,
+    "name": "Bug Catching",
+    "iconUrl": "gui_icon_skill_001_5_8.png"
+  },
+  "50129": {
+    "skillId": 50129,
+    "name": "Beholder Beam Attack",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50130": {
+    "skillId": 50130,
+    "name": "Beholder Alarm",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50131": {
+    "skillId": 50131,
+    "name": "Axe Throwing",
+    "iconUrl": "gui_icon_skill_000_2_13.png"
+  },
+  "50132": {
+    "skillId": 50132,
+    "name": "Chandelier Attack",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50133": {
+    "skillId": 50133,
+    "name": "Shadow Death",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50134": {
+    "skillId": 50134,
+    "name": "합성",
+    "iconUrl": "gui_icon_skill_001_7_5.png"
+  },
+  "50135": {
+    "skillId": 50135,
+    "name": "Summon",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50136": {
+    "skillId": 50136,
+    "name": "Thunder Storm",
+    "iconUrl": "gui_icon_skill_001_5_15.png"
+  },
+  "50137": {
+    "skillId": 50137,
+    "name": "Boost",
+    "iconUrl": "gui_icon_skill_002_6_15.png"
+  },
+  "50138": {
+    "skillId": 50138,
+    "name": "Thunder Breath",
+    "iconUrl": "gui_icon_skill_001_3_15.png"
+  },
+  "50139": {
+    "skillId": 50139,
+    "name": "Fire Storm",
+    "iconUrl": "gui_icon_skill_001_6_15.png"
+  },
+  "50140": {
+    "skillId": 50140,
+    "name": "Fire Breath",
+    "iconUrl": "gui_icon_skill_001_7_15.png"
+  },
+  "50142": {
+    "skillId": 50142,
+    "name": "Ice Storm",
+    "iconUrl": "gui_icon_skill_001_3_15.png"
+  },
+  "50143": {
+    "skillId": 50143,
+    "name": "Flame Dive",
+    "iconUrl": "gui_icon_skill_002_1_2.png"
+  },
+  "50144": {
+    "skillId": 50144,
+    "name": "Running Boost",
+    "iconUrl": "gui_icon_skill_003_0_1.png"
+  },
+  "50145": {
+    "skillId": 50145,
+    "name": "열기구 띄우기",
+    "iconUrl": "gui_icon_skill_002_2_2.png"
+  },
+  "50146": {
+    "skillId": 50146,
+    "name": "Umbrella",
+    "iconUrl": "gui_icon_skill_002_1_3.png"
+  },
+  "50147": {
+    "skillId": 50147,
+    "name": "Seal Item",
+    "iconUrl": "gui_icon_skill_001_2_7.png"
+  },
+  "50148": {
+    "skillId": 50148,
+    "name": "",
+    "iconUrl": "gui_icon_skill_002_2_3.png"
+  },
+  "50149": {
+    "skillId": 50149,
+    "name": "Hands of Salvation",
+    "iconUrl": "gui_icon_skill_001_6_15.png"
+  },
+  "50150": {
+    "skillId": 50150,
+    "name": "Scare",
+    "iconUrl": "gui_icon_skill_002_4_3.png"
+  },
+  "50151": {
+    "skillId": 50151,
+    "name": "Frost Storm",
+    "iconUrl": "gui_icon_skill_001_6_15.png"
+  },
+  "50152": {
+    "skillId": 50152,
+    "name": "Ice Breath",
+    "iconUrl": "gui_icon_skill_002_7_5.png"
+  },
+  "50153": {
+    "skillId": 50153,
+    "name": "Normal Attack",
+    "iconUrl": "gui_icon_skill_002_7_7.png"
+  },
+  "50154": {
+    "skillId": 50154,
+    "name": "Flame of Resurrection",
+    "iconUrl": "gui_icon_skill_002_0_12.png"
+  },
+  "50155": {
+    "skillId": 50155,
+    "name": "Explosive Revival",
+    "iconUrl": "gui_icon_skill_002_0_12.png"
+  },
+  "50156": {
+    "skillId": 50156,
+    "name": "Phoenix's Flame",
+    "iconUrl": "gui_icon_skill_001_6_15.png"
+  },
+  "50157": {
+    "skillId": 50157,
+    "name": "Devil's Dash",
+    "iconUrl": "gui_icon_skill_002_7_12.png"
+  },
+  "50158": {
+    "skillId": 50158,
+    "name": "Petrifying Roar",
+    "iconUrl": "gui_icon_skill_002_6_12.png"
+  },
+  "50159": {
+    "skillId": 50159,
+    "name": "Devil's Cry",
+    "iconUrl": "gui_icon_skill_002_7_12.png"
+  },
+  "50160": {
+    "skillId": 50160,
+    "name": "Save Location",
+    "iconUrl": "gui_icon_skill_002_4_9.png"
+  },
+  "50161": {
+    "skillId": 50161,
+    "name": "Pet Teleport",
+    "iconUrl": "gui_icon_skill_002_5_9.png"
+  },
+  "50162": {
+    "skillId": 50162,
+    "name": "Restful Wind",
+    "iconUrl": "gui_icon_skill_001_6_15.png"
+  },
+  "50163": {
+    "skillId": 50163,
+    "name": "Holy Shower",
+    "iconUrl": "gui_icon_skill_001_6_15.png"
+  },
+  "50164": {
+    "skillId": 50164,
+    "name": "Holy Rush",
+    "iconUrl": "gui_icon_skill_002_7_15.png"
+  },
+  "50165": {
+    "skillId": 50165,
+    "name": "Spread Wings",
+    "iconUrl": "gui_icon_skill_003_0_0.png"
+  },
+  "50166": {
+    "skillId": 50166,
+    "name": "Burnout",
+    "iconUrl": "gui_icon_skill_001_6_15.png"
+  },
+  "50167": {
+    "skillId": 50167,
+    "name": "Outfit Action",
+    "iconUrl": "gui_icon_skill_003_4_3.png"
+  },
+  "50168": {
+    "skillId": 50168,
+    "name": "펫 점프",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50169": {
+    "skillId": 50169,
+    "name": "Hop In",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50170": {
+    "skillId": 50170,
+    "name": "Hop Spin",
+    "iconUrl": "gui_icon_skill_003_5_3.png"
+  },
+  "50171": {
+    "skillId": 50171,
+    "name": "Hop Shield",
+    "iconUrl": "gui_icon_skill_003_6_3.png"
+  },
+  "50172": {
+    "skillId": 50172,
+    "name": "Couple's Flight",
+    "iconUrl": "gui_icon_skill_003_2_4.png"
+  },
+  "50173": {
+    "skillId": 50173,
+    "name": "Flight",
+    "iconUrl": "gui_icon_skill_003_1_4.png"
+  },
+  "50174": {
+    "skillId": 50174,
+    "name": "멀티 물폭탄",
+    "iconUrl": "gui_icon_skill_000_0_9.png"
+  },
+  "50175": {
+    "skillId": 50175,
+    "name": "Truck to the Head",
+    "iconUrl": "gui_icon_skill_001_6_15.png"
+  },
+  "50176": {
+    "skillId": 50176,
+    "name": "Wyvern Ice Breath (mini game)",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50177": {
+    "skillId": 50177,
+    "name": "_LT[xml.skillinfo.4127]",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50178": {
+    "skillId": 50178,
+    "name": "_LT[xml.skillinfo.4128]",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50179": {
+    "skillId": 50179,
+    "name": "Sleepy Dust",
+    "iconUrl": "gui_icon_skill_000_0_9.png"
+  },
+  "50180": {
+    "skillId": 50180,
+    "name": "Cleansing Dust",
+    "iconUrl": "gui_icon_skill_003_3_5.png"
+  },
+  "50181": {
+    "skillId": 50181,
+    "name": "Healing Breeze",
+    "iconUrl": "gui_icon_skill_003_4_5.png"
+  },
+  "50182": {
+    "skillId": 50182,
+    "name": "Outfit Action 2",
+    "iconUrl": "gui_icon_skill_003_4_3.png"
+  },
+  "50183": {
+    "skillId": 50183,
+    "name": "Wool of the Gods",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50184": {
+    "skillId": 50184,
+    "name": "Song of Tuan",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50185": {
+    "skillId": 50185,
+    "name": "Whisper of Tuan",
+    "iconUrl": "gui_icon_skill_003_2_9.png"
+  },
+  "50186": {
+    "skillId": 50186,
+    "name": "Grudge of Tuan",
+    "iconUrl": "gui_icon_skill_003_1_9.png"
+  },
+  "50187": {
+    "skillId": 50187,
+    "name": "악마의 저주",
+    "iconUrl": "gui_icon_skill_003_1_9.png"
+  },
+  "50188": {
+    "skillId": 50188,
+    "name": "Cold Winter Performance",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50189": {
+    "skillId": 50189,
+    "name": "Requiem",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50190": {
+    "skillId": 50190,
+    "name": "Sweethearts\\nFlight",
+    "iconUrl": "GUI_icon_skill_003_4_11.png"
+  },
+  "50191": {
+    "skillId": 50191,
+    "name": "Oil Squirt",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50192": {
+    "skillId": 50192,
+    "name": "Tiny Jibes",
+    "iconUrl": "GUI_icon_skill_003_5_11.png"
+  },
+  "50193": {
+    "skillId": 50193,
+    "name": "Farewell Surprise",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50194": {
+    "skillId": 50194,
+    "name": "Skill Required for Pet Summoning",
+    "iconUrl": "gui_icon_skill_001_6_15.png"
+  },
+  "50195": {
+    "skillId": 50195,
+    "name": "Save Location",
+    "iconUrl": "gui_icon_skill_002_4_9.png"
+  },
+  "50196": {
+    "skillId": 50196,
+    "name": "Pet Teleport",
+    "iconUrl": "gui_icon_skill_002_5_9.png"
+  },
+  "50197": {
+    "skillId": 50197,
+    "name": "Lightning Breath",
+    "iconUrl": "gui_icon_skill_002_0_0.png"
+  },
+  "50198": {
+    "skillId": 50198,
+    "name": "Dragon Rage",
+    "iconUrl": "gui_icon_skill_003_7_11.png"
+  },
+  "50199": {
+    "skillId": 50199,
+    "name": "Freestyle Jam",
+    "iconUrl": "gui_icon_skill_003_6_11.png"
+  },
+  "50200": {
+    "skillId": 50200,
+    "name": "Kokopo Wave",
+    "iconUrl": "gui_icon_skill_001_6_15.png"
+  },
+  "50201": {
+    "skillId": 50201,
+    "name": "Kokopo Strike",
+    "iconUrl": "gui_icon_skill_003_0_12.png"
+  },
+  "50202": {
+    "skillId": 50202,
+    "name": "Partner Healing",
+    "iconUrl": "gui_icon_skill_000_2_2.png"
+  },
+  "50203": {
+    "skillId": 50203,
+    "name": "Dance Party",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50204": {
+    "skillId": 50204,
+    "name": "Merry Melodies",
+    "iconUrl": "GUI_icon_skill_003_0_13.png"
+  },
+  "50205": {
+    "skillId": 50205,
+    "name": "Keep the Beat",
+    "iconUrl": "GUI_icon_skill_003_0_13.png"
+  },
+  "50206": {
+    "skillId": 50206,
+    "name": "Earth Dragon Roar",
+    "iconUrl": "gui_icon_skill_001_6_15.png"
+  },
+  "50207": {
+    "skillId": 50207,
+    "name": "Morningstar Swing",
+    "iconUrl": "GUI_icon_skill_004_0_4.png"
+  },
+  "50208": {
+    "skillId": 50208,
+    "name": "Healing Wind",
+    "iconUrl": "GUI_icon_skill_004_1_4.png"
+  },
+  "50209": {
+    "skillId": 50209,
+    "name": "Jack's Throw Snowball",
+    "iconUrl": "gui_icon_skill_002_0_14.png"
+  },
+  "50210": {
+    "skillId": 50210,
+    "name": "Jack's Garden",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50211": {
+    "skillId": 50211,
+    "name": "Mini Jack",
+    "iconUrl": "gui_icon_skill_002_3_0.png"
+  },
+  "50212": {
+    "skillId": 50212,
+    "name": "Jack's Frozen Field",
+    "iconUrl": "GUI_icon_skill_000_0_0.png"
+  },
+  "50213": {
+    "skillId": 50213,
+    "name": "Moonlight \\nCouple's Flight",
+    "iconUrl": "GUI_icon_skill_004_7_3.png"
+  },
+  "50214": {
+    "skillId": 50214,
+    "name": "Lost and Found",
+    "iconUrl": "gui_icon_skill_001_6_15.png"
+  },
+  "50215": {
+    "skillId": 50215,
+    "name": "Ferocious Attack",
+    "iconUrl": "gui_icon_skill_004_0_5.png"
+  },
+  "50216": {
+    "skillId": 50216,
+    "name": "Lightning Strike",
+    "iconUrl": "gui_icon_skill_004_1_5.png"
+  },
+  "50217": {
+    "skillId": 50217,
+    "name": "Lightning Wave",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50218": {
+    "skillId": 50218,
+    "name": "Infiltration",
+    "iconUrl": "gui_icon_skill_004_2_5.png"
+  },
+  "50219": {
+    "skillId": 50219,
+    "name": "Circle of Magic",
+    "iconUrl": "gui_icon_skill_004_1_11.png"
+  },
+  "50220": {
+    "skillId": 50220,
+    "name": "Gummy Attack",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "50221": {
+    "skillId": 50221,
+    "name": "Piercing Howl",
+    "iconUrl": "gui_icon_skill_004_3_11.png"
+  },
+  "50222": {
+    "skillId": 50222,
+    "name": "Blooming\\nNostalgia",
+    "iconUrl": "gui_icon_skill_004_4_11.png"
+  },
+  "50223": {
+    "skillId": 50223,
+    "name": "Soar",
+    "iconUrl": "GUI_icon_skill_004_5_11.png"
+  },
+  "50224": {
+    "skillId": 50224,
+    "name": "Crazy Drift",
+    "iconUrl": "gui_icon_skill_004_0_0.png"
+  },
+  "50225": {
+    "skillId": 50225,
+    "name": "Shield",
+    "iconUrl": "gui_icon_skill_004_7_14.png"
+  },
+  "50226": {
+    "skillId": 50226,
+    "name": "Water Balloon",
+    "iconUrl": "gui_icon_skill_004_0_15.png"
+  },
+  "50227": {
+    "skillId": 50227,
+    "name": "Missile Attack",
+    "iconUrl": "gui_icon_skill_004_6_14.png"
+  },
+  "50228": {
+    "skillId": 50228,
+    "name": "Kart Racing Mode",
+    "iconUrl": "gui_icon_skill_004_2_15.png"
+  },
+  "50229": {
+    "skillId": 50229,
+    "name": "Harmony Flight",
+    "iconUrl": "GUI_icon_skill_004_3_15.png"
+  },
+  "50230": {
+    "skillId": 50230,
+    "name": "Tractor Takedown",
+    "iconUrl": "GUI_icon_skill_kmn_5_0.png"
+  },
+  "50231": {
+    "skillId": 50231,
+    "name": "Joyful Japari Park",
+    "iconUrl": "GUI_icon_skill_kmn_6_0.png"
+  },
+  "50232": {
+    "skillId": 50232,
+    "name": "Come!",
+    "iconUrl": "GUI_icon_skill_004_5_15.png"
+  },
+  "50233": {
+    "skillId": 50233,
+    "name": "Adorable Wiggle",
+    "iconUrl": "GUI_icon_skill_004_6_15.png"
+  },
+  "50234": {
+    "skillId": 50234,
+    "name": "Lovable Yip",
+    "iconUrl": "GUI_icon_skill_004_7_15.png"
+  },
+  "50235": {
+    "skillId": 50235,
+    "name": "Form Change",
+    "iconUrl": "GUI_icon_skill_005_0_0.png"
+  },
+  "50236": {
+    "skillId": 50236,
+    "name": "Adorable Wiggle",
+    "iconUrl": "GUI_icon_skill_004_6_15.png"
+  },
+  "50237": {
+    "skillId": 50237,
+    "name": "Float Up",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50238": {
+    "skillId": 50238,
+    "name": "Protective Wave",
+    "iconUrl": "gui_icon_skill_005_3_1.png"
+  },
+  "50239": {
+    "skillId": 50239,
+    "name": "Water Wave",
+    "iconUrl": "gui_icon_skill_005_4_1.png"
+  },
+  "50240": {
+    "skillId": 50240,
+    "name": "Purifying Wave",
+    "iconUrl": "gui_icon_skill_005_5_1.png"
+  },
+  "50241": {
+    "skillId": 50241,
+    "name": "Jumping Jumping",
+    "iconUrl": "gui_icon_skill_005_6_1.png"
+  },
+  "50242": {
+    "skillId": 50242,
+    "name": "Midnight\\nCouple's Flight",
+    "iconUrl": "GUI_icon_skill_005_0_2.png"
+  },
+  "50243": {
+    "skillId": 50243,
+    "name": "Fabulous Entrance",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50244": {
+    "skillId": 50244,
+    "name": "Fabulous Dance",
+    "iconUrl": "GUI_icon_skill_005_1_2.png"
+  },
+  "50245": {
+    "skillId": 50245,
+    "name": "Special Gift",
+    "iconUrl": "GUI_icon_skill_005_2_2.png"
+  },
+  "50246": {
+    "skillId": 50246,
+    "name": "Round of Applause",
+    "iconUrl": "GUI_icon_skill_005_3_2.png"
+  },
+  "50247": {
+    "skillId": 50247,
+    "name": "Dagger Throw",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50248": {
+    "skillId": 50248,
+    "name": "Commerce Dragon Thunder",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50249": {
+    "skillId": 50249,
+    "name": "Fairy Light",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50250": {
+    "skillId": 50250,
+    "name": "Sonic Breath",
+    "iconUrl": "GUI_icon_skill_005_1_3.png"
+  },
+  "50251": {
+    "skillId": 50251,
+    "name": "Sonic Wave",
+    "iconUrl": "GUI_icon_skill_005_3_3.png"
+  },
+  "50252": {
+    "skillId": 50252,
+    "name": "Musical\\nAccompaniment",
+    "iconUrl": "GUI_icon_skill_005_2_3.png"
+  },
+  "50253": {
+    "skillId": 50253,
+    "name": "Harmony of\\nValor",
+    "iconUrl": "GUI_icon_skill_005_4_3.png"
+  },
+  "50254": {
+    "skillId": 50254,
+    "name": "Harmony of\\nAbundance",
+    "iconUrl": "GUI_icon_skill_005_6_3.png"
+  },
+  "50255": {
+    "skillId": 50255,
+    "name": "Harmony of\\nSwiftness",
+    "iconUrl": "GUI_icon_skill_005_5_3.png"
+  },
+  "50256": {
+    "skillId": 50256,
+    "name": "Flowery \\nCouple's Flight",
+    "iconUrl": "GUI_icon_skill_005_3_6.png"
+  },
+  "50257": {
+    "skillId": 50257,
+    "name": "Furious Charge",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50258": {
+    "skillId": 50258,
+    "name": "Furious Charge",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50259": {
+    "skillId": 50259,
+    "name": "Pentacle of Blessing",
+    "iconUrl": "GUI_icon_skill_005_7_6.png"
+  },
+  "50260": {
+    "skillId": 50260,
+    "name": "Pentacle of Blessing",
+    "iconUrl": "GUI_icon_skill_005_0_7.png"
+  },
+  "50261": {
+    "skillId": 50261,
+    "name": "Lucky Time",
+    "iconUrl": "GUI_icon_skill_005_1_7.png"
+  },
+  "50262": {
+    "skillId": 50262,
+    "name": "Form Change",
+    "iconUrl": "GUI_icon_skill_005_2_7.png"
+  },
+  "50263": {
+    "skillId": 50263,
+    "name": "Ignore Walk",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50264": {
+    "skillId": 50264,
+    "name": "Gleipnir",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50265": {
+    "skillId": 50265,
+    "name": "Keen Eye",
+    "iconUrl": "GUI_icon_skill_005_6_10.png"
+  },
+  "50266": {
+    "skillId": 50266,
+    "name": "Veil of Mystique",
+    "iconUrl": "GUI_icon_skill_005_3_10.png"
+  },
+  "50267": {
+    "skillId": 50267,
+    "name": "Lunar Howl",
+    "iconUrl": "GUI_icon_skill_005_4_10.png"
+  },
+  "50268": {
+    "skillId": 50268,
+    "name": "Rending Gale",
+    "iconUrl": "GUI_icon_skill_005_5_10.png"
+  },
+  "50269": {
+    "skillId": 50269,
+    "name": "Harmonious \\nCouple's Flight",
+    "iconUrl": "GUI_icon_skill_005_2_10.png"
+  },
+  "50270": {
+    "skillId": 50270,
+    "name": "Best Friends'\\nSecret Handshake",
+    "iconUrl": "GUI_icon_skill_005_2_10.png"
+  },
+  "50271": {
+    "skillId": 50271,
+    "name": "Nostalgic \\nCouple's Flight",
+    "iconUrl": "GUI_icon_skill_005_6_13.png"
+  },
+  "50272": {
+    "skillId": 50272,
+    "name": "Clover Sign",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50273": {
+    "skillId": 50273,
+    "name": "Block 'em!",
+    "iconUrl": "GUI_icon_skill_005_1_14.png"
+  },
+  "50274": {
+    "skillId": 50274,
+    "name": "Blow 'em up!",
+    "iconUrl": "GUI_icon_skill_005_2_14.png"
+  },
+  "50275": {
+    "skillId": 50275,
+    "name": "Help me!",
+    "iconUrl": "GUI_icon_skill_005_3_14.png"
+  },
+  "50276": {
+    "skillId": 50276,
+    "name": "Smack 'em!",
+    "iconUrl": "GUI_icon_skill_005_4_14.png"
+  },
+  "50300": {
+    "skillId": 50300,
+    "name": "Prone",
+    "iconUrl": "GUI_icon_skill_005_7_5.png"
+  },
+  "50301": {
+    "skillId": 50301,
+    "name": "Custom Action",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50302": {
+    "skillId": 50302,
+    "name": "Throw Snowball",
+    "iconUrl": "gui_icon_skill_002_0_14.png"
+  },
+  "50303": {
+    "skillId": 50303,
+    "name": "L-Rod Exploration EX",
+    "iconUrl": "gui_icon_skill_000_2_11.png"
+  },
+  "50304": {
+    "skillId": 50304,
+    "name": "Campfire EX",
+    "iconUrl": "gui_icon_skill_000_6_2.png"
+  },
+  "50305": {
+    "skillId": 50305,
+    "name": "Cooking EX",
+    "iconUrl": "gui_icon_skill_000_4_7.png"
+  },
+  "50306": {
+    "skillId": 50306,
+    "name": "Handicraft EX",
+    "iconUrl": "gui_icon_skill_000_1_9.png"
+  },
+  "50307": {
+    "skillId": 50307,
+    "name": "Firebolt",
+    "iconUrl": "gui_icon_skill_000_4_2.png"
+  },
+  "50308": {
+    "skillId": 50308,
+    "name": "Icebolt",
+    "iconUrl": "gui_icon_skill_000_3_2.png"
+  },
+  "50309": {
+    "skillId": 50309,
+    "name": "Windmill EX",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "50400": {
+    "skillId": 50400,
+    "name": "Blue Shield",
+    "iconUrl": "gui_icon_skill_004_2_8.png"
+  },
+  "50401": {
+    "skillId": 50401,
+    "name": "Healing Rays",
+    "iconUrl": "gui_icon_skill_004_3_8.png"
+  },
+  "50402": {
+    "skillId": 50402,
+    "name": "Bonding Ties",
+    "iconUrl": "gui_icon_skill_004_4_8.png"
+  },
+  "50403": {
+    "skillId": 50403,
+    "name": "Wild Frenzy",
+    "iconUrl": "gui_icon_skill_004_5_13.png"
+  },
+  "50404": {
+    "skillId": 50404,
+    "name": "Frozen Earth",
+    "iconUrl": "gui_icon_skill_004_6_13.png"
+  },
+  "50405": {
+    "skillId": 50405,
+    "name": "Wings of Haste",
+    "iconUrl": "gui_icon_skill_004_7_13.png"
+  },
+  "50431": {
+    "skillId": 50431,
+    "name": "Floral Shield",
+    "iconUrl": "gui_icon_skill_004_0_14.png"
+  },
+  "50432": {
+    "skillId": 50432,
+    "name": "Healing Bubble",
+    "iconUrl": "gui_icon_skill_004_1_14.png"
+  },
+  "50433": {
+    "skillId": 50433,
+    "name": "Fynni Punch",
+    "iconUrl": "gui_icon_skill_004_2_14.png"
+  },
+  "50434": {
+    "skillId": 50434,
+    "name": "Rush of Wind",
+    "iconUrl": "gui_icon_skill_004_3_14.png"
+  },
+  "50435": {
+    "skillId": 50435,
+    "name": "Pulling Force",
+    "iconUrl": "gui_icon_skill_004_4_14.png"
+  },
+  "50436": {
+    "skillId": 50436,
+    "name": "Repelling Force",
+    "iconUrl": "gui_icon_skill_004_5_14.png"
+  },
+  "50480": {
+    "skillId": 50480,
+    "name": "Fynn Pet Mastery",
+    "iconUrl": "gui_icon_skill_004_7_12.png"
+  },
+  "50481": {
+    "skillId": 50481,
+    "name": "Uis",
+    "iconUrl": "gui_icon_skill_004_4_13.png"
+  },
+  "50482": {
+    "skillId": 50482,
+    "name": "Sola",
+    "iconUrl": "gui_icon_skill_004_3_13.png"
+  },
+  "50483": {
+    "skillId": 50483,
+    "name": "Tein",
+    "iconUrl": "gui_icon_skill_004_2_13.png"
+  },
+  "50484": {
+    "skillId": 50484,
+    "name": "Gao",
+    "iconUrl": "gui_icon_skill_004_0_13.png"
+  },
+  "50485": {
+    "skillId": 50485,
+    "name": "Tala",
+    "iconUrl": "gui_icon_skill_004_1_13.png"
+  },
+  "50500": {
+    "skillId": 50500,
+    "name": "_LT[xml.skillinfo.3392]",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50501": {
+    "skillId": 50501,
+    "name": "Spread of Evil",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50502": {
+    "skillId": 50502,
+    "name": "Spread of Life",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50503": {
+    "skillId": 50503,
+    "name": "Runaway Train",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50504": {
+    "skillId": 50504,
+    "name": "Pilgrimage",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50505": {
+    "skillId": 50505,
+    "name": "White Breath",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50506": {
+    "skillId": 50506,
+    "name": "Black Breath",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50507": {
+    "skillId": 50507,
+    "name": "Hellish Hand",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50508": {
+    "skillId": 50508,
+    "name": "Devil's Embrace",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50509": {
+    "skillId": 50509,
+    "name": "_LT[xml.skillinfo.3393]",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50510": {
+    "skillId": 50510,
+    "name": "Fortification",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50511": {
+    "skillId": 50511,
+    "name": "Yui Strike",
+    "iconUrl": "GUI_icon_skill_003_3_3.png"
+  },
+  "50512": {
+    "skillId": 50512,
+    "name": "유이의 방어지원",
+    "iconUrl": "GUI_icon_skill_003_3_3.png"
+  },
+  "50513": {
+    "skillId": 50513,
+    "name": "Saber Strike",
+    "iconUrl": "GUI_icon_skill_003_3_3.png"
+  },
+  "50514": {
+    "skillId": 50514,
+    "name": "Archer Strike",
+    "iconUrl": "GUI_icon_skill_003_3_3.png"
+  },
+  "50515": {
+    "skillId": 50515,
+    "name": "Rin Strike",
+    "iconUrl": "GUI_icon_skill_003_3_3.png"
+  },
+  "50516": {
+    "skillId": 50516,
+    "name": "Illya Strike",
+    "iconUrl": "GUI_icon_skill_003_3_3.png"
+  },
+  "50517": {
+    "skillId": 50517,
+    "name": "Great Spirit Puck's \\nSupport Attack",
+    "iconUrl": "GUI_icon_skill_003_3_3.png"
+  },
+  "50518": {
+    "skillId": 50518,
+    "name": "Serval's Strike",
+    "iconUrl": "GUI_icon_skill_kmn_7_0.png"
+  },
+  "50519": {
+    "skillId": 50519,
+    "name": "Professor's Flight",
+    "iconUrl": "GUI_icon_skill_kmn_1_0.png"
+  },
+  "50520": {
+    "skillId": 50520,
+    "name": "Assistant's Insight",
+    "iconUrl": "GUI_icon_skill_kmn_2_0.png"
+  },
+  "50521": {
+    "skillId": 50521,
+    "name": "Caracal's Intimidation",
+    "iconUrl": "GUI_icon_skill_kmn_0_0.png"
+  },
+  "50522": {
+    "skillId": 50522,
+    "name": "Throw Burning\\nPaper Airplane",
+    "iconUrl": "GUI_icon_skill_kmn_4_0.png"
+  },
+  "50523": {
+    "skillId": 50523,
+    "name": "Serval Jump",
+    "iconUrl": "GUI_icon_skill_kmn_3_0.png"
+  },
+  "50524": {
+    "skillId": 50524,
+    "name": "Music Lover",
+    "iconUrl": "gui_icon_skill_005_4_9.png"
+  },
+  "50525": {
+    "skillId": 50525,
+    "name": "Band Member",
+    "iconUrl": "gui_icon_skill_005_5_9.png"
+  },
+  "50526": {
+    "skillId": 50526,
+    "name": "I'm In",
+    "iconUrl": "gui_icon_customskill_001_0_2.png"
+  },
+  "50527": {
+    "skillId": 50527,
+    "name": "과일 저글링",
+    "iconUrl": "GUI_icon_skill_005_2_13.png"
+  },
+  "50528": {
+    "skillId": 50528,
+    "name": "Vocalist",
+    "iconUrl": "GUI_icon_skill_005_5_13.png"
+  },
+  "50650": {
+    "skillId": 50650,
+    "name": "Prop Interaction",
+    "iconUrl": "gui_icon_skill_000_1_0.png"
+  },
+  "50651": {
+    "skillId": 50651,
+    "name": "Change Terrain",
+    "iconUrl": "GUI_icon_skill_005_0_10.png"
+  },
+  "50700": {
+    "skillId": 50700,
+    "name": "Spin Dash",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50701": {
+    "skillId": 50701,
+    "name": "Cluster Explosion",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50702": {
+    "skillId": 50702,
+    "name": "Illusion Decal",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "50900": {
+    "skillId": 50900,
+    "name": "_LT[xml.skillinfo.4970]",
+    "iconUrl": "GUI_icon_skill_004_0_0.png"
+  },
+  "51001": {
+    "skillId": 51001,
+    "name": "Hamlet's Anguish",
+    "iconUrl": "gui_icon_skill_002_2_0.png"
+  },
+  "51002": {
+    "skillId": 51002,
+    "name": "Claudius's \\nConspiracy",
+    "iconUrl": "gui_icon_skill_002_0_0.png"
+  },
+  "51003": {
+    "skillId": 51003,
+    "name": "Ophelia's Tears",
+    "iconUrl": "gui_icon_skill_002_1_0.png"
+  },
+  "51004": {
+    "skillId": 51004,
+    "name": "Romeo's \\nConfession",
+    "iconUrl": "gui_icon_skill_002_6_1.png"
+  },
+  "51005": {
+    "skillId": 51005,
+    "name": "Tybalt's \\nFencing Skills",
+    "iconUrl": "gui_icon_skill_002_4_1.png"
+  },
+  "51006": {
+    "skillId": 51006,
+    "name": "Juliet's Feelings",
+    "iconUrl": "gui_icon_skill_002_5_1.png"
+  },
+  "51007": {
+    "skillId": 51007,
+    "name": "Shylock's Step",
+    "iconUrl": "gui_icon_skill_002_0_3.png"
+  },
+  "51100": {
+    "skillId": 51100,
+    "name": "Zombie Walk",
+    "iconUrl": "gui_icon_skill_005_2_1.png"
+  },
+  "51101": {
+    "skillId": 51101,
+    "name": "Guild Banner \\nAction 1",
+    "iconUrl": "gui_icon_skill_005_4_6.png"
+  },
+  "51102": {
+    "skillId": 51102,
+    "name": "Guild Banner \\nAction 2",
+    "iconUrl": "gui_icon_skill_005_5_6.png"
+  },
+  "51103": {
+    "skillId": 51103,
+    "name": "Place \\nGuild Banner",
+    "iconUrl": "gui_icon_skill_005_6_6.png"
+  },
+  "52000": {
+    "skillId": 52000,
+    "name": "Merrow's Smash",
+    "iconUrl": "gui_icon_skill_000_1_1.png"
+  },
+  "52001": {
+    "skillId": 52001,
+    "name": "Merrow's Waterspout",
+    "iconUrl": "gui_icon_skill_002_1_4.png"
+  },
+  "52002": {
+    "skillId": 52002,
+    "name": "Merrow's Tidal Wave",
+    "iconUrl": "gui_icon_skill_002_2_6.png"
+  },
+  "52003": {
+    "skillId": 52003,
+    "name": "Abyss Snare",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52004": {
+    "skillId": 52004,
+    "name": "Abyss Judgment",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52005": {
+    "skillId": 52005,
+    "name": "Abyss Terror",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52006": {
+    "skillId": 52006,
+    "name": "Duke's Kiss",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52007": {
+    "skillId": 52007,
+    "name": "Duke's Rose",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52008": {
+    "skillId": 52008,
+    "name": "Duke's Mist",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52009": {
+    "skillId": 52009,
+    "name": "Duke's Temptation",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52010": {
+    "skillId": 52010,
+    "name": "Bolt Out of the Blue",
+    "iconUrl": "gui_icon_skill_003_7_3.png"
+  },
+  "52011": {
+    "skillId": 52011,
+    "name": "Spooky Sounds",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52012": {
+    "skillId": 52012,
+    "name": "Titan Kick",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52013": {
+    "skillId": 52013,
+    "name": "Titan Bump",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52014": {
+    "skillId": 52014,
+    "name": "Titan Leap",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52015": {
+    "skillId": 52015,
+    "name": "Titan Regeneration",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52016": {
+    "skillId": 52016,
+    "name": "Beast Roar",
+    "iconUrl": "gui_icon_skill_002_5_12.png"
+  },
+  "52017": {
+    "skillId": 52017,
+    "name": "Dance Time",
+    "iconUrl": "gui_icon_skill_002_0_13.png"
+  },
+  "52018": {
+    "skillId": 52018,
+    "name": "Cobweb",
+    "iconUrl": "gui_icon_skill_002_5_13.png"
+  },
+  "52019": {
+    "skillId": 52019,
+    "name": "Holy Rampage",
+    "iconUrl": "gui_icon_skill_000_3_0.png"
+  },
+  "52020": {
+    "skillId": 52020,
+    "name": "Book Shelving",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52021": {
+    "skillId": 52021,
+    "name": "Vertical Spin Attack",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52022": {
+    "skillId": 52022,
+    "name": "Horizontal Spin Attack",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52023": {
+    "skillId": 52023,
+    "name": "Dian Stab",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52024": {
+    "skillId": 52024,
+    "name": "Dian Stomp",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52025": {
+    "skillId": 52025,
+    "name": "Dian Trap",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52026": {
+    "skillId": 52026,
+    "name": "Dragon Ruairi Swing",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52027": {
+    "skillId": 52027,
+    "name": "Dragon Ruairi Grab",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52028": {
+    "skillId": 52028,
+    "name": "Dragon Ruairi Rush",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52029": {
+    "skillId": 52029,
+    "name": "Staff Swing",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52030": {
+    "skillId": 52030,
+    "name": "Holy Contagion",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52031": {
+    "skillId": 52031,
+    "name": "Holy Confinement",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52032": {
+    "skillId": 52032,
+    "name": "Fanaticism",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52033": {
+    "skillId": 52033,
+    "name": "Soul Absorption",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52034": {
+    "skillId": 52034,
+    "name": "Mineral Hail",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52035": {
+    "skillId": 52035,
+    "name": "Alban Ambush Attack",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52036": {
+    "skillId": 52036,
+    "name": "Alban Ice Spray",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52037": {
+    "skillId": 52037,
+    "name": "Alban Arrow Rain",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52038": {
+    "skillId": 52038,
+    "name": "Halo of Torment",
+    "iconUrl": "gui_icon_skill_002_1_4.png"
+  },
+  "52039": {
+    "skillId": 52039,
+    "name": "Butterfly Kiss",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52040": {
+    "skillId": 52040,
+    "name": "Pyrosphere",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52041": {
+    "skillId": 52041,
+    "name": "Soul Rift",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52042": {
+    "skillId": 52042,
+    "name": "Queen's Meteor",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52043": {
+    "skillId": 52043,
+    "name": "Necromancy",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52044": {
+    "skillId": 52044,
+    "name": "Wraith's Roar",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52045": {
+    "skillId": 52045,
+    "name": "Solidify",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52046": {
+    "skillId": 52046,
+    "name": "Shooting Star",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52047": {
+    "skillId": 52047,
+    "name": "Psychomancy",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52048": {
+    "skillId": 52048,
+    "name": "Divide and Conquer",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52049": {
+    "skillId": 52049,
+    "name": "Piercing Gaze",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52050": {
+    "skillId": 52050,
+    "name": "Vengeful Power",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52051": {
+    "skillId": 52051,
+    "name": "Corrupted Power",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52052": {
+    "skillId": 52052,
+    "name": "Rampaging Power",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52053": {
+    "skillId": 52053,
+    "name": "Farthest Movement",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52054": {
+    "skillId": 52054,
+    "name": "Water Spitting",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52055": {
+    "skillId": 52055,
+    "name": "Archelon Crouching",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52056": {
+    "skillId": 52056,
+    "name": "Stone Flash",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52057": {
+    "skillId": 52057,
+    "name": "Wild Movement",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52058": {
+    "skillId": 52058,
+    "name": "Water Recovery",
+    "iconUrl": "GUI_icon_skill_004_5_0.png"
+  },
+  "52059": {
+    "skillId": 52059,
+    "name": "Archelon Dash",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52060": {
+    "skillId": 52060,
+    "name": "Wave of Pain",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52061": {
+    "skillId": 52061,
+    "name": "Sharp Wind",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52062": {
+    "skillId": 52062,
+    "name": "Heavy Swing",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52063": {
+    "skillId": 52063,
+    "name": "Heavy Stomp",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52064": {
+    "skillId": 52064,
+    "name": "Poison Breath",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52065": {
+    "skillId": 52065,
+    "name": "Stone Blast",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52066": {
+    "skillId": 52066,
+    "name": "Wild Screech",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52067": {
+    "skillId": 52067,
+    "name": "Water Drop",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52068": {
+    "skillId": 52068,
+    "name": "Excavate Grave",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52069": {
+    "skillId": 52069,
+    "name": "Double-Edged Swing",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52070": {
+    "skillId": 52070,
+    "name": "Fierce Charge",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52071": {
+    "skillId": 52071,
+    "name": "Mineral Explosion",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52072": {
+    "skillId": 52072,
+    "name": "Soul Chase",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52073": {
+    "skillId": 52073,
+    "name": "Purgatory",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52074": {
+    "skillId": 52074,
+    "name": "Trial of Pain",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52075": {
+    "skillId": 52075,
+    "name": "War Cry",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52076": {
+    "skillId": 52076,
+    "name": "Summon Doppelganger",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52077": {
+    "skillId": 52077,
+    "name": "Blade Storm",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52078": {
+    "skillId": 52078,
+    "name": "Stone Broken",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52079": {
+    "skillId": 52079,
+    "name": "Guardian's Power",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52080": {
+    "skillId": 52080,
+    "name": "Testament of the Prophecy",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52081": {
+    "skillId": 52081,
+    "name": "Rain of Judgment",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52082": {
+    "skillId": 52082,
+    "name": "Tagar Vertical Attack",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52083": {
+    "skillId": 52083,
+    "name": "Tagar Horizontal Attack",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52084": {
+    "skillId": 52084,
+    "name": "Tagar Windmill",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52085": {
+    "skillId": 52085,
+    "name": "Create Lava Decal",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52086": {
+    "skillId": 52086,
+    "name": "Iron Chain Charge",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52087": {
+    "skillId": 52087,
+    "name": "Destroyer",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52088": {
+    "skillId": 52088,
+    "name": "Summon Fire Pillar",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52089": {
+    "skillId": 52089,
+    "name": "Clone Absorption",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52090": {
+    "skillId": 52090,
+    "name": "Sweeping Strike",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52091": {
+    "skillId": 52091,
+    "name": "Light of Annihilation",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52092": {
+    "skillId": 52092,
+    "name": "Light of Destruction",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52093": {
+    "skillId": 52093,
+    "name": "Petrifying Explosion",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52094": {
+    "skillId": 52094,
+    "name": "Dark Explosion",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52095": {
+    "skillId": 52095,
+    "name": "Create random Lava Decal",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52096": {
+    "skillId": 52096,
+    "name": "Dark Bullet",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52097": {
+    "skillId": 52097,
+    "name": "Summon Grim Reaper",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52098": {
+    "skillId": 52098,
+    "name": "Summon Staff",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52099": {
+    "skillId": 52099,
+    "name": "Rising Waters",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52100": {
+    "skillId": 52100,
+    "name": "Storm",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52101": {
+    "skillId": 52101,
+    "name": "Lightning Arc",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52102": {
+    "skillId": 52102,
+    "name": "Water Pillar",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52103": {
+    "skillId": 52103,
+    "name": "Possession",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52104": {
+    "skillId": 52104,
+    "name": "Infection",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52105": {
+    "skillId": 52105,
+    "name": "Illusion",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52106": {
+    "skillId": 52106,
+    "name": "Throw Spikes",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52107": {
+    "skillId": 52107,
+    "name": "Inked Up",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52108": {
+    "skillId": 52108,
+    "name": "Giant Tentacle",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52109": {
+    "skillId": 52109,
+    "name": "Slam Ground",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52110": {
+    "skillId": 52110,
+    "name": "Tighten (Til Death)",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52111": {
+    "skillId": 52111,
+    "name": "Tighten (Til Self Destruct)",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52112": {
+    "skillId": 52112,
+    "name": "Leg Self Destruct",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52113": {
+    "skillId": 52113,
+    "name": "Leg Sweep",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52114": {
+    "skillId": 52114,
+    "name": "Spectre",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52115": {
+    "skillId": 52115,
+    "name": "Warship Bombardment",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52116": {
+    "skillId": 52116,
+    "name": "Basic Attack",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52117": {
+    "skillId": 52117,
+    "name": "Cromm Cruaich Breath",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52118": {
+    "skillId": 52118,
+    "name": "Front Kick Attack",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52119": {
+    "skillId": 52119,
+    "name": "Body Clash",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52120": {
+    "skillId": 52120,
+    "name": "Cromm Cruaich Meteor",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52121": {
+    "skillId": 52121,
+    "name": "Spinning Headbutt",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52122": {
+    "skillId": 52122,
+    "name": "Nightmare",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52123": {
+    "skillId": 52123,
+    "name": "Dark Thrust",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52124": {
+    "skillId": 52124,
+    "name": "Moon Stone Strike",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52125": {
+    "skillId": 52125,
+    "name": "Floral Step",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52126": {
+    "skillId": 52126,
+    "name": "Paddle Dance",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52127": {
+    "skillId": 52127,
+    "name": "Scent of Death",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52128": {
+    "skillId": 52128,
+    "name": "Twilight",
+    "iconUrl": "gui_icon_skill_004_0_0.png"
+  },
+  "52129": {
+    "skillId": 52129,
+    "name": "Destructive Earthquake",
+    "iconUrl": "gui_icon_skill_004_0_0.png"
+  },
+  "52130": {
+    "skillId": 52130,
+    "name": "Rodeo",
+    "iconUrl": "gui_icon_skill_004_0_0.png"
+  },
+  "52131": {
+    "skillId": 52131,
+    "name": "Orb",
+    "iconUrl": "gui_icon_skill_000_1_1.png"
+  },
+  "52133": {
+    "skillId": 52133,
+    "name": "Nuckelavee Headbutt",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52134": {
+    "skillId": 52134,
+    "name": "Nuckelavee Breach",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52135": {
+    "skillId": 52135,
+    "name": "Nuckelavee Sound Waves",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52136": {
+    "skillId": 52136,
+    "name": "Nuckelavee Tail Thrash",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52137": {
+    "skillId": 52137,
+    "name": "Nuckelavee Escape",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52138": {
+    "skillId": 52138,
+    "name": "Hymerark Black Hole",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52139": {
+    "skillId": 52139,
+    "name": "Hymerark's Whisper",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52140": {
+    "skillId": 52140,
+    "name": "Vayne Stab",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52141": {
+    "skillId": 52141,
+    "name": "Vayne Crush",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52142": {
+    "skillId": 52142,
+    "name": "Summon Balor",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52143": {
+    "skillId": 52143,
+    "name": "Power Slam",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52144": {
+    "skillId": 52144,
+    "name": "Festering Resentment",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52145": {
+    "skillId": 52145,
+    "name": "Earth Shock",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52146": {
+    "skillId": 52146,
+    "name": "Condensed Force",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52147": {
+    "skillId": 52147,
+    "name": "Noxious Chunk",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52148": {
+    "skillId": 52148,
+    "name": "Cursed Swarm",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52149": {
+    "skillId": 52149,
+    "name": "Sharpened Claw",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52150": {
+    "skillId": 52150,
+    "name": "Devilish Ray",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52151": {
+    "skillId": 52151,
+    "name": "Dark Lure",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52152": {
+    "skillId": 52152,
+    "name": "Jumping Dash",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52153": {
+    "skillId": 52153,
+    "name": "Double Blow",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52154": {
+    "skillId": 52154,
+    "name": "Storm Blade",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52155": {
+    "skillId": 52155,
+    "name": "Erg Beam",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52156": {
+    "skillId": 52156,
+    "name": "Razing Erg Beam",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52157": {
+    "skillId": 52157,
+    "name": "Erg Black Hole",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52158": {
+    "skillId": 52158,
+    "name": "Glas Ghaibhleann",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52159": {
+    "skillId": 52159,
+    "name": "Gelatinous Bomb",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52160": {
+    "skillId": 52160,
+    "name": "Divine Blessing",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52161": {
+    "skillId": 52161,
+    "name": "Focus Buff",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52162": {
+    "skillId": 52162,
+    "name": "Shockwave",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52163": {
+    "skillId": 52163,
+    "name": "Life Ender",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52164": {
+    "skillId": 52164,
+    "name": "Dissolving Moonlight",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52165": {
+    "skillId": 52165,
+    "name": "Impending Death",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52166": {
+    "skillId": 52166,
+    "name": "Vast Might",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52167": {
+    "skillId": 52167,
+    "name": "Sweet Treat Meteor",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52168": {
+    "skillId": 52168,
+    "name": "Cailleach Frostfire",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52169": {
+    "skillId": 52169,
+    "name": "Cailleach Frozen Impact",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52170": {
+    "skillId": 52170,
+    "name": "Cailleach Fissure",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52171": {
+    "skillId": 52171,
+    "name": "Cailleach Scorched Earth",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52172": {
+    "skillId": 52172,
+    "name": "Cailleach Doombringer",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52173": {
+    "skillId": 52173,
+    "name": "Cailleach Soul Harvest",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52174": {
+    "skillId": 52174,
+    "name": "Cailleach Soul Infusion",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52175": {
+    "skillId": 52175,
+    "name": "Cailleach Temporal Inversion",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52176": {
+    "skillId": 52176,
+    "name": "Cailleach Temporal Reversion",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52177": {
+    "skillId": 52177,
+    "name": "Cailleach Triple Strike",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52178": {
+    "skillId": 52178,
+    "name": "Cailleach Spinning Slash",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52179": {
+    "skillId": 52179,
+    "name": "Cailleach Ice Arrow",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52180": {
+    "skillId": 52180,
+    "name": "Cailleach Hyper Beam",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52181": {
+    "skillId": 52181,
+    "name": "Cailleach Temporal Dilation",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52182": {
+    "skillId": 52182,
+    "name": "Cailleach Chain Throw",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52183": {
+    "skillId": 52183,
+    "name": "Cailleach Final Judgment",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52184": {
+    "skillId": 52184,
+    "name": "Cailleach Reign of Eternal Winter",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52185": {
+    "skillId": 52185,
+    "name": "Cnoc Oighir Icy Smite",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52186": {
+    "skillId": 52186,
+    "name": "Cailleach Icicle Drop",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52187": {
+    "skillId": 52187,
+    "name": "Cailleach Whisper of Unending Winter",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52188": {
+    "skillId": 52188,
+    "name": "Whisper of Unending Winter Pursuit",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52200": {
+    "skillId": 52200,
+    "name": "Fianna Geimhridh Charge",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52201": {
+    "skillId": 52201,
+    "name": "Self-Destruct",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52202": {
+    "skillId": 52202,
+    "name": "Icicle Gatling",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52203": {
+    "skillId": 52203,
+    "name": "Rolling Attack",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52204": {
+    "skillId": 52204,
+    "name": "Roar",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52205": {
+    "skillId": 52205,
+    "name": "Hibernate",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52206": {
+    "skillId": 52206,
+    "name": "Furious Roar",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52207": {
+    "skillId": 52207,
+    "name": "Throw Snow",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52208": {
+    "skillId": 52208,
+    "name": "Gnaw",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52209": {
+    "skillId": 52209,
+    "name": "Invisible Attack Skill",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52210": {
+    "skillId": 52210,
+    "name": "Lightning Strike",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52211": {
+    "skillId": 52211,
+    "name": "Ambush",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52212": {
+    "skillId": 52212,
+    "name": "Counterattack",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52213": {
+    "skillId": 52213,
+    "name": "Collapse",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52214": {
+    "skillId": 52214,
+    "name": "Fuathic Force",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52215": {
+    "skillId": 52215,
+    "name": "Fuathic Featherfoul",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52216": {
+    "skillId": 52216,
+    "name": "Fuath's Whirlwind",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52217": {
+    "skillId": 52217,
+    "name": "Fuathic Fury",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52218": {
+    "skillId": 52218,
+    "name": "Fuathic Corvus Beam",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52300": {
+    "skillId": 52300,
+    "name": "Dance Beneath the Snowfall",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52301": {
+    "skillId": 52301,
+    "name": "Wind from the Plains",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52302": {
+    "skillId": 52302,
+    "name": "Form Shift: Martial Arts",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52303": {
+    "skillId": 52303,
+    "name": "Scouring Winds",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52304": {
+    "skillId": 52304,
+    "name": "Subsidence",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52305": {
+    "skillId": 52305,
+    "name": "Focused Vision",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52306": {
+    "skillId": 52306,
+    "name": "Sequential Elimination",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52307": {
+    "skillId": 52307,
+    "name": "Form Shift: Close Combat",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52308": {
+    "skillId": 52308,
+    "name": "Consecutive Call-outs",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52350": {
+    "skillId": 52350,
+    "name": "Call of the Land",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52351": {
+    "skillId": 52351,
+    "name": "Cry of the Earth",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52352": {
+    "skillId": 52352,
+    "name": "Trampling Charge (Left)",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52353": {
+    "skillId": 52353,
+    "name": "Trampling Charge (Right)",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52354": {
+    "skillId": 52354,
+    "name": "Earthrending Fury (Left)",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52355": {
+    "skillId": 52355,
+    "name": "Earthrending Fury (Right)",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52356": {
+    "skillId": 52356,
+    "name": "Earthward Breath",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52357": {
+    "skillId": 52357,
+    "name": "Earthward Exhalation",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52358": {
+    "skillId": 52358,
+    "name": "Storm's Charge",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52359": {
+    "skillId": 52359,
+    "name": "Leaping Attack",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52360": {
+    "skillId": 52360,
+    "name": "Furious Charge",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52361": {
+    "skillId": 52361,
+    "name": "Stormcutter Charge",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52362": {
+    "skillId": 52362,
+    "name": "Maverick's Maelstrom",
+    "iconUrl": "gui_icon_skill_004_2_11.png"
+  },
+  "52400": {
+    "skillId": 52400,
+    "name": "Divine Shot",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52401": {
+    "skillId": 52401,
+    "name": "Divine Edge",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52402": {
+    "skillId": 52402,
+    "name": "Divine Thrust",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52403": {
+    "skillId": 52403,
+    "name": "Tempest of Faith",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52404": {
+    "skillId": 52404,
+    "name": "Goddess's Advent",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52405": {
+    "skillId": 52405,
+    "name": "Rescinded Grace",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52406": {
+    "skillId": 52406,
+    "name": "Divine Wings",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52407": {
+    "skillId": 52407,
+    "name": "Entwined Goddess's Miracle",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52408": {
+    "skillId": 52408,
+    "name": "Conjure Shard of Solace",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52409": {
+    "skillId": 52409,
+    "name": "Benevolent Binding",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52410": {
+    "skillId": 52410,
+    "name": "Ward of Innocence",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52411": {
+    "skillId": 52411,
+    "name": "Smothering Affection",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52412": {
+    "skillId": 52412,
+    "name": "Mercurial Judgment",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52413": {
+    "skillId": 52413,
+    "name": "Divine Punishment",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52500": {
+    "skillId": 52500,
+    "name": "Freeze! Stop Right There!",
+    "iconUrl": "gui_icon_skill_000_4_15.png"
+  },
+  "52501": {
+    "skillId": 52501,
+    "name": "Tail Chase Bomb",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52502": {
+    "skillId": 52502,
+    "name": "Frozen Roar",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52503": {
+    "skillId": 52503,
+    "name": "Ray of Thorns",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52504": {
+    "skillId": 52504,
+    "name": "Rozen Whisper",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "53001": {
+    "skillId": 53001,
+    "name": "Dischord",
+    "iconUrl": "gui_icon_skill_002_2_9.png"
+  },
+  "53002": {
+    "skillId": 53002,
+    "name": "Encore",
+    "iconUrl": "gui_icon_skill_003_1_1.png"
+  },
+  "53003": {
+    "skillId": 53003,
+    "name": "Fantastic Chorus",
+    "iconUrl": "gui_icon_skill_003_3_1.png"
+  },
+  "53101": {
+    "skillId": 53101,
+    "name": "Battlefield Overture",
+    "iconUrl": "gui_icon_skill_002_4_8.png"
+  },
+  "53102": {
+    "skillId": 53102,
+    "name": "Lullaby",
+    "iconUrl": "gui_icon_skill_002_1_9.png"
+  },
+  "53103": {
+    "skillId": 53103,
+    "name": "Vivace",
+    "iconUrl": "gui_icon_skill_002_6_8.png"
+  },
+  "53104": {
+    "skillId": 53104,
+    "name": "Enduring Melody",
+    "iconUrl": "gui_icon_skill_002_5_8.png"
+  },
+  "53105": {
+    "skillId": 53105,
+    "name": "Harvest Song",
+    "iconUrl": "gui_icon_skill_002_7_8.png"
+  },
+  "53106": {
+    "skillId": 53106,
+    "name": "March Song",
+    "iconUrl": "gui_icon_skill_002_0_9.png"
+  },
+  "53107": {
+    "skillId": 53107,
+    "name": "Dance of Death",
+    "iconUrl": "gui_icon_skill_003_7_12.png"
+  },
+  "53200": {
+    "skillId": 53200,
+    "name": "Song",
+    "iconUrl": "gui_icon_skill_003_2_1.png"
+  },
+  "54001": {
+    "skillId": 54001,
+    "name": "Control Marionette",
+    "iconUrl": "gui_icon_skill_002_7_9.png"
+  },
+  "54081": {
+    "skillId": 54081,
+    "name": "Pierrot Marionette",
+    "iconUrl": "gui_icon_skill_002_1_10.png"
+  },
+  "54082": {
+    "skillId": 54082,
+    "name": "Colossus Marionette",
+    "iconUrl": "gui_icon_skill_002_0_10.png"
+  },
+  "54101": {
+    "skillId": 54101,
+    "name": "Act 2: Threshold Cutter",
+    "iconUrl": "gui_icon_skill_002_2_10.png"
+  },
+  "54102": {
+    "skillId": 54102,
+    "name": "Act 1: Inciting Incident",
+    "iconUrl": "gui_icon_skill_002_3_10.png"
+  },
+  "54103": {
+    "skillId": 54103,
+    "name": "Act 4: Rising Action",
+    "iconUrl": "gui_icon_skill_002_4_10.png"
+  },
+  "54104": {
+    "skillId": 54104,
+    "name": "Act 6: Crisis",
+    "iconUrl": "gui_icon_skill_002_5_10.png"
+  },
+  "54105": {
+    "skillId": 54105,
+    "name": "Act 7: Climactic Crash",
+    "iconUrl": "gui_icon_skill_002_6_10.png"
+  },
+  "54106": {
+    "skillId": 54106,
+    "name": "Act 9: Invigorating Encore",
+    "iconUrl": "gui_icon_skill_002_7_10.png"
+  },
+  "54151": {
+    "skillId": 54151,
+    "name": "Act 2: Threshold Cutter AI",
+    "iconUrl": "gui_icon_skill_002_2_10.png"
+  },
+  "54152": {
+    "skillId": 54152,
+    "name": "Act 1: Inciting Incident AI",
+    "iconUrl": "gui_icon_skill_002_3_10.png"
+  },
+  "54153": {
+    "skillId": 54153,
+    "name": "Act 4: Rising Action AI",
+    "iconUrl": "gui_icon_skill_002_4_10.png"
+  },
+  "54154": {
+    "skillId": 54154,
+    "name": "Act 6: Crisis AI",
+    "iconUrl": "gui_icon_skill_002_5_10.png"
+  },
+  "54155": {
+    "skillId": 54155,
+    "name": "Act 7: Climactic Crash AI",
+    "iconUrl": "gui_icon_skill_002_6_10.png"
+  },
+  "54156": {
+    "skillId": 54156,
+    "name": "Act 9: Invigorating Encore AI",
+    "iconUrl": "gui_icon_skill_002_7_10.png"
+  },
+  "54201": {
+    "skillId": 54201,
+    "name": "Wire Pull",
+    "iconUrl": "gui_icon_skill_002_1_11.png"
+  },
+  "54202": {
+    "skillId": 54202,
+    "name": "Puppet's Snare",
+    "iconUrl": "gui_icon_skill_002_0_11.png"
+  },
+  "54302": {
+    "skillId": 54302,
+    "name": "Dual Gun Mastery",
+    "iconUrl": "gui_icon_skill_002_2_14.png"
+  },
+  "54303": {
+    "skillId": 54303,
+    "name": "Flash Launcher",
+    "iconUrl": "gui_icon_skill_002_4_14.png"
+  },
+  "54304": {
+    "skillId": 54304,
+    "name": "Grapple Shot",
+    "iconUrl": "gui_icon_skill_002_5_14.png"
+  },
+  "54305": {
+    "skillId": 54305,
+    "name": "Bullet Slide",
+    "iconUrl": "gui_icon_skill_002_6_14.png"
+  },
+  "54306": {
+    "skillId": 54306,
+    "name": "Shooting Rush",
+    "iconUrl": "gui_icon_skill_002_7_14.png"
+  },
+  "54307": {
+    "skillId": 54307,
+    "name": "Bullet Storm",
+    "iconUrl": "gui_icon_skill_002_0_15.png"
+  },
+  "54401": {
+    "skillId": 54401,
+    "name": "Reload",
+    "iconUrl": "gui_icon_skill_002_3_14.png"
+  },
+  "54402": {
+    "skillId": 54402,
+    "name": "Way of the Gun",
+    "iconUrl": "gui_icon_skill_002_1_15.png"
+  },
+  "55001": {
+    "skillId": 55001,
+    "name": "Sheep Shearing",
+    "iconUrl": "gui_icon_skill_000_0_4.png"
+  },
+  "55002": {
+    "skillId": 55002,
+    "name": "Mining",
+    "iconUrl": "gui_icon_skill_000_1_5.png"
+  },
+  "55003": {
+    "skillId": 55003,
+    "name": "Egg Gathering",
+    "iconUrl": "gui_icon_skill_000_6_4.png"
+  },
+  "55004": {
+    "skillId": 55004,
+    "name": "Mushroom Gathering",
+    "iconUrl": "gui_icon_skill_000_6_12.png"
+  },
+  "55005": {
+    "skillId": 55005,
+    "name": "Milking",
+    "iconUrl": "gui_icon_skill_000_1_3.png"
+  },
+  "55006": {
+    "skillId": 55006,
+    "name": "Harvesting",
+    "iconUrl": "gui_icon_skill_000_0_5.png"
+  },
+  "55007": {
+    "skillId": 55007,
+    "name": "Hoeing",
+    "iconUrl": "gui_icon_skill_000_7_4.png"
+  },
+  "55100": {
+    "skillId": 55100,
+    "name": "Commerce Mastery",
+    "iconUrl": "gui_icon_skill_002_6_9.png"
+  },
+  "56001": {
+    "skillId": 56001,
+    "name": "Transformation Mastery",
+    "iconUrl": "gui_icon_skill_002_2_12.png"
+  },
+  "57001": {
+    "skillId": 57001,
+    "name": "Exploration Mastery",
+    "iconUrl": "gui_icon_skill_003_4_2.png"
+  },
+  "57002": {
+    "skillId": 57002,
+    "name": "Artifact Investigation",
+    "iconUrl": "gui_icon_skill_003_5_2.png"
+  },
+  "57003": {
+    "skillId": 57003,
+    "name": "Crisis Escape",
+    "iconUrl": "gui_icon_skill_003_6_2.png"
+  },
+  "57004": {
+    "skillId": 57004,
+    "name": "Treasure Dungeon Exploration",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "57005": {
+    "skillId": 57005,
+    "name": "Iria Expedition Passive",
+    "iconUrl": "gui_icon_skill_003_4_2.png"
+  },
+  "58000": {
+    "skillId": 58000,
+    "name": "Iron Will",
+    "iconUrl": "gui_icon_skill_004_2_4.png"
+  },
+  "58001": {
+    "skillId": 58001,
+    "name": "Vital Surge",
+    "iconUrl": "gui_icon_skill_004_3_4.png"
+  },
+  "58002": {
+    "skillId": 58002,
+    "name": "Dampen Shock",
+    "iconUrl": "gui_icon_skill_004_7_4.png"
+  },
+  "58003": {
+    "skillId": 58003,
+    "name": "Blunting Field",
+    "iconUrl": "gui_icon_skill_004_7_4.png"
+  },
+  "58004": {
+    "skillId": 58004,
+    "name": "Defiance",
+    "iconUrl": "gui_icon_skill_004_7_4.png"
+  },
+  "58005": {
+    "skillId": 58005,
+    "name": "Time Shift",
+    "iconUrl": "gui_icon_skill_004_4_4.png"
+  },
+  "58006": {
+    "skillId": 58006,
+    "name": "Relentless Assault",
+    "iconUrl": "gui_icon_skill_004_5_4.png"
+  },
+  "58007": {
+    "skillId": 58007,
+    "name": "Exploit Weakness",
+    "iconUrl": "gui_icon_skill_004_6_4.png"
+  },
+  "58008": {
+    "skillId": 58008,
+    "name": "Elemental Attunement",
+    "iconUrl": "gui_icon_skill_004_7_4.png"
+  },
+  "58009": {
+    "skillId": 58009,
+    "name": "Redoubled Offensive",
+    "iconUrl": "gui_icon_skill_004_7_4.png"
+  },
+  "58010": {
+    "skillId": 58010,
+    "name": "Phantasmal Sight",
+    "iconUrl": "gui_icon_skill_004_6_6.png"
+  },
+  "58011": {
+    "skillId": 58011,
+    "name": "Fateweaver",
+    "iconUrl": "gui_icon_skill_004_7_6.png"
+  },
+  "58012": {
+    "skillId": 58012,
+    "name": "Tenacious Taunt",
+    "iconUrl": "gui_icon_skill_004_0_7.png"
+  },
+  "58013": {
+    "skillId": 58013,
+    "name": "Zone of Renewal",
+    "iconUrl": "gui_icon_skill_004_1_7.png"
+  },
+  "58014": {
+    "skillId": 58014,
+    "name": "Unified Might",
+    "iconUrl": "gui_icon_skill_004_2_7.png"
+  },
+  "58015": {
+    "skillId": 58015,
+    "name": "Continuous Awakening",
+    "iconUrl": "gui_icon_skill_004_7_4.png"
+  },
+  "58016": {
+    "skillId": 58016,
+    "name": "Shield",
+    "iconUrl": "gui_icon_skill_004_0_11.png"
+  },
+  "58017": {
+    "skillId": 58017,
+    "name": "Protective Touch",
+    "iconUrl": "gui_icon_skill_004_7_4.png"
+  },
+  "58018": {
+    "skillId": 58018,
+    "name": "Seal: Fragarach",
+    "iconUrl": "gui_icon_skill_005_1_0.png"
+  },
+  "58100": {
+    "skillId": 58100,
+    "name": "Blast",
+    "iconUrl": "gui_icon_skill_005_1_0.png"
+  },
+  "58101": {
+    "skillId": 58101,
+    "name": "Flare",
+    "iconUrl": "gui_icon_skill_005_1_0.png"
+  },
+  "58102": {
+    "skillId": 58102,
+    "name": "Blow",
+    "iconUrl": "GUI_Option_weapon_4040icon_0_0.png"
+  },
+  "58103": {
+    "skillId": 58103,
+    "name": "Chaser",
+    "iconUrl": "GUI_Option_weapon_4040icon_1_0.png"
+  },
+  "58104": {
+    "skillId": 58104,
+    "name": "Veil",
+    "iconUrl": "gui_icon_skill_005_1_0.png"
+  },
+  "58200": {
+    "skillId": 58200,
+    "name": "Guardian Impulse",
+    "iconUrl": "gui_icon_skill_004_0_0.png"
+  },
+  "58201": {
+    "skillId": 58201,
+    "name": "Dynamis Rush",
+    "iconUrl": "gui_icon_skill_004_0_0.png"
+  },
+  "58202": {
+    "skillId": 58202,
+    "name": "Steadfast Blessing",
+    "iconUrl": "gui_icon_skill_004_0_0.png"
+  },
+  "59000": {
+    "skillId": 59000,
+    "name": "Hand of Restoration",
+    "iconUrl": "gui_icon_skill_005_7_3.png"
+  },
+  "59001": {
+    "skillId": 59001,
+    "name": "Echoes of Salvation",
+    "iconUrl": "gui_icon_skill_005_0_4.png"
+  },
+  "59002": {
+    "skillId": 59002,
+    "name": "Voice of Vitality",
+    "iconUrl": "gui_icon_skill_005_1_4.png"
+  },
+  "59003": {
+    "skillId": 59003,
+    "name": "Song of Harmonic Minor",
+    "iconUrl": "gui_icon_skill_005_0_0.png"
+  },
+  "59004": {
+    "skillId": 59004,
+    "name": "Pulse of Purification",
+    "iconUrl": "gui_icon_skill_005_5_4.png"
+  },
+  "59005": {
+    "skillId": 59005,
+    "name": "Pall of Ruination",
+    "iconUrl": "gui_icon_skill_005_2_4.png"
+  },
+  "59006": {
+    "skillId": 59006,
+    "name": "Blessing of Protection",
+    "iconUrl": "gui_icon_skill_005_3_4.png"
+  },
+  "59007": {
+    "skillId": 59007,
+    "name": "Hymn of Resurrection",
+    "iconUrl": "gui_icon_skill_005_4_4.png"
+  },
+  "59008": {
+    "skillId": 59008,
+    "name": "Polyphonic Melody",
+    "iconUrl": "gui_icon_skill_005_1_10.png"
+  },
+  "59020": {
+    "skillId": 59020,
+    "name": "Instill Flame",
+    "iconUrl": "gui_icon_skill_005_6_4.png"
+  },
+  "59021": {
+    "skillId": 59021,
+    "name": "Instill Frost",
+    "iconUrl": "gui_icon_skill_005_7_4.png"
+  },
+  "59022": {
+    "skillId": 59022,
+    "name": "Instill Thunder",
+    "iconUrl": "gui_icon_skill_005_0_5.png"
+  },
+  "59023": {
+    "skillId": 59023,
+    "name": "Dauntless Defense",
+    "iconUrl": "gui_icon_skill_005_1_5.png"
+  },
+  "59024": {
+    "skillId": 59024,
+    "name": "Blazing Assault Slash",
+    "iconUrl": "gui_icon_skill_005_2_5.png"
+  },
+  "59025": {
+    "skillId": 59025,
+    "name": "Shattering Windmill",
+    "iconUrl": "gui_icon_skill_005_3_5.png"
+  },
+  "59026": {
+    "skillId": 59026,
+    "name": "Dynavolt Smash",
+    "iconUrl": "gui_icon_skill_005_4_5.png"
+  },
+  "59027": {
+    "skillId": 59027,
+    "name": "Instill Elements",
+    "iconUrl": "gui_icon_skill_005_0_14.png"
+  },
+  "59028": {
+    "skillId": 59028,
+    "name": "Flashing Steel",
+    "iconUrl": "GUI_icon_skill_005_7_13.png"
+  },
+  "59040": {
+    "skillId": 59040,
+    "name": "Shadow Flare",
+    "iconUrl": "gui_icon_skill_005_1_8.png"
+  },
+  "59041": {
+    "skillId": 59041,
+    "name": "Thunderblight",
+    "iconUrl": "gui_icon_skill_005_2_8.png"
+  },
+  "59042": {
+    "skillId": 59042,
+    "name": "Polar Vortex",
+    "iconUrl": "gui_icon_skill_005_3_8.png"
+  },
+  "59043": {
+    "skillId": 59043,
+    "name": "Render Mana",
+    "iconUrl": "gui_icon_skill_005_4_8.png"
+  },
+  "59044": {
+    "skillId": 59044,
+    "name": "Render Dorcha",
+    "iconUrl": "gui_icon_skill_005_5_8.png"
+  },
+  "59045": {
+    "skillId": 59045,
+    "name": "Hexshroud",
+    "iconUrl": "gui_icon_skill_005_6_8.png"
+  },
+  "59046": {
+    "skillId": 59046,
+    "name": "Seething Mana",
+    "iconUrl": "gui_icon_skill_005_7_8.png"
+  },
+  "59060": {
+    "skillId": 59060,
+    "name": "Ignis Plume",
+    "iconUrl": "gui_icon_skill_005_3_7.png"
+  },
+  "59061": {
+    "skillId": 59061,
+    "name": "Aqua Volley",
+    "iconUrl": "gui_icon_skill_005_4_7.png"
+  },
+  "59062": {
+    "skillId": 59062,
+    "name": "Ventus Howl",
+    "iconUrl": "gui_icon_skill_005_5_7.png"
+  },
+  "59063": {
+    "skillId": 59063,
+    "name": "Terra Scourge",
+    "iconUrl": "gui_icon_skill_005_6_7.png"
+  },
+  "59064": {
+    "skillId": 59064,
+    "name": "Tri-Assault",
+    "iconUrl": "gui_icon_skill_005_7_7.png"
+  },
+  "59065": {
+    "skillId": 59065,
+    "name": "Hermetic Harmony",
+    "iconUrl": "gui_icon_skill_005_0_8.png"
+  },
+  "59080": {
+    "skillId": 59080,
+    "name": "Pledge of Penance",
+    "iconUrl": "gui_icon_skill_AR_SG_0_0.png"
+  },
+  "59081": {
+    "skillId": 59081,
+    "name": "Provoke",
+    "iconUrl": "gui_icon_skill_AR_SG_1_0.png"
+  },
+  "59082": {
+    "skillId": 59082,
+    "name": "Ardent Advance",
+    "iconUrl": "gui_icon_skill_AR_SG_2_0.png"
+  },
+  "59083": {
+    "skillId": 59083,
+    "name": "Rend Armor",
+    "iconUrl": "gui_icon_skill_AR_SG_3_0.png"
+  },
+  "59084": {
+    "skillId": 59084,
+    "name": "Deliver Judgment",
+    "iconUrl": "gui_icon_skill_AR_SG_4_0.png"
+  },
+  "59085": {
+    "skillId": 59085,
+    "name": "Divine Retribution",
+    "iconUrl": "gui_icon_skill_AR_SG_5_0.png"
+  },
+  "59086": {
+    "skillId": 59086,
+    "name": "Martyr's Consecration",
+    "iconUrl": "gui_icon_skill_AR_SG_6_0.png"
+  },
+  "59100": {
+    "skillId": 59100,
+    "name": "Recharge Shells",
+    "iconUrl": "gui_icon_skill_AR_BL_0_0.png"
+  },
+  "59101": {
+    "skillId": 59101,
+    "name": "Relentless Thrust",
+    "iconUrl": "gui_icon_skill_AR_BL_1_0.png"
+  },
+  "59102": {
+    "skillId": 59102,
+    "name": "Arc Impact",
+    "iconUrl": "gui_icon_skill_AR_BL_2_0.png"
+  },
+  "59103": {
+    "skillId": 59103,
+    "name": "Blast Zone",
+    "iconUrl": "gui_icon_skill_AR_BL_3_0.png"
+  },
+  "59104": {
+    "skillId": 59104,
+    "name": "Drill Charge",
+    "iconUrl": "gui_icon_skill_AR_BL_4_0.png"
+  },
+  "59105": {
+    "skillId": 59105,
+    "name": "Dreadnought Burst",
+    "iconUrl": "gui_icon_skill_AR_BL_5_0.png"
+  },
+  "59106": {
+    "skillId": 59106,
+    "name": "Blaze of Glory",
+    "iconUrl": "gui_icon_skill_AR_BL_6_0.png"
+  },
+  "59120": {
+    "skillId": 59120,
+    "name": "Bullet Barrage",
+    "iconUrl": "gui_icon_skill_005_2_15.png"
+  },
+  "59121": {
+    "skillId": 59121,
+    "name": "Heavy Artillery",
+    "iconUrl": "gui_icon_skill_005_3_15.png"
+  },
+  "59122": {
+    "skillId": 59122,
+    "name": "Calamity Cannon",
+    "iconUrl": "gui_icon_skill_005_4_15.png"
+  },
+  "59123": {
+    "skillId": 59123,
+    "name": "Fatal Scope",
+    "iconUrl": "gui_icon_skill_005_5_15.png"
+  },
+  "59124": {
+    "skillId": 59124,
+    "name": "Tracer Pod",
+    "iconUrl": "gui_icon_skill_005_6_15.png"
+  },
+  "59125": {
+    "skillId": 59125,
+    "name": "Detonation Field",
+    "iconUrl": "gui_icon_skill_005_7_15.png"
+  },
+  "59126": {
+    "skillId": 59126,
+    "name": "Gunner's Crest",
+    "iconUrl": "gui_icon_skill_006_0_0.png"
+  },
+  "59140": {
+    "skillId": 59140,
+    "name": "Elemental Compounding",
+    "iconUrl": "gui_icon_skill_006_1_0.png"
+  },
+  "59141": {
+    "skillId": 59141,
+    "name": "Compound Catalyst",
+    "iconUrl": "gui_icon_skill_005_5_14.png"
+  },
+  "59142": {
+    "skillId": 59142,
+    "name": "Elemental Amplification",
+    "iconUrl": "gui_icon_skill_005_6_14.png"
+  },
+  "59143": {
+    "skillId": 59143,
+    "name": "Serpentcall",
+    "iconUrl": "gui_icon_skill_005_7_14.png"
+  },
+  "59144": {
+    "skillId": 59144,
+    "name": "Chemical Carnival",
+    "iconUrl": "gui_icon_skill_005_0_15.png"
+  },
+  "59145": {
+    "skillId": 59145,
+    "name": "Fangs of Stone",
+    "iconUrl": "gui_icon_skill_005_1_15.png"
+  },
+  "60000": {
+    "skillId": 60000,
+    "name": "Excalibur",
+    "iconUrl": "gui_icon_skill_003_5_9.png"
+  },
+  "60001": {
+    "skillId": 60001,
+    "name": "Invisible Air",
+    "iconUrl": "gui_icon_skill_003_6_9.png"
+  },
+  "60002": {
+    "skillId": 60002,
+    "name": "Unlimited Blade Works",
+    "iconUrl": "gui_icon_skill_003_7_9.png"
+  },
+  "60003": {
+    "skillId": 60003,
+    "name": "The Fake Spiral Sword",
+    "iconUrl": "gui_icon_skill_003_0_10.png"
+  },
+  "60004": {
+    "skillId": 60004,
+    "name": "Enuma Elish",
+    "iconUrl": "gui_icon_skill_003_4_10.png"
+  },
+  "60005": {
+    "skillId": 60005,
+    "name": "King's Treasure",
+    "iconUrl": "gui_icon_skill_003_3_10.png"
+  },
+  "60006": {
+    "skillId": 60006,
+    "name": "God Hand: Twelve Labors",
+    "iconUrl": "gui_icon_skill_003_1_10.png"
+  },
+  "60007": {
+    "skillId": 60007,
+    "name": "Spinning Slash",
+    "iconUrl": "gui_icon_skill_003_2_10.png"
+  },
+  "65001": {
+    "skillId": 65001,
+    "name": "Pick Up Item (GM Skill)",
+    "iconUrl": "gui_icon_skill_000_2_4.png"
+  },
+  "65002": {
+    "skillId": 65002,
+    "name": "Super Windmill (GM Skill)",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "65003": {
+    "skillId": 65003,
+    "name": "Block World (GM Skill)",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "65004": {
+    "skillId": 65004,
+    "name": "Kill All (GM Skill)",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "65005": {
+    "skillId": 65005,
+    "name": "KO Self (GM Skill)",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "65006": {
+    "skillId": 65006,
+    "name": "Pick Up Item 2 (GM Skill)",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "65007": {
+    "skillId": 65007,
+    "name": "Power Pull (GM Skill)",
+    "iconUrl": "gui_icon_skill_002_5_10.png"
+  }
+}

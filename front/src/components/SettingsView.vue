@@ -1,0 +1,378 @@
+<template>
+  <v-container fluid>
+    <v-card class="mx-auto" max-width="800">
+      <v-toolbar color="surface" flat>
+        <v-toolbar-title class="text-h5">Settings</v-toolbar-title>
+      </v-toolbar>
+      
+      <v-tabs v-model="activeTab" bg-color="surface">
+        <v-tab value="capture"><v-icon start>mdi-lan</v-icon> Capture</v-tab>
+        <v-tab value="appearance"><v-icon start>mdi-palette</v-icon> Appearance</v-tab>
+      </v-tabs>
+      
+      <v-card-text>
+        <v-window v-model="activeTab">
+          <!-- CAPTURE TAB -->
+          <v-window-item value="capture">
+            <v-alert
+              v-if="captureStatus.is_running"
+              type="success"
+              variant="tonal"
+              class="mb-4"
+              density="compact"
+            >
+              Capture is currently <strong>running</strong> on NIC: {{ captureStatus.nic || 'File/Unknown' }} 
+              <span v-if="captureStatus.exitlag">(ExitLag Enabled)</span>
+            </v-alert>
+            <v-alert
+              v-else
+              type="warning"
+              variant="tonal"
+              class="mb-4"
+              density="compact"
+            >
+              Capture is currently <strong>stopped</strong>. Waiting for configuration.
+            </v-alert>
+
+            <v-form @submit.prevent="applyCaptureSettings">
+              <v-select
+                v-model="captureConfig.nicName"
+                :items="nics"
+                item-title="description"
+                item-value="name"
+                label="Network Interface (NIC)"
+                variant="outlined"
+                density="compact"
+                hide-details
+                class="mb-4"
+              >
+                <template v-slot:item="{ props, item }">
+                  <v-list-item v-bind="props" :subtitle="item.raw.ip ? 'IP: ' + item.raw.ip : 'No IP'"></v-list-item>
+                </template>
+                <template v-slot:selection="{ item }">
+                  <span>{{ item.raw.description || item.raw.name }} ({{ item.raw.ip || 'No IP' }})</span>
+                </template>
+              </v-select>
+
+              <v-switch
+                v-model="captureConfig.exitlag"
+                label="Enable ExitLag Mode"
+                color="primary"
+                hide-details
+                inset
+                class="mb-4"
+              ></v-switch>
+
+              <div 
+                class="mb-4 pa-3 border rounded" 
+                :class="{ 'opacity-60': !captureConfig.exitlag }"
+                style="transition: opacity 0.3s ease;"
+              >
+                <div class="d-flex align-center justify-space-between mb-3">
+                  <div class="d-flex align-center">
+                    <span class="text-subtitle-2">Filtering</span>
+                    <v-tooltip text="Usually only required when using ExitLag. Leave blank to auto-detect fixed game channels." location="top">
+                      <template v-slot:activator="{ props }">
+                        <v-btn icon="mdi-information-outline" variant="text" size="x-small" density="comfortable" class="ml-1 text-grey" v-bind="props"></v-btn>
+                      </template>
+                    </v-tooltip>
+                  </div>
+                  
+                  <v-btn 
+                    v-if="captureConfig.exitlag"
+                    size="small" 
+                    color="secondary" 
+                    variant="tonal"
+                    :loading="isAutodetecting"
+                    :disabled="!captureConfig.nicName"
+                    @click="startAutodetect"
+                  >
+                    Auto-Detect IP/Port
+                  </v-btn>
+                </div>
+                
+                <v-expand-transition>
+                  <div v-if="isAutodetecting" class="mb-4">
+                    <v-alert type="info" variant="tonal" density="compact" class="mb-2">
+                      Please run around in-game to generate movement packets.
+                    </v-alert>
+                    <v-progress-linear 
+                      :model-value="(autodetectProgress / 5) * 100" 
+                      color="primary" 
+                      height="20" 
+                      striped
+                    >
+                      <template v-slot:default>
+                        <strong>{{ autodetectProgress }} / 5 Packets Detected</strong>
+                      </template>
+                    </v-progress-linear>
+                  </div>
+                </v-expand-transition>
+
+                <v-row>
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model="captureConfig.ip"
+                      label="IP Filter (Optional)"
+                      placeholder="Comma-separated IPs"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      :disabled="!captureConfig.exitlag || isAutodetecting"
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model="captureConfig.port"
+                      label="Port Filter (Optional)"
+                      placeholder="Comma-separated Ports"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      :disabled="!captureConfig.exitlag || isAutodetecting"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
+              </div>
+
+              <div class="d-flex ga-2 mt-4">
+                <v-btn
+                  color="primary"
+                  type="submit"
+                  prepend-icon="mdi-play"
+                  :loading="isApplying"
+                >
+                  {{ captureStatus.is_running ? 'Apply & Restart Capture' : 'Start Capture' }}
+                </v-btn>
+                
+                <v-btn
+                  v-if="captureStatus.is_running"
+                  color="error"
+                  variant="outlined"
+                  prepend-icon="mdi-stop"
+                  @click="stopCapture"
+                  :loading="isStopping"
+                >
+                  Stop Capture
+                </v-btn>
+              </div>
+              <div class="text-caption text-grey mt-2">
+                Note: Restarting the capture will clear the current ongoing live session data to avoid corrupted aggregator states.
+              </div>
+            </v-form>
+          </v-window-item>
+
+          <!-- APPEARANCE TAB -->
+          <v-window-item value="appearance">
+            <v-list>
+              <v-list-item>
+                <template v-slot:prepend>
+                  <v-icon icon="mdi-palette"></v-icon>
+                </template>
+                <v-list-item-title>Use Class Colors for Visible Players</v-list-item-title>
+                <v-list-item-subtitle class="mt-1">
+                  If enabled, visible players will be colored based on their active Talent/Arcana instead of a random color.
+                  Hidden players always use Class Colors.
+                </v-list-item-subtitle>
+                <template v-slot:append>
+                  <v-switch
+                    v-model="showClassColorsForVisiblePlayers"
+                    color="primary"
+                    hide-details
+                    inset
+                  ></v-switch>
+                </template>
+              </v-list-item>
+            </v-list>
+            
+            <v-divider class="my-4"></v-divider>
+            
+            <ColorSettings />
+          </v-window-item>
+        </v-window>
+      </v-card-text>
+    </v-card>
+  </v-container>
+</template>
+
+<script lang="ts">
+import { defineComponent, computed, ref, onMounted, onUnmounted } from "vue";
+import { showClassColorsForVisiblePlayers, activeTool, socket } from "@/store";
+import ColorSettings from "./ColorSettings.vue";
+
+export default defineComponent({
+  name: "SettingsView",
+  components: {
+    ColorSettings,
+  },
+  setup() {
+    const activeTab = ref("capture");
+    
+    // --- CAPTURE SETTINGS ---
+    const nics = ref<any[]>([]);
+    const captureStatus = ref({ is_running: false, nic: '', exitlag: false });
+    const isApplying = ref(false);
+    const isStopping = ref(false);
+    const captureConfig = ref({
+      nicName: "",
+      ip: "",
+      port: "",
+      exitlag: false
+    });
+
+    const fetchNics = async () => {
+      try {
+        const res = await fetch("/api/setup/nics");
+        if (res.ok) {
+          nics.value = (await res.json()) || [];
+          if (!captureConfig.value.nicName && nics.value.length > 0) {
+            captureConfig.value.nicName = nics.value[0].name;
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch nics:", err);
+      }
+    };
+
+    const fetchStatus = async () => {
+      try {
+        const res = await fetch("/api/setup/status");
+        if (res.ok) {
+          const data = await res.json();
+          captureStatus.value = data;
+          
+          if (data.nic) captureConfig.value.nicName = data.nic;
+          captureConfig.value.exitlag = data.exitlag || false;
+          if (data.ip) captureConfig.value.ip = data.ip;
+          if (data.port) captureConfig.value.port = data.port;
+        }
+      } catch (err) {
+        console.error("Failed to fetch capture status:", err);
+      }
+    };
+
+    const applyCaptureSettings = async () => {
+      if (!captureConfig.value.nicName) {
+        alert("Please select a network interface.");
+        return;
+      }
+      isApplying.value = true;
+      try {
+        const res = await fetch("/api/setup/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(captureConfig.value)
+        });
+        if (res.ok) {
+          await fetchStatus();
+          activeTool.value = "dps"; 
+        } else {
+          const errMsg = await res.text();
+          alert("Failed to start capture: " + errMsg);
+        }
+      } catch (err) {
+        console.error("Error starting capture:", err);
+        alert("Network error while trying to start capture.");
+      } finally {
+        isApplying.value = false;
+      }
+    };
+
+    const stopCapture = async () => {
+      isStopping.value = true;
+      try {
+        const res = await fetch("/api/setup/stop", { method: "POST" });
+        if (res.ok) {
+           await fetchStatus();
+        }
+      } catch (err) {
+        console.error("Error stopping capture:", err);
+      } finally {
+        isStopping.value = false;
+      }
+    };
+
+    // --- AUTODETECT ---
+    const isAutodetecting = ref(false);
+    const autodetectProgress = ref(0);
+
+    const startAutodetect = async () => {
+      if (!captureConfig.value.nicName) return;
+      isAutodetecting.value = true;
+      autodetectProgress.value = 0;
+      
+      try {
+        const res = await fetch("/api/setup/autodetect", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nicName: captureConfig.value.nicName })
+        });
+        
+        if (!res.ok) {
+          isAutodetecting.value = false;
+          alert("Failed to start auto-detect: " + await res.text());
+        }
+      } catch (err) {
+        isAutodetecting.value = false;
+        console.error("Error starting autodetect:", err);
+      }
+    };
+
+    onMounted(() => {
+       fetchNics();
+       fetchStatus();
+       
+       socket.onAutodetectProgress = (progress) => {
+         if (isAutodetecting.value) {
+           autodetectProgress.value = progress.current;
+         }
+       };
+       
+       socket.onAutodetectDone = (result) => {
+         if (isAutodetecting.value) {
+           captureConfig.value.ip = result.ip;
+           captureConfig.value.port = result.port;
+           isAutodetecting.value = false;
+           autodetectProgress.value = 5;
+         }
+       };
+    });
+    
+    onUnmounted(() => {
+       socket.onAutodetectProgress = undefined;
+       socket.onAutodetectDone = undefined;
+       if (isAutodetecting.value) {
+           fetch("/api/setup/autodetect/stop", { method: "POST" }).catch(console.error);
+       }
+    });
+
+    return {
+      activeTab,
+      showClassColorsForVisiblePlayers,
+      
+      // Capture
+      nics,
+      captureStatus,
+      captureConfig,
+      isApplying,
+      isStopping,
+      applyCaptureSettings,
+      stopCapture,
+      
+      // Autodetect
+      isAutodetecting,
+      autodetectProgress,
+      startAutodetect
+    };
+  },
+});
+</script>
+
+<style scoped>
+.v-list-item-title {
+    white-space: normal;
+}
+.v-list-item-subtitle {
+    white-space: normal;
+}
+</style>

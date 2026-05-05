@@ -1,0 +1,6247 @@
+{
+  "0": {
+    "conditionId": 0,
+    "name": "Poisoned",
+    "iconUrl": "gui_condition_change_1_0.png"
+  },
+  "1": {
+    "conditionId": 1,
+    "name": "Deadly",
+    "iconUrl": "gui_condition_change_12_1.png"
+  },
+  "10": {
+    "conditionId": 10,
+    "name": "slow",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "100": {
+    "conditionId": 100,
+    "name": "Name Color Change",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1000": {
+    "conditionId": 1000,
+    "name": "Pulse of Purification Stun Immunity",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "10000": {
+    "conditionId": 10000,
+    "name": "Persistent Damage Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10001": {
+    "conditionId": 10001,
+    "name": "Physical Vulnerability Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10002": {
+    "conditionId": 10002,
+    "name": "Magic Vulnerability Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10003": {
+    "conditionId": 10003,
+    "name": "Healing Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10004": {
+    "conditionId": 10004,
+    "name": "Muscle Building Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10005": {
+    "conditionId": 10005,
+    "name": "Fattening Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10007": {
+    "conditionId": 10007,
+    "name": "Whispering Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10008": {
+    "conditionId": 10008,
+    "name": "MP Wellspring Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10009": {
+    "conditionId": 10009,
+    "name": "Stamina Wellspring Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "1001": {
+    "conditionId": 1001,
+    "name": "Slow",
+    "iconUrl": "gui_condition_change03_7_3.png"
+  },
+  "10010": {
+    "conditionId": 10010,
+    "name": "Satiating Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10011": {
+    "conditionId": 10011,
+    "name": "Wound Closing Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10012": {
+    "conditionId": 10012,
+    "name": "Muscle Atrophy Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10013": {
+    "conditionId": 10013,
+    "name": "Slimming Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10014": {
+    "conditionId": 10014,
+    "name": "Defense Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10015": {
+    "conditionId": 10015,
+    "name": "Smash Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10016": {
+    "conditionId": 10016,
+    "name": "Counterattack Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10017": {
+    "conditionId": 10017,
+    "name": "Charge Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10018": {
+    "conditionId": 10018,
+    "name": "Assault Slash Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10019": {
+    "conditionId": 10019,
+    "name": "Rage Impact Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "1002": {
+    "conditionId": 1002,
+    "name": "Polyphonic Melody Timer",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "10020": {
+    "conditionId": 10020,
+    "name": "Bash Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10021": {
+    "conditionId": 10021,
+    "name": "Final Strike Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10022": {
+    "conditionId": 10022,
+    "name": "Stampede Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10023": {
+    "conditionId": 10023,
+    "name": "Throwing Attack Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10024": {
+    "conditionId": 10024,
+    "name": "Windmill Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10025": {
+    "conditionId": 10025,
+    "name": "Final Hit Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10026": {
+    "conditionId": 10026,
+    "name": "Stomp Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10027": {
+    "conditionId": 10027,
+    "name": "Wind Guard Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10028": {
+    "conditionId": 10028,
+    "name": "Taunt Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10029": {
+    "conditionId": 10029,
+    "name": "Evasion Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "1003": {
+    "conditionId": 1003,
+    "name": "Sealing Chain",
+    "iconUrl": "gui_condition_change03_3_5.png"
+  },
+  "10030": {
+    "conditionId": 10030,
+    "name": "Doppelganger Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10031": {
+    "conditionId": 10031,
+    "name": "Berserk Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10032": {
+    "conditionId": 10032,
+    "name": "Meditation Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10033": {
+    "conditionId": 10033,
+    "name": "Lightning Bolt Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10034": {
+    "conditionId": 10034,
+    "name": "Thunder Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10035": {
+    "conditionId": 10035,
+    "name": "Shockwave Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10036": {
+    "conditionId": 10036,
+    "name": "Lightning Rod Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10037": {
+    "conditionId": 10037,
+    "name": "Firebolt Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10038": {
+    "conditionId": 10038,
+    "name": "Fireball Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10039": {
+    "conditionId": 10039,
+    "name": "Meteor Strike Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "1004": {
+    "conditionId": 1004,
+    "name": "Keen Eye",
+    "iconUrl": "gui_condition_change03_12_5.png"
+  },
+  "10040": {
+    "conditionId": 10040,
+    "name": "Icebolt Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10041": {
+    "conditionId": 10041,
+    "name": "Ice Spear Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10042": {
+    "conditionId": 10042,
+    "name": "Hail Storm Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10043": {
+    "conditionId": 10043,
+    "name": "Fusion Bolt Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10044": {
+    "conditionId": 10044,
+    "name": "Blaze Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10045": {
+    "conditionId": 10045,
+    "name": "Spellwalk Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10046": {
+    "conditionId": 10046,
+    "name": "Snap Cast Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10047": {
+    "conditionId": 10047,
+    "name": "Inspiration Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10048": {
+    "conditionId": 10048,
+    "name": "Magnum Shot Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10049": {
+    "conditionId": 10049,
+    "name": "Arrow Revolver Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "1005": {
+    "conditionId": 1005,
+    "name": "Veil of Mystique",
+    "iconUrl": "gui_condition_change03_15_5.png"
+  },
+  "10050": {
+    "conditionId": 10050,
+    "name": "Support Shot Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10051": {
+    "conditionId": 10051,
+    "name": "Mirage Missile Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10052": {
+    "conditionId": 10052,
+    "name": "Spider Shot Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10053": {
+    "conditionId": 10053,
+    "name": "Urgent Shot Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10054": {
+    "conditionId": 10054,
+    "name": "Crash Shot Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10055": {
+    "conditionId": 10055,
+    "name": "Final Shot Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10056": {
+    "conditionId": 10056,
+    "name": "Life Drain Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10057": {
+    "conditionId": 10057,
+    "name": "Water Cannon Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10058": {
+    "conditionId": 10058,
+    "name": "Wind Blast Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10059": {
+    "conditionId": 10059,
+    "name": "Flame Burst Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "1006": {
+    "conditionId": 1006,
+    "name": "Lunar Blessing",
+    "iconUrl": "gui_condition_change03_14_5.png"
+  },
+  "10060": {
+    "conditionId": 10060,
+    "name": "Sand Burst Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10061": {
+    "conditionId": 10061,
+    "name": "Frozen Blast Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10062": {
+    "conditionId": 10062,
+    "name": "Shock Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10063": {
+    "conditionId": 10063,
+    "name": "Heat Buster Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10064": {
+    "conditionId": 10064,
+    "name": "Golden Time Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10065": {
+    "conditionId": 10065,
+    "name": "Combo: Charging Strike Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10066": {
+    "conditionId": 10066,
+    "name": "Combo: Focused Fist Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10067": {
+    "conditionId": 10067,
+    "name": "Combo: Counter Punch Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10068": {
+    "conditionId": 10068,
+    "name": "Combo: Spinning Uppercut Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10069": {
+    "conditionId": 10069,
+    "name": "Combo: Somersault Kick Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "1007": {
+    "conditionId": 1007,
+    "name": "Lunar Curse",
+    "iconUrl": "gui_condition_change03_14_5.png"
+  },
+  "10070": {
+    "conditionId": 10070,
+    "name": "Combo: Drop Kick Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10071": {
+    "conditionId": 10071,
+    "name": "Combo: Pummel Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10072": {
+    "conditionId": 10072,
+    "name": "Respite Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10073": {
+    "conditionId": 10073,
+    "name": "Tumble Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10074": {
+    "conditionId": 10074,
+    "name": "Enthralling Performance Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10075": {
+    "conditionId": 10075,
+    "name": "Dischord Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10076": {
+    "conditionId": 10076,
+    "name": "Fantastic Chorus Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10077": {
+    "conditionId": 10077,
+    "name": "Battlefield Overture Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10078": {
+    "conditionId": 10078,
+    "name": "Lullaby Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10079": {
+    "conditionId": 10079,
+    "name": "Vivace Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "1008": {
+    "conditionId": 1008,
+    "name": "Warding Gale",
+    "iconUrl": "gui_condition_change03_13_5.png"
+  },
+  "10080": {
+    "conditionId": 10080,
+    "name": "Enduring Melody Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10081": {
+    "conditionId": 10081,
+    "name": "Harvest Song Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10082": {
+    "conditionId": 10082,
+    "name": "March Song Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10083": {
+    "conditionId": 10083,
+    "name": "Dance of Death Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10084": {
+    "conditionId": 10084,
+    "name": "Act 2: Threshold Cutter Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10085": {
+    "conditionId": 10085,
+    "name": "Act 1: Inciting Incident Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10086": {
+    "conditionId": 10086,
+    "name": "Act 4: Rising Action Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10087": {
+    "conditionId": 10087,
+    "name": "Act 6: Crisis Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10088": {
+    "conditionId": 10088,
+    "name": "Act 7: Climactic Crash Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10089": {
+    "conditionId": 10089,
+    "name": "Act 9: Invigorating Encore Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "1009": {
+    "conditionId": 1009,
+    "name": "Electrocution",
+    "iconUrl": "gui_condition_change03_8_3.png"
+  },
+  "10090": {
+    "conditionId": 10090,
+    "name": "Wire Pull Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10091": {
+    "conditionId": 10091,
+    "name": "Puppet's Snare Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10092": {
+    "conditionId": 10092,
+    "name": "Lance Counter Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10093": {
+    "conditionId": 10093,
+    "name": "Lance Charge Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "101": {
+    "conditionId": 101,
+    "name": "Tower Cylinder installed",
+    "iconUrl": "gui_condition_change_15_2.png"
+  },
+  "1010": {
+    "conditionId": 1010,
+    "name": "Astrology Skill Training Boost",
+    "iconUrl": "gui_condition_change03_5_5.png"
+  },
+  "10101": {
+    "conditionId": 10101,
+    "name": "Mana Crystallization Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10102": {
+    "conditionId": 10102,
+    "name": "Barrier Spikes Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10103": {
+    "conditionId": 10103,
+    "name": "Rain Casting Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10104": {
+    "conditionId": 10104,
+    "name": "Hydra Transmutation Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10105": {
+    "conditionId": 10105,
+    "name": "Summon Golem Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10106": {
+    "conditionId": 10106,
+    "name": "Flash Launcher Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10107": {
+    "conditionId": 10107,
+    "name": "Grapple Shot Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10108": {
+    "conditionId": 10108,
+    "name": "Bullet Slide Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10109": {
+    "conditionId": 10109,
+    "name": "Shooting Rush Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "1011": {
+    "conditionId": 1011,
+    "name": "ATT Decrease",
+    "iconUrl": "gui_condition_change03_6_5.png"
+  },
+  "10110": {
+    "conditionId": 10110,
+    "name": "Bullet Storm Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10111": {
+    "conditionId": 10111,
+    "name": "Reload Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10112": {
+    "conditionId": 10112,
+    "name": "Way of the Gun Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10113": {
+    "conditionId": 10113,
+    "name": "Shuriken Charge Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10114": {
+    "conditionId": 10114,
+    "name": "Kunai Storm Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10115": {
+    "conditionId": 10115,
+    "name": "Shadow Bind Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10116": {
+    "conditionId": 10116,
+    "name": "Shadow Cloak Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10117": {
+    "conditionId": 10117,
+    "name": "Explosive Kunai Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10118": {
+    "conditionId": 10118,
+    "name": "Smokescreen Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10119": {
+    "conditionId": 10119,
+    "name": "Sakura Abyss Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "1012": {
+    "conditionId": 1012,
+    "name": "Defense/Protection Decrease",
+    "iconUrl": "gui_condition_change03_7_5.png"
+  },
+  "10120": {
+    "conditionId": 10120,
+    "name": "Dorcha Snatch Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10121": {
+    "conditionId": 10121,
+    "name": "Chain Impale Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10122": {
+    "conditionId": 10122,
+    "name": "Raging Spike Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10123": {
+    "conditionId": 10123,
+    "name": "Spinning Slasher Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10124": {
+    "conditionId": 10124,
+    "name": "Chain Crush Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10125": {
+    "conditionId": 10125,
+    "name": "Chain Sweep Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10126": {
+    "conditionId": 10126,
+    "name": "Dorcha Conversion Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10127": {
+    "conditionId": 10127,
+    "name": "Anchor Rush Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10128": {
+    "conditionId": 10128,
+    "name": "Death Mark Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10129": {
+    "conditionId": 10129,
+    "name": "Chain Burst Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "1013": {
+    "conditionId": 1013,
+    "name": "Movement Speed Decrease",
+    "iconUrl": "gui_condition_change03_8_5.png"
+  },
+  "10130": {
+    "conditionId": 10130,
+    "name": "Bachram Explosion Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10131": {
+    "conditionId": 10131,
+    "name": "Astral Reave Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10132": {
+    "conditionId": 10132,
+    "name": "Nova Blast Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10133": {
+    "conditionId": 10133,
+    "name": "Stellar Surge Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10134": {
+    "conditionId": 10134,
+    "name": "Meridian Sweep Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10135": {
+    "conditionId": 10135,
+    "name": "Orbital Pulse Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10136": {
+    "conditionId": 10136,
+    "name": "Starlight Veil Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10137": {
+    "conditionId": 10137,
+    "name": "Gravity Well Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "10138": {
+    "conditionId": 10138,
+    "name": "Fate Foretold Skill Augment Glyph",
+    "iconUrl": "gui_condition_change02_5_7.png"
+  },
+  "1014": {
+    "conditionId": 1014,
+    "name": "Subsequent Damage Boost",
+    "iconUrl": "gui_condition_change03_9_5.png"
+  },
+  "1015": {
+    "conditionId": 1015,
+    "name": "Defense/Protection Boost",
+    "iconUrl": "gui_condition_change03_11_5.png"
+  },
+  "1016": {
+    "conditionId": 1016,
+    "name": "Physical Damage Boost",
+    "iconUrl": "gui_condition_change03_10_5.png"
+  },
+  "1018": {
+    "conditionId": 1018,
+    "name": "Justice",
+    "iconUrl": "gui_condition_change03_4_6.png"
+  },
+  "1019": {
+    "conditionId": 1019,
+    "name": "Judgement",
+    "iconUrl": "gui_condition_change03_4_6.png"
+  },
+  "102": {
+    "conditionId": 102,
+    "name": "Demigod STR increased",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1020": {
+    "conditionId": 1020,
+    "name": "The Hierophant",
+    "iconUrl": "gui_condition_change03_5_6.png"
+  },
+  "1021": {
+    "conditionId": 1021,
+    "name": "The Lovers",
+    "iconUrl": "gui_condition_change03_5_6.png"
+  },
+  "1022": {
+    "conditionId": 1022,
+    "name": "The Chariot",
+    "iconUrl": "gui_condition_change03_5_6.png"
+  },
+  "1023": {
+    "conditionId": 1023,
+    "name": "The Moon",
+    "iconUrl": "gui_condition_change03_5_6.png"
+  },
+  "1024": {
+    "conditionId": 1024,
+    "name": "The Tower",
+    "iconUrl": "gui_condition_change03_5_6.png"
+  },
+  "1025": {
+    "conditionId": 1025,
+    "name": "The Hermit",
+    "iconUrl": "gui_condition_change03_6_6.png"
+  },
+  "1026": {
+    "conditionId": 1026,
+    "name": "The Hanged Man",
+    "iconUrl": "gui_condition_change03_6_6.png"
+  },
+  "1027": {
+    "conditionId": 1027,
+    "name": "The World",
+    "iconUrl": "gui_condition_change03_6_6.png"
+  },
+  "1028": {
+    "conditionId": 1028,
+    "name": "Temperance",
+    "iconUrl": "gui_condition_change03_6_6.png"
+  },
+  "1029": {
+    "conditionId": 1029,
+    "name": "The Magician",
+    "iconUrl": "gui_condition_change03_6_6.png"
+  },
+  "103": {
+    "conditionId": 103,
+    "name": "Demigod DEX increased",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1030": {
+    "conditionId": 1030,
+    "name": "Death",
+    "iconUrl": "gui_condition_change03_6_6.png"
+  },
+  "1031": {
+    "conditionId": 1031,
+    "name": "Synergy Effect - Movement Speed Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1032": {
+    "conditionId": 1032,
+    "name": "The Fool",
+    "iconUrl": "gui_condition_change03_7_6.png"
+  },
+  "1033": {
+    "conditionId": 1033,
+    "name": "The Star",
+    "iconUrl": "gui_condition_change03_7_6.png"
+  },
+  "1034": {
+    "conditionId": 1034,
+    "name": "Sun and Moon",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1035": {
+    "conditionId": 1035,
+    "name": "Sun",
+    "iconUrl": "gui_condition_change03_0_6.png"
+  },
+  "1036": {
+    "conditionId": 1036,
+    "name": "Moon",
+    "iconUrl": "gui_condition_change03_1_6.png"
+  },
+  "1037": {
+    "conditionId": 1037,
+    "name": "Eclipse",
+    "iconUrl": "gui_condition_change03_2_6.png"
+  },
+  "1038": {
+    "conditionId": 1038,
+    "name": "Balance Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1039": {
+    "conditionId": 1039,
+    "name": "Urgent Shot Cost Reduction",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "104": {
+    "conditionId": 104,
+    "name": "Demigod WILL increased",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1040": {
+    "conditionId": 1040,
+    "name": "Exalted Melody Step",
+    "iconUrl": "gui_condition_change03_9_6.png"
+  },
+  "1041": {
+    "conditionId": 1041,
+    "name": "17th Anniversary Combat EXP Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1042": {
+    "conditionId": 1042,
+    "name": "Card Draw Boost",
+    "iconUrl": "gui_condition_change03_3_6.png"
+  },
+  "1043": {
+    "conditionId": 1043,
+    "name": "Battle Astrology Skill Damage Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1044": {
+    "conditionId": 1044,
+    "name": "_LT[xml.charactercondition.2448]",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1045": {
+    "conditionId": 1045,
+    "name": "Magic Damage Increase",
+    "iconUrl": "gui_condition_change03_10_5.png"
+  },
+  "1046": {
+    "conditionId": 1046,
+    "name": "Alchemic Damage Increase",
+    "iconUrl": "gui_condition_change03_10_5.png"
+  },
+  "1047": {
+    "conditionId": 1047,
+    "name": "Quest Completion EXP Bonus",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1048": {
+    "conditionId": 1048,
+    "name": "Exploration EXP Bonus",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1049": {
+    "conditionId": 1049,
+    "name": "Daily Advancement Bonus",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "105": {
+    "conditionId": 105,
+    "name": "Demigod LUCK increased",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1050": {
+    "conditionId": 1050,
+    "name": "Pet Rebirth Points Bonus",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1051": {
+    "conditionId": 1051,
+    "name": "Decrease Equipment Durability Loss",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1052": {
+    "conditionId": 1052,
+    "name": "Special Unit CMD EXP Bonus",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1053": {
+    "conditionId": 1053,
+    "name": "Pet Points/Perks Training Increase",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1054": {
+    "conditionId": 1054,
+    "name": "Cartomancy Buff",
+    "iconUrl": "GUI_condition_change03_10_6.png"
+  },
+  "1055": {
+    "conditionId": 1055,
+    "name": "Scythe Boost",
+    "iconUrl": "gui_condition_change03_8_6.png"
+  },
+  "1056": {
+    "conditionId": 1056,
+    "name": "Gradual Transparency",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1058": {
+    "conditionId": 1058,
+    "name": "Martyr's Consecration",
+    "iconUrl": "gui_condition_change03_13_7.png"
+  },
+  "1059": {
+    "conditionId": 1059,
+    "name": "Consecrated",
+    "iconUrl": "gui_condition_change03_12_7.png"
+  },
+  "106": {
+    "conditionId": 106,
+    "name": "Demigod INT increased",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1060": {
+    "conditionId": 1060,
+    "name": "Unbreakable Pledge",
+    "iconUrl": "gui_condition_change03_5_7.png"
+  },
+  "1061": {
+    "conditionId": 1061,
+    "name": "Pledgekeeper",
+    "iconUrl": "gui_condition_change03_6_7.png"
+  },
+  "1062": {
+    "conditionId": 1062,
+    "name": "Movement Speed Decrease from Deliver Judgment",
+    "iconUrl": "gui_condition_change03_10_7.png"
+  },
+  "1063": {
+    "conditionId": 1063,
+    "name": "Broken Armor",
+    "iconUrl": "gui_condition_change03_9_7.png"
+  },
+  "1064": {
+    "conditionId": 1064,
+    "name": "Divine Consolation",
+    "iconUrl": "gui_condition_change03_11_7.png"
+  },
+  "1065": {
+    "conditionId": 1065,
+    "name": "Provoke",
+    "iconUrl": "gui_condition_change03_7_7.png"
+  },
+  "107": {
+    "conditionId": 107,
+    "name": "Demigod Fury of Light - damage increased",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1073": {
+    "conditionId": 1073,
+    "name": "Cave to Provocation",
+    "iconUrl": "gui_condition_change03_8_7.png"
+  },
+  "1079": {
+    "conditionId": 1079,
+    "name": "Mineralization",
+    "iconUrl": "gui_condition_change_6_0.png"
+  },
+  "108": {
+    "conditionId": 108,
+    "name": "Demigod Spear of Light damage increased",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1080": {
+    "conditionId": 1080,
+    "name": "Midir's Feather",
+    "iconUrl": "gui_condition_change03_15_7.png"
+  },
+  "1081": {
+    "conditionId": 1081,
+    "name": "Phantasmal Sight - Cooldown Reduction",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1082": {
+    "conditionId": 1082,
+    "name": "Magic Craft - Quality Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1083": {
+    "conditionId": 1083,
+    "name": "Hillwen Engineering - Quality Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1084": {
+    "conditionId": 1084,
+    "name": "Decreases casting time of Rain Casting",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1085": {
+    "conditionId": 1085,
+    "name": "Rain Casting - Cooldown Decrease",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1086": {
+    "conditionId": 1086,
+    "name": "Exploit Weakness Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1087": {
+    "conditionId": 1087,
+    "name": "Redoubled Offensive - Damage Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1088": {
+    "conditionId": 1088,
+    "name": "Zone of Renewal - Radius Increase",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1089": {
+    "conditionId": 1089,
+    "name": "Melee Attack Resistance",
+    "iconUrl": "gui_condition_change03_4_3.png"
+  },
+  "109": {
+    "conditionId": 109,
+    "name": "Demigod Shadow Spirit - damage increased",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1090": {
+    "conditionId": 1090,
+    "name": "Magic Attack Resistance",
+    "iconUrl": "gui_condition_change03_4_3.png"
+  },
+  "1091": {
+    "conditionId": 1091,
+    "name": "Ranged Attack Resistance",
+    "iconUrl": "gui_condition_change03_4_3.png"
+  },
+  "1092": {
+    "conditionId": 1092,
+    "name": "Hydra Transmutation",
+    "iconUrl": "gui_condition_change03_14_6.png"
+  },
+  "1093": {
+    "conditionId": 1093,
+    "name": "Protection Max Decreased",
+    "iconUrl": "gui_condition_change03_3_7.png"
+  },
+  "1094": {
+    "conditionId": 1094,
+    "name": "Magic Protection Max Decreased",
+    "iconUrl": "gui_condition_change03_4_7.png"
+  },
+  "1095": {
+    "conditionId": 1095,
+    "name": "Vertrag's Centripetal Force",
+    "iconUrl": "gui_condition_change03_0_0.png"
+  },
+  "1096": {
+    "conditionId": 1096,
+    "name": "Increased Production Quality",
+    "iconUrl": "GUI_condition_change_2_3.png"
+  },
+  "1097": {
+    "conditionId": 1097,
+    "name": "Revival Restriction",
+    "iconUrl": "GUI_condition_change_2_3.png"
+  },
+  "1098": {
+    "conditionId": 1098,
+    "name": "Blue Hemorrhage",
+    "iconUrl": "gui_condition_change_12_4.png"
+  },
+  "1099": {
+    "conditionId": 1099,
+    "name": "Marionette Critical Damage Enhancement",
+    "iconUrl": "gui_condition_change02_10_5.png"
+  },
+  "11": {
+    "conditionId": 11,
+    "name": "Luck",
+    "iconUrl": "gui_condition_change_12_0.png"
+  },
+  "110": {
+    "conditionId": 110,
+    "name": "Demigod duration increased",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1100": {
+    "conditionId": 1100,
+    "name": "Windmill Enhancement",
+    "iconUrl": "gui_condition_change02_0_5.png"
+  },
+  "1101": {
+    "conditionId": 1101,
+    "name": "Smash Enhancement",
+    "iconUrl": "gui_condition_change_5_3.png"
+  },
+  "1102": {
+    "conditionId": 1102,
+    "name": "Nova Blast Enhancement",
+    "iconUrl": "gui_condition_change03_3_6.png"
+  },
+  "1103": {
+    "conditionId": 1103,
+    "name": "Act 7: Climactic Crash Enhancement",
+    "iconUrl": "gui_condition_change02_10_5.png"
+  },
+  "1106": {
+    "conditionId": 1106,
+    "name": "Charge Enhancement",
+    "iconUrl": "gui_condition_change_6_3.png"
+  },
+  "1107": {
+    "conditionId": 1107,
+    "name": "Piercing Resistance Level",
+    "iconUrl": "gui_condition_change02_2_2.png"
+  },
+  "1108": {
+    "conditionId": 1108,
+    "name": "Blurred Outline",
+    "iconUrl": "GUI_condition_change04_1_0.png"
+  },
+  "1109": {
+    "conditionId": 1109,
+    "name": "Present Courage",
+    "iconUrl": "GUI_condition_change04_2_0.png"
+  },
+  "111": {
+    "conditionId": 111,
+    "name": "Demigod cooldown decreased",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1110": {
+    "conditionId": 1110,
+    "name": "Ancient Trace",
+    "iconUrl": "GUI_condition_change04_0_0.png"
+  },
+  "1111": {
+    "conditionId": 1111,
+    "name": "Touching the Trace",
+    "iconUrl": "GUI_condition_change04_0_0.png"
+  },
+  "1112": {
+    "conditionId": 1112,
+    "name": "Moon Stone's Energy",
+    "iconUrl": "gui_condition_change_13_4.png"
+  },
+  "1113": {
+    "conditionId": 1113,
+    "name": "_LT[xml.charactercondition.2610]",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1114": {
+    "conditionId": 1114,
+    "name": "Stellar Surge Enhancement",
+    "iconUrl": "gui_condition_change03_3_6.png"
+  },
+  "1115": {
+    "conditionId": 1115,
+    "name": "Field Boss Damage Fixed at 1",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1116": {
+    "conditionId": 1116,
+    "name": "Increased Chance of Inspiring Performance from Musical Knowledge",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1117": {
+    "conditionId": 1117,
+    "name": "Music Buff Skill Effect Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1118": {
+    "conditionId": 1118,
+    "name": "Music Buff Duration Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1119": {
+    "conditionId": 1119,
+    "name": "Rend Armor Resistance",
+    "iconUrl": "gui_condition_change03_11_7.png"
+  },
+  "112": {
+    "conditionId": 112,
+    "name": "Damage increased when Brionac is equipped",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1120": {
+    "conditionId": 1120,
+    "name": "Instill Elements",
+    "iconUrl": "gui_condition_change04_6_0.png"
+  },
+  "1121": {
+    "conditionId": 1121,
+    "name": "Magic Power Boost",
+    "iconUrl": "gui_condition_change_8_4.png"
+  },
+  "1122": {
+    "conditionId": 1122,
+    "name": "Tracer Pod",
+    "iconUrl": "gui_condition_change04_5_1.png"
+  },
+  "1123": {
+    "conditionId": 1123,
+    "name": "Gunner's Crest",
+    "iconUrl": "gui_condition_change04_6_1.png"
+  },
+  "1124": {
+    "conditionId": 1124,
+    "name": "Song of Tuan",
+    "iconUrl": "gui_condition_change04_7_0.png"
+  },
+  "1125": {
+    "conditionId": 1125,
+    "name": "Battle Astrology MP Recovery",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1126": {
+    "conditionId": 1126,
+    "name": "Meridian Sweep Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1127": {
+    "conditionId": 1127,
+    "name": "Battle Astrology Mastery Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1128": {
+    "conditionId": 1128,
+    "name": "Orbital Pulse Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1129": {
+    "conditionId": 1129,
+    "name": "Magic Element Mastery Damage Increase",
+    "iconUrl": "gui_condition_change02_7_5.png"
+  },
+  "113": {
+    "conditionId": 113,
+    "name": "Critical rate increased when Brionac is equipped",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1130": {
+    "conditionId": 1130,
+    "name": "Enhanced Critical Damage",
+    "iconUrl": "gui_condition_change02_0_5.png"
+  },
+  "1131": {
+    "conditionId": 1131,
+    "name": "Echostone Advancement Rate Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1132": {
+    "conditionId": 1132,
+    "name": "Special Upgrade Success Rate Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1133": {
+    "conditionId": 1133,
+    "name": "Enchant Success Rate Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1134": {
+    "conditionId": 1134,
+    "name": "Alchemy Success Rate Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1135": {
+    "conditionId": 1135,
+    "name": "Production Success Rate Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1136": {
+    "conditionId": 1136,
+    "name": "Stardust Level Increase Success Rate Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1137": {
+    "conditionId": 1137,
+    "name": "Commerce Merchant Rating Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1138": {
+    "conditionId": 1138,
+    "name": "Clover Mark",
+    "iconUrl": "gui_condition_change04_11_0.png"
+  },
+  "1139": {
+    "conditionId": 1139,
+    "name": "Carrot Debuff",
+    "iconUrl": "gui_condition_change04_10_0.png"
+  },
+  "114": {
+    "conditionId": 114,
+    "name": "Magical Music effect increased",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1140": {
+    "conditionId": 1140,
+    "name": "Carrot Buff",
+    "iconUrl": "gui_condition_change04_9_0.png"
+  },
+  "1141": {
+    "conditionId": 1141,
+    "name": "Shield Activated",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1142": {
+    "conditionId": 1142,
+    "name": "Shield Stun",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1143": {
+    "conditionId": 1143,
+    "name": "Special Help",
+    "iconUrl": "gui_condition_change04_15_0.png"
+  },
+  "1144": {
+    "conditionId": 1144,
+    "name": "Compound Catalyst",
+    "iconUrl": "gui_condition_change04_1_1.png"
+  },
+  "1145": {
+    "conditionId": 1145,
+    "name": "Compound Catalyst",
+    "iconUrl": "gui_condition_change04_1_1.png"
+  },
+  "1146": {
+    "conditionId": 1146,
+    "name": "Elemental Amplification",
+    "iconUrl": "gui_condition_change04_2_1.png"
+  },
+  "1147": {
+    "conditionId": 1147,
+    "name": "Serpentcall",
+    "iconUrl": "gui_condition_change04_3_1.png"
+  },
+  "1148": {
+    "conditionId": 1148,
+    "name": "Fangs of Stone",
+    "iconUrl": "gui_condition_change04_4_1.png"
+  },
+  "1149": {
+    "conditionId": 1149,
+    "name": "Technique Briogh Weekly Limit Removed",
+    "iconUrl": "gui_condition_change02_4_0.png"
+  },
+  "115": {
+    "conditionId": 115,
+    "name": "Movement speed increased",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1150": {
+    "conditionId": 1150,
+    "name": "Alchemic Damage Boost",
+    "iconUrl": "GUI_condition_change04_0_1.png"
+  },
+  "1151": {
+    "conditionId": 1151,
+    "name": "Boundary of the Dream",
+    "iconUrl": "GUI_condition_change02_4_7.png"
+  },
+  "116": {
+    "conditionId": 116,
+    "name": "Demigod Invulnerability",
+    "iconUrl": "gui_condition_change_0_3.png"
+  },
+  "1164": {
+    "conditionId": 1164,
+    "name": "Defense/Protection Decreased",
+    "iconUrl": "GUI_condition_change04_15_1.png"
+  },
+  "1165": {
+    "conditionId": 1165,
+    "name": "Magic Defense/Magic Protection Decreased",
+    "iconUrl": "GUI_condition_change04_0_2.png"
+  },
+  "1166": {
+    "conditionId": 1166,
+    "name": "Increased Damage Taken",
+    "iconUrl": "GUI_condition_change04_1_2.png"
+  },
+  "117": {
+    "conditionId": 117,
+    "name": "Height Change",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "118": {
+    "conditionId": 118,
+    "name": "Attacked by a Crow.",
+    "iconUrl": "gui_condition_change_1_3.png"
+  },
+  "119": {
+    "conditionId": 119,
+    "name": "누아자 페이즈 전환",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "12": {
+    "conditionId": 12,
+    "name": "Misfortune",
+    "iconUrl": "gui_condition_change_13_0.png"
+  },
+  "120": {
+    "conditionId": 120,
+    "name": "Allows you to attack while mounted.",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "121": {
+    "conditionId": 121,
+    "name": "Decrease Stats Curse",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "122": {
+    "conditionId": 122,
+    "name": "Shadow Crystal",
+    "iconUrl": "gui_condition_change_3_3.png"
+  },
+  "123": {
+    "conditionId": 123,
+    "name": "Item Drop Rate Boost Status",
+    "iconUrl": "gui_condition_change_2_3.png"
+  },
+  "124": {
+    "conditionId": 124,
+    "name": "Item Drop Rate Boost Status",
+    "iconUrl": "gui_condition_change_2_3.png"
+  },
+  "125": {
+    "conditionId": 125,
+    "name": "Fishing Booster",
+    "iconUrl": "gui_condition_change_4_3.png"
+  },
+  "126": {
+    "conditionId": 126,
+    "name": "Fishing Booster",
+    "iconUrl": "gui_condition_change_4_3.png"
+  },
+  "127": {
+    "conditionId": 127,
+    "name": "채팅 색상 변경",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "128": {
+    "conditionId": 128,
+    "name": "Combat EXP Increase",
+    "iconUrl": "gui_condition_change_10_0.png"
+  },
+  "129": {
+    "conditionId": 129,
+    "name": "Support Shot",
+    "iconUrl": "gui_condition_change_12_3.png"
+  },
+  "13": {
+    "conditionId": 13,
+    "name": "Leader's Blessing",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "130": {
+    "conditionId": 130,
+    "name": "",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "131": {
+    "conditionId": 131,
+    "name": "Nuadha Set Item",
+    "iconUrl": "gui_condition_change_5_4.png"
+  },
+  "132": {
+    "conditionId": 132,
+    "name": "Theatre Dungeon Spotlight",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "133": {
+    "conditionId": 133,
+    "name": "Hamelin Contract",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "134": {
+    "conditionId": 134,
+    "name": "Out of Body",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "135": {
+    "conditionId": 135,
+    "name": "Spirit Clear",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "136": {
+    "conditionId": 136,
+    "name": "Hands Full",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "137": {
+    "conditionId": 137,
+    "name": "Troll Recovery",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "138": {
+    "conditionId": 138,
+    "name": "Smash Enhancement",
+    "iconUrl": "gui_condition_change_5_3.png"
+  },
+  "139": {
+    "conditionId": 139,
+    "name": "Assault Slash Enhancement",
+    "iconUrl": "gui_condition_change_7_3.png"
+  },
+  "14": {
+    "conditionId": 14,
+    "name": "Explode",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "140": {
+    "conditionId": 140,
+    "name": "Charge Enhancement",
+    "iconUrl": "gui_condition_change_6_3.png"
+  },
+  "141": {
+    "conditionId": 141,
+    "name": "Ice Bolt Enhancement",
+    "iconUrl": "gui_condition_change_8_3.png"
+  },
+  "142": {
+    "conditionId": 142,
+    "name": "Fire Bolt Enhancement",
+    "iconUrl": "gui_condition_change_9_3.png"
+  },
+  "143": {
+    "conditionId": 143,
+    "name": "Healing Enhancement",
+    "iconUrl": "gui_condition_change_10_3.png"
+  },
+  "144": {
+    "conditionId": 144,
+    "name": "Flame Burst Enhancement",
+    "iconUrl": "gui_condition_change_14_3.png"
+  },
+  "145": {
+    "conditionId": 145,
+    "name": "Water Cannon Enhancement",
+    "iconUrl": "gui_condition_change_15_3.png"
+  },
+  "146": {
+    "conditionId": 146,
+    "name": "Life Drain Enhancement",
+    "iconUrl": "gui_condition_change_1_4.png"
+  },
+  "147": {
+    "conditionId": 147,
+    "name": "Magnum Shot Enhancement",
+    "iconUrl": "gui_condition_change_11_3.png"
+  },
+  "148": {
+    "conditionId": 148,
+    "name": "Support Shot Enhancement",
+    "iconUrl": "gui_condition_change_12_3.png"
+  },
+  "149": {
+    "conditionId": 149,
+    "name": "Fishing Enhancement",
+    "iconUrl": "gui_condition_change_13_3.png"
+  },
+  "15": {
+    "conditionId": 15,
+    "name": "Explode",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "150": {
+    "conditionId": 150,
+    "name": "Refining Enhancement",
+    "iconUrl": "gui_condition_change_2_4.png"
+  },
+  "151": {
+    "conditionId": 151,
+    "name": "Blacksmith Enhancement",
+    "iconUrl": "gui_condition_change_3_4.png"
+  },
+  "152": {
+    "conditionId": 152,
+    "name": "Metallurgy Enhancement",
+    "iconUrl": "gui_condition_change_4_4.png"
+  },
+  "153": {
+    "conditionId": 153,
+    "name": "Armor Bear Roar",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "154": {
+    "conditionId": 154,
+    "name": "Rosemary Gloves Equipped",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "155": {
+    "conditionId": 155,
+    "name": "Flying Pet Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "156": {
+    "conditionId": 156,
+    "name": "Claudius Pursuit",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "157": {
+    "conditionId": 157,
+    "name": "Animal Character Training Kit",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "158": {
+    "conditionId": 158,
+    "name": "Movement speed increased with the Animal Character Training Kit.",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "159": {
+    "conditionId": 159,
+    "name": "Flying speed increased with the Animal Character Training Kit.",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "16": {
+    "conditionId": 16,
+    "name": "Mirage",
+    "iconUrl": "gui_condition_change_1_1.png"
+  },
+  "160": {
+    "conditionId": 160,
+    "name": "Today's Mission Completed",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "161": {
+    "conditionId": 161,
+    "name": "Goes up to Ladeca",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "162": {
+    "conditionId": 162,
+    "name": "Mabinogi Quiz Show Event",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "163": {
+    "conditionId": 163,
+    "name": "Pet Land Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "164": {
+    "conditionId": 164,
+    "name": "Currently transporting goods",
+    "iconUrl": "gui_condition_change_6_4.png"
+  },
+  "165": {
+    "conditionId": 165,
+    "name": "Demigod Wings of Eclipse Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "166": {
+    "conditionId": 166,
+    "name": "Demigod Wings of Rage Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "167": {
+    "conditionId": 167,
+    "name": "마누스의 건강 비약",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "168": {
+    "conditionId": 168,
+    "name": "Movement speed increased",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "169": {
+    "conditionId": 169,
+    "name": "Movement Speed Increase, Gathering Speed Increase",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "17": {
+    "conditionId": 17,
+    "name": "Weak",
+    "iconUrl": "gui_condition_change_2_1.png"
+  },
+  "170": {
+    "conditionId": 170,
+    "name": "Weapon Seal Removal",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "171": {
+    "conditionId": 171,
+    "name": "Your body is becoming smaller.",
+    "iconUrl": "gui_condition_change_14_2.png"
+  },
+  "172": {
+    "conditionId": 172,
+    "name": "Reforging Movement Speed Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "173": {
+    "conditionId": 173,
+    "name": "Reforging Trading Movement Speed Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "174": {
+    "conditionId": 174,
+    "name": "낚시용 의자 사용",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "175": {
+    "conditionId": 175,
+    "name": "Letter of Guarantee",
+    "iconUrl": "gui_condition_change_7_4.png"
+  },
+  "176": {
+    "conditionId": 176,
+    "name": "Speed Walk Potion In Effect",
+    "iconUrl": "GUI_condition_change03_2_4.png"
+  },
+  "177": {
+    "conditionId": 177,
+    "name": "Magic Power Boost",
+    "iconUrl": "gui_condition_change_8_4.png"
+  },
+  "178": {
+    "conditionId": 178,
+    "name": "Zombie Infection",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "179": {
+    "conditionId": 179,
+    "name": "Musical Petrification",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "18": {
+    "conditionId": 18,
+    "name": "PVP Penalty",
+    "iconUrl": "gui_condition_change_15_1.png"
+  },
+  "180": {
+    "conditionId": 180,
+    "name": "Gold Strike Enhancement",
+    "iconUrl": "gui_condition_change_9_4.png"
+  },
+  "181": {
+    "conditionId": 181,
+    "name": "Outlaw Pursuit Mode",
+    "iconUrl": "gui_condition_change_10_4.png"
+  },
+  "182": {
+    "conditionId": 182,
+    "name": "Combo: Spinning Uppercut",
+    "iconUrl": "gui_condition_change03_13_6.png"
+  },
+  "183": {
+    "conditionId": 183,
+    "name": "Respite Aftereffect",
+    "iconUrl": "gui_condition_change_11_4.png"
+  },
+  "184": {
+    "conditionId": 184,
+    "name": "Movement Speed Boost (Ducking Fighter)",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "185": {
+    "conditionId": 185,
+    "name": "Pinned (Pummel)",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "186": {
+    "conditionId": 186,
+    "name": "Dazed (Sommersault Kick/Cannot use Magic or Alchemy)",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "187": {
+    "conditionId": 187,
+    "name": "Using Pummel",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "188": {
+    "conditionId": 188,
+    "name": "Merrow's Curse",
+    "iconUrl": "gui_condition_change_13_4.png"
+  },
+  "189": {
+    "conditionId": 189,
+    "name": "Fighter Skill Training Boost",
+    "iconUrl": "gui_condition_change_2_6.png"
+  },
+  "19": {
+    "conditionId": 19,
+    "name": "Lethargic",
+    "iconUrl": "gui_condition_change_4_1.png"
+  },
+  "190": {
+    "conditionId": 190,
+    "name": "The decal is following the character",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "191": {
+    "conditionId": 191,
+    "name": "Popper Bomb received",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "192": {
+    "conditionId": 192,
+    "name": "Vivace",
+    "iconUrl": "gui_condition_change02_10_7.png"
+  },
+  "193": {
+    "conditionId": 193,
+    "name": "March Song",
+    "iconUrl": "gui_condition_change02_13_7.png"
+  },
+  "194": {
+    "conditionId": 194,
+    "name": "Harvest Song",
+    "iconUrl": "gui_condition_change02_12_7.png"
+  },
+  "195": {
+    "conditionId": 195,
+    "name": "Music of Peace",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "196": {
+    "conditionId": 196,
+    "name": "Batter",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "197": {
+    "conditionId": 197,
+    "name": "수호의 영혼석 사용",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "198": {
+    "conditionId": 198,
+    "name": "교역 불가 상태",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "199": {
+    "conditionId": 199,
+    "name": "Music Skill Training Boost",
+    "iconUrl": "gui_condition_change_3_6.png"
+  },
+  "2": {
+    "conditionId": 2,
+    "name": "Potion Poisoning",
+    "iconUrl": "gui_condition_change_10_1.png"
+  },
+  "20": {
+    "conditionId": 20,
+    "name": "Cancel Dark Knight",
+    "iconUrl": "gui_condition_change_14_1.png"
+  },
+  "200": {
+    "conditionId": 200,
+    "name": "Puppeteer Skill Training Boost",
+    "iconUrl": "gui_condition_change_4_6.png"
+  },
+  "201": {
+    "conditionId": 201,
+    "name": "Flame of Resurrection",
+    "iconUrl": "gui_condition_change_0_5.png"
+  },
+  "202": {
+    "conditionId": 202,
+    "name": "Wire-Bound",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "203": {
+    "conditionId": 203,
+    "name": "Bleeding damage from being bound in puppetry string.",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "204": {
+    "conditionId": 204,
+    "name": "Avon Crystal",
+    "iconUrl": "gui_condition_change_15_4.png"
+  },
+  "205": {
+    "conditionId": 205,
+    "name": "Bounty Hunter Mode",
+    "iconUrl": "gui_condition_change_14_4.png"
+  },
+  "206": {
+    "conditionId": 206,
+    "name": "Marionette Spirit",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "207": {
+    "conditionId": 207,
+    "name": "Getting attacked doesn't cancel skills.",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "208": {
+    "conditionId": 208,
+    "name": "Marionette Spiral Buff (Defense and Protection Increased)",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "209": {
+    "conditionId": 209,
+    "name": "Skill Stun",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "21": {
+    "conditionId": 21,
+    "name": "Camouflage",
+    "iconUrl": "gui_condition_change_6_1.png"
+  },
+  "210": {
+    "conditionId": 210,
+    "name": "Flame of Resurrection",
+    "iconUrl": "gui_condition_change_0_5.png"
+  },
+  "211": {
+    "conditionId": 211,
+    "name": "Bone Dragon Devil's Dash",
+    "iconUrl": "gui_condition_change_12_4.png"
+  },
+  "212": {
+    "conditionId": 212,
+    "name": "Bone Dragon Devil's Cry",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "213": {
+    "conditionId": 213,
+    "name": "Transformation Enhancement",
+    "iconUrl": "gui_condition_change_1_5.png"
+  },
+  "214": {
+    "conditionId": 214,
+    "name": "Increases Damage",
+    "iconUrl": "gui_condition_change_1_5.png"
+  },
+  "215": {
+    "conditionId": 215,
+    "name": "Decreases Damage",
+    "iconUrl": "gui_condition_change_1_5.png"
+  },
+  "216": {
+    "conditionId": 216,
+    "name": "Decreases Defense/Protection",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "217": {
+    "conditionId": 217,
+    "name": "Skill 2x EXP",
+    "iconUrl": "gui_condition_change_3_5.png"
+  },
+  "218": {
+    "conditionId": 218,
+    "name": "Enhances Windmill",
+    "iconUrl": "gui_condition_change_2_5.png"
+  },
+  "219": {
+    "conditionId": 219,
+    "name": "Tangled",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "22": {
+    "conditionId": 22,
+    "name": "Blessed",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "220": {
+    "conditionId": 220,
+    "name": "Berserk",
+    "iconUrl": "gui_condition_change02_15_7.png"
+  },
+  "221": {
+    "conditionId": 221,
+    "name": "Restful Wind",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "222": {
+    "conditionId": 222,
+    "name": "Restful Wind's Embrace",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "223": {
+    "conditionId": 223,
+    "name": "Guard Increase",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "224": {
+    "conditionId": 224,
+    "name": "Steadfast",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "225": {
+    "conditionId": 225,
+    "name": "Absorption",
+    "iconUrl": "gui_condition_change_12_0.png"
+  },
+  "226": {
+    "conditionId": 226,
+    "name": "Increases Quest EXP",
+    "iconUrl": "gui_condition_change_10_0.png"
+  },
+  "227": {
+    "conditionId": 227,
+    "name": "Raid Crystal",
+    "iconUrl": "gui_condition_change_9_5.png"
+  },
+  "228": {
+    "conditionId": 228,
+    "name": "Increases Attack Power against Dragons",
+    "iconUrl": "gui_condition_change_10_5.png"
+  },
+  "229": {
+    "conditionId": 229,
+    "name": "Contribution Bonus",
+    "iconUrl": "gui_condition_change_11_5.png"
+  },
+  "23": {
+    "conditionId": 23,
+    "name": "Invisible",
+    "iconUrl": "gui_condition_change_7_1.png"
+  },
+  "230": {
+    "conditionId": 230,
+    "name": "Way of the Gun",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "231": {
+    "conditionId": 231,
+    "name": "Dual Gun Skill Training Boost",
+    "iconUrl": "gui_condition_change_1_6.png"
+  },
+  "232": {
+    "conditionId": 232,
+    "name": "Wing condition after use",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "233": {
+    "conditionId": 233,
+    "name": "메테오 스트라이크 도트 대미지",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "234": {
+    "conditionId": 234,
+    "name": "Snap Cast",
+    "iconUrl": "gui_condition_change03_1_0.png"
+  },
+  "235": {
+    "conditionId": 235,
+    "name": "Continuous Statue Damage",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "236": {
+    "conditionId": 236,
+    "name": "Enhanced Assault Slash",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "237": {
+    "conditionId": 237,
+    "name": "엔진 쇼크",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "238": {
+    "conditionId": 238,
+    "name": "뮤직 코러스를 사용 한 상태",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "239": {
+    "conditionId": 239,
+    "name": "탄식의 송가",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "24": {
+    "conditionId": 24,
+    "name": "Not Tradable",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "240": {
+    "conditionId": 240,
+    "name": "Elemental Wave",
+    "iconUrl": "gui_condition_change03_11_6.png"
+  },
+  "241": {
+    "conditionId": 241,
+    "name": "Golden Time",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "242": {
+    "conditionId": 242,
+    "name": "Prepare to play a placed Instrument",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "243": {
+    "conditionId": 243,
+    "name": "Life Skill Training Experience Increased (Same Day Effect)",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "244": {
+    "conditionId": 244,
+    "name": "Combat 2x EXP (Same Day Effect)",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "245": {
+    "conditionId": 245,
+    "name": "More EXP from Shadow Missions (Same Day Effect)",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "246": {
+    "conditionId": 246,
+    "name": "Electrocuted by the enhanced Shock skill",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "247": {
+    "conditionId": 247,
+    "name": "Received a passive effect of the Wind Alchemy",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "248": {
+    "conditionId": 248,
+    "name": "선베드 2인용",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "249": {
+    "conditionId": 249,
+    "name": "Abyss Curse",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "25": {
+    "conditionId": 25,
+    "name": "Following",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "250": {
+    "conditionId": 250,
+    "name": "Bloody Duke",
+    "iconUrl": "gui_condition_change_8_0.png"
+  },
+  "251": {
+    "conditionId": 251,
+    "name": "Duke's Temptation",
+    "iconUrl": "gui_condition_change_9_0.png"
+  },
+  "252": {
+    "conditionId": 252,
+    "name": "Crisis Escape",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "253": {
+    "conditionId": 253,
+    "name": "인식 불가",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "254": {
+    "conditionId": 254,
+    "name": "나오의 축복(초보 펫 보너스)",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "255": {
+    "conditionId": 255,
+    "name": "Banshee Howl",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "256": {
+    "conditionId": 256,
+    "name": "Silent Voice",
+    "iconUrl": "gui_condition_change_5_0.png"
+  },
+  "257": {
+    "conditionId": 257,
+    "name": "Beast Roar",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "258": {
+    "conditionId": 258,
+    "name": "Dance Time",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "259": {
+    "conditionId": 259,
+    "name": "Ghost Madness",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "26": {
+    "conditionId": 26,
+    "name": "Chat Banned",
+    "iconUrl": "gui_condition_change_5_0.png"
+  },
+  "260": {
+    "conditionId": 260,
+    "name": "Eastern Vampire Protection",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "261": {
+    "conditionId": 261,
+    "name": "Halloween Channel Buff",
+    "iconUrl": "gui_condition_change_12_5.png"
+  },
+  "262": {
+    "conditionId": 262,
+    "name": "Halloween World",
+    "iconUrl": "gui_condition_change_11_5.png"
+  },
+  "263": {
+    "conditionId": 263,
+    "name": "Flight Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "264": {
+    "conditionId": 264,
+    "name": "",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "265": {
+    "conditionId": 265,
+    "name": "",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "266": {
+    "conditionId": 266,
+    "name": "Stun",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "267": {
+    "conditionId": 267,
+    "name": "Typhoon Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "268": {
+    "conditionId": 268,
+    "name": "",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "269": {
+    "conditionId": 269,
+    "name": "화가난",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "27": {
+    "conditionId": 27,
+    "name": "View Cut Scene",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "270": {
+    "conditionId": 270,
+    "name": "Commerce Speed",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "271": {
+    "conditionId": 271,
+    "name": "Lovey Dovey",
+    "iconUrl": "gui_condition_change_5_6.png"
+  },
+  "272": {
+    "conditionId": 272,
+    "name": "Cooking Production EXP Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "273": {
+    "conditionId": 273,
+    "name": "사다리 오르는",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "274": {
+    "conditionId": 274,
+    "name": "전투모드 돌입",
+    "iconUrl": "gui_condition_change_5_6.png"
+  },
+  "275": {
+    "conditionId": 275,
+    "name": "Movement speed increased",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "276": {
+    "conditionId": 276,
+    "name": "-DEF",
+    "iconUrl": "gui_condition_change_12_4.png"
+  },
+  "277": {
+    "conditionId": 277,
+    "name": "보스무적",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "278": {
+    "conditionId": 278,
+    "name": "보스 앰비언트 사운드",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "279": {
+    "conditionId": 279,
+    "name": "Possessed Ruairi Swng Skill DOT Damage",
+    "iconUrl": "gui_condition_change_14_1.png"
+  },
+  "28": {
+    "conditionId": 28,
+    "name": "Ensemble",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "280": {
+    "conditionId": 280,
+    "name": "Shadow Mission EXP boost",
+    "iconUrl": "gui_condition_change_10_0.png"
+  },
+  "281": {
+    "conditionId": 281,
+    "name": "Ninja Skill Training Boost",
+    "iconUrl": "gui_condition_change_6_6.png"
+  },
+  "282": {
+    "conditionId": 282,
+    "name": "Increase movement and gathering speed",
+    "iconUrl": "gui_condition_change_8_6.png"
+  },
+  "283": {
+    "conditionId": 283,
+    "name": "Increase HP, Wound, MP, Strength recovery rate",
+    "iconUrl": "gui_condition_change_7_6.png"
+  },
+  "284": {
+    "conditionId": 284,
+    "name": "잠재우기",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "285": {
+    "conditionId": 285,
+    "name": "잠재우기 감속",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "286": {
+    "conditionId": 286,
+    "name": "Remove Debuff",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "287": {
+    "conditionId": 287,
+    "name": "Refreshed",
+    "iconUrl": "gui_condition_change_5_6.png"
+  },
+  "288": {
+    "conditionId": 288,
+    "name": "Contagion",
+    "iconUrl": "gui_condition_change_9_6.png"
+  },
+  "289": {
+    "conditionId": 289,
+    "name": "Confinement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "29": {
+    "conditionId": 29,
+    "name": "Increase in Aim Accuracy",
+    "iconUrl": "gui_condition_change_11_1.png"
+  },
+  "290": {
+    "conditionId": 290,
+    "name": "Fanaticism Buff",
+    "iconUrl": "gui_condition_change_10_6.png"
+  },
+  "291": {
+    "conditionId": 291,
+    "name": "Binding Timing",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "292": {
+    "conditionId": 292,
+    "name": "Smiting Timing",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "293": {
+    "conditionId": 293,
+    "name": "Apostle Warding",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "294": {
+    "conditionId": 294,
+    "name": "Smiting Enhancement effect",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "295": {
+    "conditionId": 295,
+    "name": "Shield of Trust",
+    "iconUrl": "gui_condition_change_1_2.png"
+  },
+  "296": {
+    "conditionId": 296,
+    "name": "Celestial Spike",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "297": {
+    "conditionId": 297,
+    "name": "Fatty",
+    "iconUrl": "gui_condition_change_14_2.png"
+  },
+  "298": {
+    "conditionId": 298,
+    "name": "Crusader Warding Power",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "299": {
+    "conditionId": 299,
+    "name": "Celestial Spike Divine Damage",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "3": {
+    "conditionId": 3,
+    "name": "Numb",
+    "iconUrl": "gui_condition_change_4_0.png"
+  },
+  "30": {
+    "conditionId": 30,
+    "name": "Quick Summon",
+    "iconUrl": "gui_condition_change_13_1.png"
+  },
+  "300": {
+    "conditionId": 300,
+    "name": "펫소환 불가 상태",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "301": {
+    "conditionId": 301,
+    "name": "Fanaticism Debuff",
+    "iconUrl": "gui_condition_change_11_6.png"
+  },
+  "302": {
+    "conditionId": 302,
+    "name": "Meditation",
+    "iconUrl": "gui_condition_change_12_6.png"
+  },
+  "303": {
+    "conditionId": 303,
+    "name": "Perfect Pitch",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "304": {
+    "conditionId": 304,
+    "name": "Incarnation",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "305": {
+    "conditionId": 305,
+    "name": "Aquarius Sign",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "306": {
+    "conditionId": 306,
+    "name": "Pisces Sign",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "307": {
+    "conditionId": 307,
+    "name": "Aries Sign",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "308": {
+    "conditionId": 308,
+    "name": "Taurus Sign",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "309": {
+    "conditionId": 309,
+    "name": "Gemini Sign",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "31": {
+    "conditionId": 31,
+    "name": "Weakened Attack",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "310": {
+    "conditionId": 310,
+    "name": "Cancer Sign",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "311": {
+    "conditionId": 311,
+    "name": "Leo Sign",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "312": {
+    "conditionId": 312,
+    "name": "Virgo Sign",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "313": {
+    "conditionId": 313,
+    "name": "Libra Sign",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "314": {
+    "conditionId": 314,
+    "name": "Scorpio Sign",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "315": {
+    "conditionId": 315,
+    "name": "Sagittarius Sign",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "316": {
+    "conditionId": 316,
+    "name": "Capricorn Sign",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "317": {
+    "conditionId": 317,
+    "name": "Close Combat Bleeding Effect",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "318": {
+    "conditionId": 318,
+    "name": "Close Combat Dazed Effect",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "319": {
+    "conditionId": 319,
+    "name": "Close Combat Shatter Effect",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "32": {
+    "conditionId": 32,
+    "name": "Giggle Mushroom Cookie",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "320": {
+    "conditionId": 320,
+    "name": "교역 로그아웃 패널티 면제",
+    "iconUrl": "gui_condition_change_12_5.png"
+  },
+  "321": {
+    "conditionId": 321,
+    "name": "Bash Combo",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "322": {
+    "conditionId": 322,
+    "name": "Bash Combo Max",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "323": {
+    "conditionId": 323,
+    "name": "Damage Curse 2",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "324": {
+    "conditionId": 324,
+    "name": "Enhanced Critical Damage",
+    "iconUrl": "gui_condition_change02_0_5.png"
+  },
+  "325": {
+    "conditionId": 325,
+    "name": "Enhanced Bash",
+    "iconUrl": "gui_condition_change02_0_5.png"
+  },
+  "326": {
+    "conditionId": 326,
+    "name": "Decreased Durability Loss",
+    "iconUrl": "gui_condition_change02_11_2.png"
+  },
+  "327": {
+    "conditionId": 327,
+    "name": "Sleeping Wool",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "328": {
+    "conditionId": 328,
+    "name": "Giving Off the Charm",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "329": {
+    "conditionId": 329,
+    "name": "Light as Wool",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "33": {
+    "conditionId": 33,
+    "name": "Tear Noodles",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "330": {
+    "conditionId": 330,
+    "name": "Ice Spear Deep Freeze",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "331": {
+    "conditionId": 331,
+    "name": "Icebolt Hobble",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "332": {
+    "conditionId": 332,
+    "name": "Increases HP",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "333": {
+    "conditionId": 333,
+    "name": "Increases Max Damage",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "334": {
+    "conditionId": 334,
+    "name": "Increases HP Recovery Speed",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "335": {
+    "conditionId": 335,
+    "name": "Increases MP Recovery Speed",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "336": {
+    "conditionId": 336,
+    "name": "Increases Stamina Recovery Speed",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "337": {
+    "conditionId": 337,
+    "name": "Critical Rate Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "338": {
+    "conditionId": 338,
+    "name": "Increases Training Experience for particular talent skills",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "339": {
+    "conditionId": 339,
+    "name": "Increases Close Combat Talent Skill damage",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "34": {
+    "conditionId": 34,
+    "name": "Crazy Chocolate Balls",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "340": {
+    "conditionId": 340,
+    "name": "Increases Magic Talent Skill Casting Speed",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "341": {
+    "conditionId": 341,
+    "name": "Increases Archer Talent Aim Speed",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "342": {
+    "conditionId": 342,
+    "name": "Increases Gathering Speed and success rate",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "343": {
+    "conditionId": 343,
+    "name": "Sheep Wolf World Quest check",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "344": {
+    "conditionId": 344,
+    "name": "Bonus Damage for Ranged Combat Skills",
+    "iconUrl": "gui_condition_change_12_3.png"
+  },
+  "345": {
+    "conditionId": 345,
+    "name": "Binding",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "346": {
+    "conditionId": 346,
+    "name": "",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "347": {
+    "conditionId": 347,
+    "name": "",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "348": {
+    "conditionId": 348,
+    "name": "마력공급",
+    "iconUrl": "gui_condition_change_5_6.png"
+  },
+  "349": {
+    "conditionId": 349,
+    "name": "마력차단",
+    "iconUrl": "gui_condition_change_3_0.png"
+  },
+  "35": {
+    "conditionId": 35,
+    "name": "Conceited Steak",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "350": {
+    "conditionId": 350,
+    "name": "God Hand: Twelve Labors",
+    "iconUrl": "gui_condition_change_14_1.png"
+  },
+  "351": {
+    "conditionId": 351,
+    "name": "Smokescreen",
+    "iconUrl": "gui_condition_change03_15_6.png"
+  },
+  "352": {
+    "conditionId": 352,
+    "name": "Soul Linked",
+    "iconUrl": "gui_condition_change_13_6.png"
+  },
+  "353": {
+    "conditionId": 353,
+    "name": "Soul Linked",
+    "iconUrl": "gui_condition_change_13_6.png"
+  },
+  "354": {
+    "conditionId": 354,
+    "name": "Cooking Training EXP Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "355": {
+    "conditionId": 355,
+    "name": "Cooking Training EXP Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "356": {
+    "conditionId": 356,
+    "name": "Cooking Quality Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "357": {
+    "conditionId": 357,
+    "name": "Cooking Buff Duration Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "358": {
+    "conditionId": 358,
+    "name": "Judgment Blade Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "359": {
+    "conditionId": 359,
+    "name": "Lance Charge Enhancement",
+    "iconUrl": "gui_condition_change02_3_5.png"
+  },
+  "36": {
+    "conditionId": 36,
+    "name": "Gateau Chocolat of Ecstasy",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "360": {
+    "conditionId": 360,
+    "name": "Fallen Fairy Summon Skill",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "361": {
+    "conditionId": 361,
+    "name": "Increases Movement Speed",
+    "iconUrl": "gui_condition_change_15_6.png"
+  },
+  "362": {
+    "conditionId": 362,
+    "name": "Increases Attack Speed",
+    "iconUrl": "gui_condition_change_14_6.png"
+  },
+  "363": {
+    "conditionId": 363,
+    "name": "the Returned",
+    "iconUrl": "gui_condition_change_3_5.png"
+  },
+  "364": {
+    "conditionId": 364,
+    "name": "풍등 날리기",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "365": {
+    "conditionId": 365,
+    "name": "Craft Success Rate Enhanced",
+    "iconUrl": "gui_condition_change_0_7.png"
+  },
+  "366": {
+    "conditionId": 366,
+    "name": "Safeguard",
+    "iconUrl": "gui_condition_change_2_7.png"
+  },
+  "367": {
+    "conditionId": 367,
+    "name": "Berserk Phantom",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "368": {
+    "conditionId": 368,
+    "name": "Wraith's Roar",
+    "iconUrl": "gui_condition_change_1_7.png"
+  },
+  "369": {
+    "conditionId": 369,
+    "name": "Captive Audience",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "37": {
+    "conditionId": 37,
+    "name": "Poison Immunity",
+    "iconUrl": "gui_condition_change_0_2.png"
+  },
+  "370": {
+    "conditionId": 370,
+    "name": "Soul Rift",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "371": {
+    "conditionId": 371,
+    "name": "Combat 2x EXP (Event)",
+    "iconUrl": "gui_condition_change_10_0.png"
+  },
+  "372": {
+    "conditionId": 372,
+    "name": "Cannot be revived by the balloon.",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "373": {
+    "conditionId": 373,
+    "name": "Stealth Soul",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "374": {
+    "conditionId": 374,
+    "name": "Doki Doki Wig Condition 1",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "375": {
+    "conditionId": 375,
+    "name": "Doki Doki Wig Condition 2",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "376": {
+    "conditionId": 376,
+    "name": "Doki Doki Wig Condition 3",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "377": {
+    "conditionId": 377,
+    "name": "_LT[xml.charactercondition.937]",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "378": {
+    "conditionId": 378,
+    "name": "Boss Monster Hit Check Condition",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "379": {
+    "conditionId": 379,
+    "name": "Scooter Imp Summon Skill",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "38": {
+    "conditionId": 38,
+    "name": "Petrification Immunity",
+    "iconUrl": "gui_condition_change_1_2.png"
+  },
+  "380": {
+    "conditionId": 380,
+    "name": "Tiny Jibes",
+    "iconUrl": "gui_condition_change_12_4.png"
+  },
+  "381": {
+    "conditionId": 381,
+    "name": "Pet Combat 2x EXP",
+    "iconUrl": "gui_condition_change_3_7.png"
+  },
+  "382": {
+    "conditionId": 382,
+    "name": "Movement Speed Increase",
+    "iconUrl": "gui_condition_change_8_6.png"
+  },
+  "383": {
+    "conditionId": 383,
+    "name": "Shooting Gallery",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "384": {
+    "conditionId": 384,
+    "name": "Play Music Box",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "385": {
+    "conditionId": 385,
+    "name": "Great Mood",
+    "iconUrl": "gui_condition_change_10_6.png"
+  },
+  "386": {
+    "conditionId": 386,
+    "name": "Movement Speed Increase",
+    "iconUrl": "gui_condition_change02_9_6.png"
+  },
+  "387": {
+    "conditionId": 387,
+    "name": "Attack Delay Reduction",
+    "iconUrl": "gui_condition_change02_9_6.png"
+  },
+  "388": {
+    "conditionId": 388,
+    "name": "Max Damage Increase",
+    "iconUrl": "gui_condition_change02_4_5.png"
+  },
+  "389": {
+    "conditionId": 389,
+    "name": "Magic Attack Increase",
+    "iconUrl": "gui_condition_change02_7_5.png"
+  },
+  "39": {
+    "conditionId": 39,
+    "name": "Mana Usage Reduction",
+    "iconUrl": "gui_condition_change_2_2.png"
+  },
+  "390": {
+    "conditionId": 390,
+    "name": "No Summon, No Skill",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "391": {
+    "conditionId": 391,
+    "name": "Immune to DoT Damage",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "392": {
+    "conditionId": 392,
+    "name": "Lightning Breath",
+    "iconUrl": "gui_condition_change04_5_0.png"
+  },
+  "393": {
+    "conditionId": 393,
+    "name": "Melody Step",
+    "iconUrl": "gui_condition_change_4_7.png"
+  },
+  "394": {
+    "conditionId": 394,
+    "name": "Psychomancy",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "395": {
+    "conditionId": 395,
+    "name": "Blessed Melody Step",
+    "iconUrl": "gui_condition_change_5_7.png"
+  },
+  "396": {
+    "conditionId": 396,
+    "name": "Recovery Potion Effect Bonus",
+    "iconUrl": "gui_condition_change_7_7.png"
+  },
+  "397": {
+    "conditionId": 397,
+    "name": "Exploration EXP Bonus",
+    "iconUrl": "gui_condition_change_9_7.png"
+  },
+  "398": {
+    "conditionId": 398,
+    "name": "Huge Lucky Bonus",
+    "iconUrl": "gui_condition_change_12_0.png"
+  },
+  "399": {
+    "conditionId": 399,
+    "name": "Stats Boost",
+    "iconUrl": "gui_condition_change_6_7.png"
+  },
+  "4": {
+    "conditionId": 4,
+    "name": "Silence",
+    "iconUrl": "gui_condition_change_5_0.png"
+  },
+  "40": {
+    "conditionId": 40,
+    "name": "Stamina Usage Reduction",
+    "iconUrl": "gui_condition_change_3_2.png"
+  },
+  "400": {
+    "conditionId": 400,
+    "name": "Production EXP Bonus",
+    "iconUrl": "gui_condition_change_8_7.png"
+  },
+  "401": {
+    "conditionId": 401,
+    "name": "Combat EXP x4",
+    "iconUrl": "gui_condition_change_10_0.png"
+  },
+  "402": {
+    "conditionId": 402,
+    "name": "MP Consumption Decrease",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "403": {
+    "conditionId": 403,
+    "name": "Stamina Consumption Decrease",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "404": {
+    "conditionId": 404,
+    "name": "Critical Increase",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "405": {
+    "conditionId": 405,
+    "name": "Use Imp Mini Potion",
+    "iconUrl": "gui_condition_change_10_7.png"
+  },
+  "406": {
+    "conditionId": 406,
+    "name": "Breath of Ladeca",
+    "iconUrl": "gui_condition_change_11_7.png"
+  },
+  "407": {
+    "conditionId": 407,
+    "name": "Vision of Ladeca",
+    "iconUrl": "gui_condition_change_12_7.png"
+  },
+  "408": {
+    "conditionId": 408,
+    "name": "Might of Ladeca",
+    "iconUrl": "gui_condition_change_13_7.png"
+  },
+  "409": {
+    "conditionId": 409,
+    "name": "Crusader Skill Training Boost",
+    "iconUrl": "gui_condition_change02_8_0.png"
+  },
+  "41": {
+    "conditionId": 41,
+    "name": "Explosive Resistance",
+    "iconUrl": "gui_condition_change_4_2.png"
+  },
+  "410": {
+    "conditionId": 410,
+    "name": "Dance of Death",
+    "iconUrl": "gui_condition_change_14_7.png"
+  },
+  "411": {
+    "conditionId": 411,
+    "name": "Dance of Death Debuff",
+    "iconUrl": "gui_condition_change_15_7.png"
+  },
+  "412": {
+    "conditionId": 412,
+    "name": "Shadowlike",
+    "iconUrl": "gui_condition_change_7_1.png"
+  },
+  "413": {
+    "conditionId": 413,
+    "name": "Bleeding",
+    "iconUrl": "gui_condition_change_8_0.png"
+  },
+  "414": {
+    "conditionId": 414,
+    "name": "Increases Attack Speed",
+    "iconUrl": "gui_condition_change_14_6.png"
+  },
+  "415": {
+    "conditionId": 415,
+    "name": "Increases Movement Speed",
+    "iconUrl": "gui_condition_change_15_6.png"
+  },
+  "416": {
+    "conditionId": 416,
+    "name": "_LT[xml.charactercondition.1015]",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "417": {
+    "conditionId": 417,
+    "name": "Interrupted Connection",
+    "iconUrl": "gui_condition_change_8_1.png"
+  },
+  "418": {
+    "conditionId": 418,
+    "name": "_LT[xml.charactercondition.1019]",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "419": {
+    "conditionId": 419,
+    "name": "Peeved",
+    "iconUrl": "gui_condition_change02_1_0.png"
+  },
+  "42": {
+    "conditionId": 42,
+    "name": "Stomp Resistance",
+    "iconUrl": "gui_condition_change_5_2.png"
+  },
+  "420": {
+    "conditionId": 420,
+    "name": "Enemy Movement Speed Decrease",
+    "iconUrl": "gui_condition_change_15_6.png"
+  },
+  "421": {
+    "conditionId": 421,
+    "name": "Increases Movement Speed",
+    "iconUrl": "gui_condition_change_15_6.png"
+  },
+  "422": {
+    "conditionId": 422,
+    "name": "Exploration EXP Bonus",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "423": {
+    "conditionId": 423,
+    "name": "Homestead Stone+",
+    "iconUrl": "gui_condition_change02_2_0.png"
+  },
+  "424": {
+    "conditionId": 424,
+    "name": "Cannot move",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "425": {
+    "conditionId": 425,
+    "name": "Acquire Bachram",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "426": {
+    "conditionId": 426,
+    "name": "Death Mark",
+    "iconUrl": "gui_condition_change03_0_7.png"
+  },
+  "427": {
+    "conditionId": 427,
+    "name": "Chain Burst",
+    "iconUrl": "gui_condition_change02_14_7.png"
+  },
+  "428": {
+    "conditionId": 428,
+    "name": "Bachram Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "429": {
+    "conditionId": 429,
+    "name": "Baltane Mission EXP Bonus",
+    "iconUrl": "gui_condition_change02_6_0.png"
+  },
+  "43": {
+    "conditionId": 43,
+    "name": "Mana Usage Increase",
+    "iconUrl": "gui_condition_change_6_2.png"
+  },
+  "430": {
+    "conditionId": 430,
+    "name": "Chain Slash Skill Training Boost",
+    "iconUrl": "gui_condition_change02_5_0.png"
+  },
+  "431": {
+    "conditionId": 431,
+    "name": "Receiver of Nao's Blessing",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "432": {
+    "conditionId": 432,
+    "name": "Let's go nuts and have an adventure!",
+    "iconUrl": "gui_condition_change02_10_0.png"
+  },
+  "433": {
+    "conditionId": 433,
+    "name": "Meditation Potion",
+    "iconUrl": "gui_condition_change02_7_0.png"
+  },
+  "434": {
+    "conditionId": 434,
+    "name": "Crusader 2x EXP",
+    "iconUrl": "gui_condition_change02_11_0.png"
+  },
+  "435": {
+    "conditionId": 435,
+    "name": "Music Buff Skill Effect Boost",
+    "iconUrl": "gui_condition_change02_9_0.png"
+  },
+  "436": {
+    "conditionId": 436,
+    "name": "Dorcha Leech Amount Increase",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "437": {
+    "conditionId": 437,
+    "name": "Death Mark Damage Increase",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "438": {
+    "conditionId": 438,
+    "name": "Attack Delay Reduction",
+    "iconUrl": "gui_condition_change_9_2.png"
+  },
+  "439": {
+    "conditionId": 439,
+    "name": "Aquarius Sign",
+    "iconUrl": "gui_condition_change_7_7.png"
+  },
+  "44": {
+    "conditionId": 44,
+    "name": "Stamina Usage Increase",
+    "iconUrl": "gui_condition_change_7_2.png"
+  },
+  "440": {
+    "conditionId": 440,
+    "name": "Pisces Sign",
+    "iconUrl": "gui_condition_change_7_7.png"
+  },
+  "441": {
+    "conditionId": 441,
+    "name": "Aries Sign",
+    "iconUrl": "gui_condition_change_7_7.png"
+  },
+  "442": {
+    "conditionId": 442,
+    "name": "Taurus Sign",
+    "iconUrl": "gui_condition_change_7_7.png"
+  },
+  "443": {
+    "conditionId": 443,
+    "name": "Gemini Sign",
+    "iconUrl": "gui_condition_change_7_7.png"
+  },
+  "444": {
+    "conditionId": 444,
+    "name": "Cancer Sign",
+    "iconUrl": "gui_condition_change_7_7.png"
+  },
+  "445": {
+    "conditionId": 445,
+    "name": "Leo Sign",
+    "iconUrl": "gui_condition_change_7_7.png"
+  },
+  "446": {
+    "conditionId": 446,
+    "name": "Virgo Sign",
+    "iconUrl": "gui_condition_change_7_7.png"
+  },
+  "447": {
+    "conditionId": 447,
+    "name": "Libra Sign",
+    "iconUrl": "gui_condition_change_7_7.png"
+  },
+  "448": {
+    "conditionId": 448,
+    "name": "Scorpio Sign",
+    "iconUrl": "gui_condition_change_7_7.png"
+  },
+  "449": {
+    "conditionId": 449,
+    "name": "Sagittarius Sign",
+    "iconUrl": "gui_condition_change_7_7.png"
+  },
+  "45": {
+    "conditionId": 45,
+    "name": "Shrimp Fried Rice of Friendship",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "450": {
+    "conditionId": 450,
+    "name": "Capricorn Sign",
+    "iconUrl": "gui_condition_change_7_7.png"
+  },
+  "451": {
+    "conditionId": 451,
+    "name": "Prism",
+    "iconUrl": "gui_condition_change02_12_0.png"
+  },
+  "452": {
+    "conditionId": 452,
+    "name": "Blue Prism",
+    "iconUrl": "gui_condition_change02_13_0.png"
+  },
+  "453": {
+    "conditionId": 453,
+    "name": "_LT[xml.charactercondition.1088]",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "454": {
+    "conditionId": 454,
+    "name": "Loving Bond",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "455": {
+    "conditionId": 455,
+    "name": "Party Buff",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "456": {
+    "conditionId": 456,
+    "name": "Orange Prism",
+    "iconUrl": "gui_condition_change02_14_0.png"
+  },
+  "457": {
+    "conditionId": 457,
+    "name": "Yellow Prism",
+    "iconUrl": "gui_condition_change02_15_0.png"
+  },
+  "458": {
+    "conditionId": 458,
+    "name": "Sky Blue Prism",
+    "iconUrl": "gui_condition_change02_0_1.png"
+  },
+  "459": {
+    "conditionId": 459,
+    "name": "_LT[xml.charactercondition.1100]",
+    "iconUrl": "gui_condition_change02_1_1.png"
+  },
+  "46": {
+    "conditionId": 46,
+    "name": "Fire Shield",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "460": {
+    "conditionId": 460,
+    "name": "Unable to Use Crusader Skills",
+    "iconUrl": "gui_condition_change02_3_1.png"
+  },
+  "461": {
+    "conditionId": 461,
+    "name": "Critical Counter",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "462": {
+    "conditionId": 462,
+    "name": "Vulnerability Revealed!",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "463": {
+    "conditionId": 463,
+    "name": "Crusader EXP Increase",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "464": {
+    "conditionId": 464,
+    "name": "Frozen",
+    "iconUrl": "gui_condition_change02_2_1.png"
+  },
+  "465": {
+    "conditionId": 465,
+    "name": "Frozen",
+    "iconUrl": "gui_condition_change02_2_1.png"
+  },
+  "466": {
+    "conditionId": 466,
+    "name": "Blink",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "467": {
+    "conditionId": 467,
+    "name": "Mini Hold Up",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "468": {
+    "conditionId": 468,
+    "name": "Nascent Divinity Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "469": {
+    "conditionId": 469,
+    "name": "Movement Speed Down",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "47": {
+    "conditionId": 47,
+    "name": "Ice Shield",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "470": {
+    "conditionId": 470,
+    "name": "Nascent Divinity",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "471": {
+    "conditionId": 471,
+    "name": "Doll Companion Bonus",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "472": {
+    "conditionId": 472,
+    "name": "Baltane Combat EXP Boost",
+    "iconUrl": "gui_condition_change_10_0.png"
+  },
+  "473": {
+    "conditionId": 473,
+    "name": "Rich Aroma",
+    "iconUrl": "gui_condition_change02_4_1.png"
+  },
+  "474": {
+    "conditionId": 474,
+    "name": "크리티컬 대미지 증가",
+    "iconUrl": "gui_condition_change02_9_0.png"
+  },
+  "475": {
+    "conditionId": 475,
+    "name": "음악 버프 스킬 효과 증가",
+    "iconUrl": "gui_condition_change02_9_0.png"
+  },
+  "476": {
+    "conditionId": 476,
+    "name": "Exploit Weakness",
+    "iconUrl": "gui_condition_change_12_2.png"
+  },
+  "477": {
+    "conditionId": 477,
+    "name": "Relentless Assault",
+    "iconUrl": "gui_condition_change_14_6.png"
+  },
+  "478": {
+    "conditionId": 478,
+    "name": "Vital Surge",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "479": {
+    "conditionId": 479,
+    "name": "Iron Will",
+    "iconUrl": "gui_condition_change02_4_2.png"
+  },
+  "48": {
+    "conditionId": 48,
+    "name": "Lightning Shield",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "480": {
+    "conditionId": 480,
+    "name": "Purple Prism",
+    "iconUrl": "gui_condition_change02_9_1.png"
+  },
+  "481": {
+    "conditionId": 481,
+    "name": "Green Prism",
+    "iconUrl": "gui_condition_change02_10_1.png"
+  },
+  "482": {
+    "conditionId": 482,
+    "name": "Red Prism",
+    "iconUrl": "gui_condition_change02_11_1.png"
+  },
+  "483": {
+    "conditionId": 483,
+    "name": "Elemental Attunement",
+    "iconUrl": "gui_condition_change02_5_2.png"
+  },
+  "484": {
+    "conditionId": 484,
+    "name": "Elemental Attunement",
+    "iconUrl": "gui_condition_change02_6_2.png"
+  },
+  "485": {
+    "conditionId": 485,
+    "name": "Elemental Attunement",
+    "iconUrl": "gui_condition_change_8_0.png"
+  },
+  "486": {
+    "conditionId": 486,
+    "name": "Hard",
+    "iconUrl": "gui_condition_change02_2_2.png"
+  },
+  "487": {
+    "conditionId": 487,
+    "name": "Time Shift",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "488": {
+    "conditionId": 488,
+    "name": "Lorna's Growth Support",
+    "iconUrl": "gui_condition_change02_13_1.png"
+  },
+  "489": {
+    "conditionId": 489,
+    "name": "Lorna's Growth Support Stage 1",
+    "iconUrl": "gui_condition_change02_14_1.png"
+  },
+  "49": {
+    "conditionId": 49,
+    "name": "Natural Shield",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "490": {
+    "conditionId": 490,
+    "name": "Lorna's Growth Support Stage 2",
+    "iconUrl": "gui_condition_change02_15_1.png"
+  },
+  "491": {
+    "conditionId": 491,
+    "name": "Lorna's Growth Support Stage 3",
+    "iconUrl": "gui_condition_change02_0_2.png"
+  },
+  "492": {
+    "conditionId": 492,
+    "name": "Lorna's Growth Support Bonus",
+    "iconUrl": "gui_condition_change02_1_2.png"
+  },
+  "493": {
+    "conditionId": 493,
+    "name": "Lorna's Special Support",
+    "iconUrl": "gui_condition_change02_12_1.png"
+  },
+  "494": {
+    "conditionId": 494,
+    "name": "Invincible",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "495": {
+    "conditionId": 495,
+    "name": "Illusion Decal condition",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "496": {
+    "conditionId": 496,
+    "name": "HP and Wound recovery",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "497": {
+    "conditionId": 497,
+    "name": "Defiance Activation Boost",
+    "iconUrl": "gui_condition_change02_7_2.png"
+  },
+  "498": {
+    "conditionId": 498,
+    "name": "Iron Will Duration Boost",
+    "iconUrl": "gui_condition_change02_4_2.png"
+  },
+  "499": {
+    "conditionId": 499,
+    "name": "Vital Surge Duration Boost",
+    "iconUrl": "gui_condition_change02_8_2.png"
+  },
+  "5": {
+    "conditionId": 5,
+    "name": "Petrified",
+    "iconUrl": "gui_condition_change_6_0.png"
+  },
+  "50": {
+    "conditionId": 50,
+    "name": "Move Slow",
+    "iconUrl": "gui_condition_change_8_2.png"
+  },
+  "500": {
+    "conditionId": 500,
+    "name": "Redoubled Offensive Activation Boost",
+    "iconUrl": "gui_condition_change02_9_2.png"
+  },
+  "501": {
+    "conditionId": 501,
+    "name": "Exploit Weakness Duration Boost",
+    "iconUrl": "gui_condition_change_12_2.png"
+  },
+  "502": {
+    "conditionId": 502,
+    "name": "Relentless Assault Duration Boost",
+    "iconUrl": "gui_condition_change_14_6.png"
+  },
+  "503": {
+    "conditionId": 503,
+    "name": "Powerless Status",
+    "iconUrl": "gui_condition_change_11_6.png"
+  },
+  "504": {
+    "conditionId": 504,
+    "name": "Lightning Wave",
+    "iconUrl": "gui_condition_change04_5_0.png"
+  },
+  "505": {
+    "conditionId": 505,
+    "name": "Defiance Activation Boost",
+    "iconUrl": "gui_condition_change02_7_2.png"
+  },
+  "506": {
+    "conditionId": 506,
+    "name": "Iron Will Duration Boost",
+    "iconUrl": "gui_condition_change02_4_2.png"
+  },
+  "507": {
+    "conditionId": 507,
+    "name": "Vital Surge Duration Boost",
+    "iconUrl": "gui_condition_change02_8_2.png"
+  },
+  "508": {
+    "conditionId": 508,
+    "name": "Redoubled Offensive Activation Boost",
+    "iconUrl": "gui_condition_change02_9_2.png"
+  },
+  "509": {
+    "conditionId": 509,
+    "name": "Exploit Weakness Duration Boost",
+    "iconUrl": "gui_condition_change_12_2.png"
+  },
+  "51": {
+    "conditionId": 51,
+    "name": "Master Gatherer",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "510": {
+    "conditionId": 510,
+    "name": "Relentless Assault Duration Boost",
+    "iconUrl": "gui_condition_change_14_6.png"
+  },
+  "511": {
+    "conditionId": 511,
+    "name": "Aspect of Might",
+    "iconUrl": "gui_condition_change02_14_2.png"
+  },
+  "512": {
+    "conditionId": 512,
+    "name": "Aspect of Fortification",
+    "iconUrl": "gui_condition_change02_15_2.png"
+  },
+  "513": {
+    "conditionId": 513,
+    "name": "Aspect of Swiftness",
+    "iconUrl": "gui_condition_change02_0_3.png"
+  },
+  "514": {
+    "conditionId": 514,
+    "name": "Aspect of Focus",
+    "iconUrl": "gui_condition_change02_1_3.png"
+  },
+  "515": {
+    "conditionId": 515,
+    "name": "Aspect of Reversal",
+    "iconUrl": "gui_condition_change02_2_3.png"
+  },
+  "516": {
+    "conditionId": 516,
+    "name": "Awaken",
+    "iconUrl": "gui_condition_change02_3_3.png"
+  },
+  "517": {
+    "conditionId": 517,
+    "name": "Tenacious Taunt - Caster",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "518": {
+    "conditionId": 518,
+    "name": "Tenacious Taunt - Target",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "519": {
+    "conditionId": 519,
+    "name": "Tenacious Taunt",
+    "iconUrl": "gui_condition_change02_6_3.png"
+  },
+  "52": {
+    "conditionId": 52,
+    "name": "Charge",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "520": {
+    "conditionId": 520,
+    "name": "Steadfast",
+    "iconUrl": "gui_condition_change02_4_3.png"
+  },
+  "521": {
+    "conditionId": 521,
+    "name": "Phantasmal Sight",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "522": {
+    "conditionId": 522,
+    "name": "Zone of Renewal",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "523": {
+    "conditionId": 523,
+    "name": "Gathering Success Rate Boost",
+    "iconUrl": "gui_condition_change02_10_2.png"
+  },
+  "524": {
+    "conditionId": 524,
+    "name": "Stampede Enhancement",
+    "iconUrl": "gui_condition_change02_12_2.png"
+  },
+  "525": {
+    "conditionId": 525,
+    "name": "Final Strike Enhancement",
+    "iconUrl": "gui_condition_change02_13_2.png"
+  },
+  "526": {
+    "conditionId": 526,
+    "name": "Final Strike",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "527": {
+    "conditionId": 527,
+    "name": "Chained Close Combat Skill Enhancement",
+    "iconUrl": "gui_condition_change02_11_2.png"
+  },
+  "528": {
+    "conditionId": 528,
+    "name": "Manannan's Rising Waters",
+    "iconUrl": "gui_condition_change02_11_2.png"
+  },
+  "529": {
+    "conditionId": 529,
+    "name": "Possession",
+    "iconUrl": "gui_condition_change_1_0.png"
+  },
+  "53": {
+    "conditionId": 53,
+    "name": "Attack Speed Increase",
+    "iconUrl": "gui_condition_change_9_2.png"
+  },
+  "530": {
+    "conditionId": 530,
+    "name": "Talek's Illusion",
+    "iconUrl": "gui_condition_change_0_7.png"
+  },
+  "531": {
+    "conditionId": 531,
+    "name": "_LT[xml.charactercondition.1231]",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "532": {
+    "conditionId": 532,
+    "name": "Battle Alchemy Enhancement",
+    "iconUrl": "gui_condition_change02_8_5.png"
+  },
+  "533": {
+    "conditionId": 533,
+    "name": "Transmutation Enhancement",
+    "iconUrl": "gui_condition_change02_8_5.png"
+  },
+  "534": {
+    "conditionId": 534,
+    "name": "Hero Alchemy Enhancement",
+    "iconUrl": "gui_condition_change02_8_5.png"
+  },
+  "535": {
+    "conditionId": 535,
+    "name": "Marionette Stun Resistance Rate",
+    "iconUrl": "gui_condition_change02_10_5.png"
+  },
+  "536": {
+    "conditionId": 536,
+    "name": "Marionette Critical Damage Enhancement",
+    "iconUrl": "gui_condition_change02_10_5.png"
+  },
+  "537": {
+    "conditionId": 537,
+    "name": "Puppetry skill cooldown decreased",
+    "iconUrl": "gui_condition_change02_10_5.png"
+  },
+  "538": {
+    "conditionId": 538,
+    "name": "Special Potion Effect",
+    "iconUrl": "gui_condition_change02_5_3.png"
+  },
+  "539": {
+    "conditionId": 539,
+    "name": "Kraken Rex Ink Skill Shield",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "54": {
+    "conditionId": 54,
+    "name": "달빛 이팩트 컨디션",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "540": {
+    "conditionId": 540,
+    "name": "Condition to check whether the player is under Kraken Leg's coiling attack",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "541": {
+    "conditionId": 541,
+    "name": "Kraken Poison",
+    "iconUrl": "gui_condition_change_2_0.png"
+  },
+  "542": {
+    "conditionId": 542,
+    "name": "Combat EXP Increase",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "543": {
+    "conditionId": 543,
+    "name": "Pet Mana Shield",
+    "iconUrl": "gui_condition_change_11_2.png"
+  },
+  "544": {
+    "conditionId": 544,
+    "name": "Magic Defense and Magic Protection Boost",
+    "iconUrl": "gui_condition_change02_7_3.png"
+  },
+  "545": {
+    "conditionId": 545,
+    "name": "Healing Rays",
+    "iconUrl": "gui_condition_change02_8_3.png"
+  },
+  "546": {
+    "conditionId": 546,
+    "name": "Area Healing Effect",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "547": {
+    "conditionId": 547,
+    "name": "Bonding Ties",
+    "iconUrl": "gui_condition_change02_9_3.png"
+  },
+  "55": {
+    "conditionId": 55,
+    "name": "Sulfur Poisoning",
+    "iconUrl": "gui_condition_change_10_2.png"
+  },
+  "550": {
+    "conditionId": 550,
+    "name": "Increases Movement Speed",
+    "iconUrl": "gui_condition_change02_15_3.png"
+  },
+  "551": {
+    "conditionId": 551,
+    "name": "Bleeding",
+    "iconUrl": "gui_condition_change02_13_3.png"
+  },
+  "552": {
+    "conditionId": 552,
+    "name": "Decreases Defense/Protection",
+    "iconUrl": "gui_condition_change02_14_3.png"
+  },
+  "553": {
+    "conditionId": 553,
+    "name": "Increases Cast Range",
+    "iconUrl": "gui_condition_change02_12_3.png"
+  },
+  "554": {
+    "conditionId": 554,
+    "name": "Restores MP",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "555": {
+    "conditionId": 555,
+    "name": "Shield",
+    "iconUrl": "gui_condition_change_11_2.png"
+  },
+  "556": {
+    "conditionId": 556,
+    "name": "Concert Goer",
+    "iconUrl": "gui_condition_change02_10_3.png"
+  },
+  "557": {
+    "conditionId": 557,
+    "name": "Burn",
+    "iconUrl": "gui_condition_change_14_1.png"
+  },
+  "558": {
+    "conditionId": 558,
+    "name": "Aquarius Starbright Potion",
+    "iconUrl": "gui_condition_change02_11_3.png"
+  },
+  "559": {
+    "conditionId": 559,
+    "name": "Pisces Starbright Potion",
+    "iconUrl": "gui_condition_change02_11_3.png"
+  },
+  "56": {
+    "conditionId": 56,
+    "name": "Burn",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "560": {
+    "conditionId": 560,
+    "name": "Aries Starbright Potion",
+    "iconUrl": "gui_condition_change02_11_3.png"
+  },
+  "561": {
+    "conditionId": 561,
+    "name": "Taurus Starbright Potion",
+    "iconUrl": "gui_condition_change02_11_3.png"
+  },
+  "562": {
+    "conditionId": 562,
+    "name": "Gemini Starbright Potion",
+    "iconUrl": "gui_condition_change02_11_3.png"
+  },
+  "563": {
+    "conditionId": 563,
+    "name": "Cancer Starbright Potion",
+    "iconUrl": "gui_condition_change02_11_3.png"
+  },
+  "564": {
+    "conditionId": 564,
+    "name": "Leo Starbright Potion",
+    "iconUrl": "gui_condition_change02_11_3.png"
+  },
+  "565": {
+    "conditionId": 565,
+    "name": "Virgo Starbright Potion",
+    "iconUrl": "gui_condition_change02_11_3.png"
+  },
+  "566": {
+    "conditionId": 566,
+    "name": "Libra Starbright Potion",
+    "iconUrl": "gui_condition_change02_11_3.png"
+  },
+  "567": {
+    "conditionId": 567,
+    "name": "Scorpio Starbright Potion",
+    "iconUrl": "gui_condition_change02_11_3.png"
+  },
+  "568": {
+    "conditionId": 568,
+    "name": "Sagittarius Starbright Potion",
+    "iconUrl": "gui_condition_change02_11_3.png"
+  },
+  "569": {
+    "conditionId": 569,
+    "name": "Capricorn Starbright Potion",
+    "iconUrl": "gui_condition_change02_11_3.png"
+  },
+  "57": {
+    "conditionId": 57,
+    "name": "Ice",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "570": {
+    "conditionId": 570,
+    "name": "Combat 5x EXP",
+    "iconUrl": "gui_condition_change_10_0.png"
+  },
+  "571": {
+    "conditionId": 571,
+    "name": "Nightmare",
+    "iconUrl": "gui_condition_change_15_1.png"
+  },
+  "572": {
+    "conditionId": 572,
+    "name": "Debuff Defense",
+    "iconUrl": "gui_condition_change_1_2.png"
+  },
+  "573": {
+    "conditionId": 573,
+    "name": "Combat EXP Increase",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "574": {
+    "conditionId": 574,
+    "name": "Lightning Rod Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "575": {
+    "conditionId": 575,
+    "name": "Skill 3x EXP",
+    "iconUrl": "gui_condition_change_3_5.png"
+  },
+  "576": {
+    "conditionId": 576,
+    "name": "Indomitable Knight",
+    "iconUrl": "gui_condition_change02_4_2.png"
+  },
+  "577": {
+    "conditionId": 577,
+    "name": "Spirit Awakening Skill Buff",
+    "iconUrl": "gui_condition_change02_0_4.png"
+  },
+  "578": {
+    "conditionId": 578,
+    "name": "Circle of Magic",
+    "iconUrl": "gui_condition_change02_1_4.png"
+  },
+  "579": {
+    "conditionId": 579,
+    "name": "Mark of Light",
+    "iconUrl": "gui_condition_change02_2_4.png"
+  },
+  "58": {
+    "conditionId": 58,
+    "name": "별사탕",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "580": {
+    "conditionId": 580,
+    "name": "Decaying Swamp Poisoning",
+    "iconUrl": "gui_condition_change_10_2.png"
+  },
+  "581": {
+    "conditionId": 581,
+    "name": "Stage 1 Effect for Watching the Concert: Pet Combat 2x EXP",
+    "iconUrl": "gui_condition_change_3_7.png"
+  },
+  "582": {
+    "conditionId": 582,
+    "name": "Blissful Aura Effect",
+    "iconUrl": "gui_condition_change02_3_4.png"
+  },
+  "583": {
+    "conditionId": 583,
+    "name": "Weaken",
+    "iconUrl": "gui_condition_change_3_0.png"
+  },
+  "584": {
+    "conditionId": 584,
+    "name": "Wild Frenzy",
+    "iconUrl": "gui_condition_change02_4_4.png"
+  },
+  "585": {
+    "conditionId": 585,
+    "name": "Wings of Haste",
+    "iconUrl": "gui_condition_change02_5_4.png"
+  },
+  "586": {
+    "conditionId": 586,
+    "name": "Milletian Booster",
+    "iconUrl": "gui_condition_change_3_5.png"
+  },
+  "587": {
+    "conditionId": 587,
+    "name": "Tein Element Burn",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "588": {
+    "conditionId": 588,
+    "name": "Gao Element Contagion",
+    "iconUrl": "gui_condition_change_1_0.png"
+  },
+  "589": {
+    "conditionId": 589,
+    "name": "Exclusive Fynn Pet Food Buff",
+    "iconUrl": "gui_condition_change02_11_4.png"
+  },
+  "59": {
+    "conditionId": 59,
+    "name": "Mana Shield",
+    "iconUrl": "gui_condition_change_11_2.png"
+  },
+  "590": {
+    "conditionId": 590,
+    "name": "Floral Shield",
+    "iconUrl": "gui_condition_change02_6_4.png"
+  },
+  "591": {
+    "conditionId": 591,
+    "name": "Fleur Shield",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "592": {
+    "conditionId": 592,
+    "name": "Petal Protection",
+    "iconUrl": "gui_condition_change02_14_4.png"
+  },
+  "593": {
+    "conditionId": 593,
+    "name": "Powerless (Fleur)",
+    "iconUrl": "gui_condition_change02_15_4.png"
+  },
+  "594": {
+    "conditionId": 594,
+    "name": "KartRider Water Balloon",
+    "iconUrl": "gui_condition_change02_12_4.png"
+  },
+  "595": {
+    "conditionId": 595,
+    "name": "KartRider UFO",
+    "iconUrl": "gui_condition_change02_13_4.png"
+  },
+  "596": {
+    "conditionId": 596,
+    "name": "Effective Range Increase",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "597": {
+    "conditionId": 597,
+    "name": "솟구치는 분노 면역",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "598": {
+    "conditionId": 598,
+    "name": "KartRider Water Balloon",
+    "iconUrl": "gui_condition_change03_1_7.png"
+  },
+  "599": {
+    "conditionId": 599,
+    "name": "Heat Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "6": {
+    "conditionId": 6,
+    "name": "Coward",
+    "iconUrl": "gui_condition_change_7_0.png"
+  },
+  "60": {
+    "conditionId": 60,
+    "name": "벚꽃놀이",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "600": {
+    "conditionId": 600,
+    "name": "KartRider Missile",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "601": {
+    "conditionId": 601,
+    "name": "Heat Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "602": {
+    "conditionId": 602,
+    "name": "KartRider Shield",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "603": {
+    "conditionId": 603,
+    "name": "Stun",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "604": {
+    "conditionId": 604,
+    "name": "스위트 로즈 가시에 찔린",
+    "iconUrl": "gui_condition_change02_10_6.png"
+  },
+  "605": {
+    "conditionId": 605,
+    "name": "Sweet Rose Melody Step",
+    "iconUrl": "gui_condition_change02_11_6.png"
+  },
+  "606": {
+    "conditionId": 606,
+    "name": "Party Buff",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "607": {
+    "conditionId": 607,
+    "name": "Skill Training 2x EXP",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "608": {
+    "conditionId": 608,
+    "name": "_LT[xml.charactercondition.1456]",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "609": {
+    "conditionId": 609,
+    "name": "Hymerark's Whisper",
+    "iconUrl": "gui_condition_change_15_1.png"
+  },
+  "61": {
+    "conditionId": 61,
+    "name": "",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "610": {
+    "conditionId": 610,
+    "name": "Flame Crystal",
+    "iconUrl": "gui_condition_change02_12_6.png"
+  },
+  "611": {
+    "conditionId": 611,
+    "name": "Halt",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "612": {
+    "conditionId": 612,
+    "name": "Seal: Fragarach",
+    "iconUrl": "gui_condition_change02_4_7.png"
+  },
+  "613": {
+    "conditionId": 613,
+    "name": "Campfire Spirit's Friend",
+    "iconUrl": "gui_condition_change_3_5.png"
+  },
+  "614": {
+    "conditionId": 614,
+    "name": "Corgi Companionship",
+    "iconUrl": "gui_condition_change02_13_6.png"
+  },
+  "615": {
+    "conditionId": 615,
+    "name": "Adorable Wiggle",
+    "iconUrl": "gui_condition_change02_14_6.png"
+  },
+  "616": {
+    "conditionId": 616,
+    "name": "Divine Link Harmony",
+    "iconUrl": "gui_condition_change02_7_6.png"
+  },
+  "617": {
+    "conditionId": 617,
+    "name": "Campfire Harmony",
+    "iconUrl": "gui_condition_change02_14_5.png"
+  },
+  "618": {
+    "conditionId": 618,
+    "name": "Commerce Harmony",
+    "iconUrl": "gui_condition_change02_15_5.png"
+  },
+  "619": {
+    "conditionId": 619,
+    "name": "Gathering Harmony",
+    "iconUrl": "gui_condition_change02_0_6.png"
+  },
+  "62": {
+    "conditionId": 62,
+    "name": "Magic Casting Speed Boost",
+    "iconUrl": "gui_condition_change_13_1.png"
+  },
+  "620": {
+    "conditionId": 620,
+    "name": "Smithing Harmony",
+    "iconUrl": "gui_condition_change02_1_6.png"
+  },
+  "621": {
+    "conditionId": 621,
+    "name": "Sheep Shearing Harmony",
+    "iconUrl": "gui_condition_change02_2_6.png"
+  },
+  "622": {
+    "conditionId": 622,
+    "name": "Carpentry Harmony",
+    "iconUrl": "gui_condition_change02_3_6.png"
+  },
+  "623": {
+    "conditionId": 623,
+    "name": "Pet Training Harmony",
+    "iconUrl": "gui_condition_change02_4_6.png"
+  },
+  "624": {
+    "conditionId": 624,
+    "name": "Harmony of Curiosity",
+    "iconUrl": "gui_condition_change02_5_6.png"
+  },
+  "625": {
+    "conditionId": 625,
+    "name": "Harmony of Delight",
+    "iconUrl": "gui_condition_change02_6_6.png"
+  },
+  "626": {
+    "conditionId": 626,
+    "name": "Joyful Japari Park",
+    "iconUrl": "gui_condition_change02_9_6.png"
+  },
+  "627": {
+    "conditionId": 627,
+    "name": "Joyful Japari Park Cooldown",
+    "iconUrl": "gui_condition_change02_8_6.png"
+  },
+  "628": {
+    "conditionId": 628,
+    "name": "Magic Casting Speed Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "629": {
+    "conditionId": 629,
+    "name": "Critical Increase",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "63": {
+    "conditionId": 63,
+    "name": "Attack Increase",
+    "iconUrl": "gui_condition_change_12_2.png"
+  },
+  "630": {
+    "conditionId": 630,
+    "name": "Curse Damage",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "631": {
+    "conditionId": 631,
+    "name": "_LT[xml.charactercondition.1430]",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "632": {
+    "conditionId": 632,
+    "name": "_LT[xml.charactercondition.1431]",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "633": {
+    "conditionId": 633,
+    "name": "_LT[xml.charactercondition.1436]",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "634": {
+    "conditionId": 634,
+    "name": "_LT[xml.charactercondition.1437]",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "635": {
+    "conditionId": 635,
+    "name": "_LT[xml.charactercondition.1438]",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "636": {
+    "conditionId": 636,
+    "name": "_LT[xml.charactercondition.1439]",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "637": {
+    "conditionId": 637,
+    "name": "Adorable Wiggle",
+    "iconUrl": "gui_condition_change02_1_7.png"
+  },
+  "638": {
+    "conditionId": 638,
+    "name": "Loving Bond",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "639": {
+    "conditionId": 639,
+    "name": "원문수정해서 사용하세요",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "64": {
+    "conditionId": 64,
+    "name": "반투명",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "640": {
+    "conditionId": 640,
+    "name": "Character Movement Speed Settings",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "641": {
+    "conditionId": 641,
+    "name": "Royal Academy Crystal",
+    "iconUrl": "gui_condition_change02_6_7.png"
+  },
+  "642": {
+    "conditionId": 642,
+    "name": "원문수정해서 사용하세요",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "643": {
+    "conditionId": 643,
+    "name": "Stardust Support Effect 5",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "644": {
+    "conditionId": 644,
+    "name": "Water Wave",
+    "iconUrl": "gui_condition_change02_8_7.png"
+  },
+  "645": {
+    "conditionId": 645,
+    "name": "Purifying Wave",
+    "iconUrl": "gui_condition_change02_7_7.png"
+  },
+  "646": {
+    "conditionId": 646,
+    "name": "Decreases Defense and Protection",
+    "iconUrl": "gui_condition_change_12_4.png"
+  },
+  "647": {
+    "conditionId": 647,
+    "name": "Decreases Damage",
+    "iconUrl": "gui_condition_change_1_5.png"
+  },
+  "648": {
+    "conditionId": 648,
+    "name": "Increases Damage",
+    "iconUrl": "gui_condition_change_1_5.png"
+  },
+  "649": {
+    "conditionId": 649,
+    "name": "Magic Power Boost",
+    "iconUrl": "gui_condition_change_8_4.png"
+  },
+  "65": {
+    "conditionId": 65,
+    "name": "Combat EXP 1.1x",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "650": {
+    "conditionId": 650,
+    "name": "Hail Storm Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "651": {
+    "conditionId": 651,
+    "name": "Lightning Rod Charge Time Reduction",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "652": {
+    "conditionId": 652,
+    "name": "Meteor Strike Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "653": {
+    "conditionId": 653,
+    "name": "Guardian Impulse",
+    "iconUrl": "gui_condition_change02_6_2.png"
+  },
+  "654": {
+    "conditionId": 654,
+    "name": "Dynamis Rush",
+    "iconUrl": "gui_condition_change02_6_2.png"
+  },
+  "655": {
+    "conditionId": 655,
+    "name": "Steadfast Blessing",
+    "iconUrl": "gui_condition_change02_6_2.png"
+  },
+  "656": {
+    "conditionId": 656,
+    "name": "Tainted Matter",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "657": {
+    "conditionId": 657,
+    "name": "Mutagenic Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "658": {
+    "conditionId": 658,
+    "name": "Fantastic Chorus Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "659": {
+    "conditionId": 659,
+    "name": "Music Buff Duration Extension",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "66": {
+    "conditionId": 66,
+    "name": "Combat 2x EXP",
+    "iconUrl": "gui_condition_change_10_0.png"
+  },
+  "660": {
+    "conditionId": 660,
+    "name": "Vivace Buff Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "661": {
+    "conditionId": 661,
+    "name": "Battlefield Overture Buff Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "662": {
+    "conditionId": 662,
+    "name": "Enduring Melody Buff Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "663": {
+    "conditionId": 663,
+    "name": "Harvest Song Buff Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "664": {
+    "conditionId": 664,
+    "name": "Lullaby Buff Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "665": {
+    "conditionId": 665,
+    "name": "March Song Buff Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "666": {
+    "conditionId": 666,
+    "name": "Irusan's Deathly Brand",
+    "iconUrl": "gui_condition_change03_2_1.png"
+  },
+  "667": {
+    "conditionId": 667,
+    "name": "Irusan's Enervating Brand",
+    "iconUrl": "gui_condition_change03_3_1.png"
+  },
+  "668": {
+    "conditionId": 668,
+    "name": "Irusan's Binding Brand",
+    "iconUrl": "gui_condition_change03_4_1.png"
+  },
+  "669": {
+    "conditionId": 669,
+    "name": "Irusan's Snacktastic Brand",
+    "iconUrl": "gui_condition_change03_5_1.png"
+  },
+  "67": {
+    "conditionId": 67,
+    "name": "Bewildered",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "670": {
+    "conditionId": 670,
+    "name": "Decreased Durability Loss",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "671": {
+    "conditionId": 671,
+    "name": "Item Drop Booster Potion",
+    "iconUrl": "gui_condition_change_8_7.png"
+  },
+  "672": {
+    "conditionId": 672,
+    "name": "Erg Beam After-effect",
+    "iconUrl": "gui_condition_change_1_7.png"
+  },
+  "673": {
+    "conditionId": 673,
+    "name": "Erg Poisoning",
+    "iconUrl": "gui_condition_change_1_7.png"
+  },
+  "674": {
+    "conditionId": 674,
+    "name": "Death Sentence",
+    "iconUrl": "gui_condition_change_1_7.png"
+  },
+  "675": {
+    "conditionId": 675,
+    "name": "Confusion",
+    "iconUrl": "gui_condition_change_1_7.png"
+  },
+  "676": {
+    "conditionId": 676,
+    "name": "Divine Blessing",
+    "iconUrl": "gui_condition_change_11_2.png"
+  },
+  "677": {
+    "conditionId": 677,
+    "name": "Possession",
+    "iconUrl": "gui_condition_change_15_1.png"
+  },
+  "678": {
+    "conditionId": 678,
+    "name": "Cannot consume potions or food",
+    "iconUrl": "gui_condition_change_1_0.png"
+  },
+  "679": {
+    "conditionId": 679,
+    "name": "Hardening",
+    "iconUrl": "gui_condition_change_12_1.png"
+  },
+  "68": {
+    "conditionId": 68,
+    "name": "Elephant Shower",
+    "iconUrl": "gui_condition_change_13_2.png"
+  },
+  "680": {
+    "conditionId": 680,
+    "name": "Battlefield Overture",
+    "iconUrl": "gui_condition_change02_9_7.png"
+  },
+  "681": {
+    "conditionId": 681,
+    "name": "Enduring Melody",
+    "iconUrl": "gui_condition_change02_11_7.png"
+  },
+  "682": {
+    "conditionId": 682,
+    "name": "Close Combat Enhancement",
+    "iconUrl": "gui_condition_change03_3_0.png"
+  },
+  "683": {
+    "conditionId": 683,
+    "name": "Archery Enhancement",
+    "iconUrl": "gui_condition_change03_4_0.png"
+  },
+  "684": {
+    "conditionId": 684,
+    "name": "Magic Enhancement",
+    "iconUrl": "gui_condition_change03_5_0.png"
+  },
+  "685": {
+    "conditionId": 685,
+    "name": "Alchemy Enhancement",
+    "iconUrl": "gui_condition_change03_6_0.png"
+  },
+  "686": {
+    "conditionId": 686,
+    "name": "Martial Arts Enhancement",
+    "iconUrl": "gui_condition_change03_7_0.png"
+  },
+  "687": {
+    "conditionId": 687,
+    "name": "Puppetry Enhancement",
+    "iconUrl": "gui_condition_change03_8_0.png"
+  },
+  "688": {
+    "conditionId": 688,
+    "name": "Dual Gun Enhancement",
+    "iconUrl": "gui_condition_change03_9_0.png"
+  },
+  "689": {
+    "conditionId": 689,
+    "name": "Ninja Enhancement",
+    "iconUrl": "gui_condition_change03_10_0.png"
+  },
+  "69": {
+    "conditionId": 69,
+    "name": "Curse",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "690": {
+    "conditionId": 690,
+    "name": "Chain Slash Enhancement",
+    "iconUrl": "gui_condition_change03_11_0.png"
+  },
+  "691": {
+    "conditionId": 691,
+    "name": "Healing Enhancement",
+    "iconUrl": "gui_condition_change03_12_0.png"
+  },
+  "692": {
+    "conditionId": 692,
+    "name": "Music Enhancement",
+    "iconUrl": "gui_condition_change03_13_0.png"
+  },
+  "693": {
+    "conditionId": 693,
+    "name": "Defense Increase",
+    "iconUrl": "gui_condition_change03_14_0.png"
+  },
+  "694": {
+    "conditionId": 694,
+    "name": "Protection Increase",
+    "iconUrl": "gui_condition_change03_15_0.png"
+  },
+  "695": {
+    "conditionId": 695,
+    "name": "HP Increase",
+    "iconUrl": "gui_condition_change03_0_1.png"
+  },
+  "696": {
+    "conditionId": 696,
+    "name": "MP Increase",
+    "iconUrl": "gui_condition_change03_1_1.png"
+  },
+  "697": {
+    "conditionId": 697,
+    "name": "Windmill Enhancement",
+    "iconUrl": "gui_condition_change02_0_5.png"
+  },
+  "698": {
+    "conditionId": 698,
+    "name": "Final Hit Enhancement",
+    "iconUrl": "gui_condition_change02_4_5.png"
+  },
+  "699": {
+    "conditionId": 699,
+    "name": "Final Strike Enhancement",
+    "iconUrl": "gui_condition_change02_1_5.png"
+  },
+  "7": {
+    "conditionId": 7,
+    "name": "Outraged",
+    "iconUrl": "gui_condition_change_8_0.png"
+  },
+  "70": {
+    "conditionId": 70,
+    "name": "Blindness",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "700": {
+    "conditionId": 700,
+    "name": "Horseback Lance Charge Enhancement",
+    "iconUrl": "gui_condition_change02_3_5.png"
+  },
+  "701": {
+    "conditionId": 701,
+    "name": "Crash Shot Enhancement",
+    "iconUrl": "gui_condition_change02_5_5.png"
+  },
+  "702": {
+    "conditionId": 702,
+    "name": "Shooting Rush Enhancement",
+    "iconUrl": "gui_condition_change02_11_5.png"
+  },
+  "703": {
+    "conditionId": 703,
+    "name": "Fusion Bolt Enhancement",
+    "iconUrl": "gui_condition_change02_7_5.png"
+  },
+  "704": {
+    "conditionId": 704,
+    "name": "Combo: Drop Kick Enhancement",
+    "iconUrl": "gui_condition_change02_9_5.png"
+  },
+  "705": {
+    "conditionId": 705,
+    "name": "Act 2: Threshold Cutter Enhancement",
+    "iconUrl": "gui_condition_change02_10_5.png"
+  },
+  "706": {
+    "conditionId": 706,
+    "name": "Giant Full Swing Enhancement",
+    "iconUrl": "gui_condition_change02_1_5.png"
+  },
+  "707": {
+    "conditionId": 707,
+    "name": "Hail Storm Enhancement",
+    "iconUrl": "gui_condition_change02_7_5.png"
+  },
+  "708": {
+    "conditionId": 708,
+    "name": "Spinning Slasher Enhancement",
+    "iconUrl": "gui_condition_change02_13_5.png"
+  },
+  "709": {
+    "conditionId": 709,
+    "name": "Chain Impale Enhancement",
+    "iconUrl": "gui_condition_change02_13_5.png"
+  },
+  "71": {
+    "conditionId": 71,
+    "name": "Ice - no effect",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "710": {
+    "conditionId": 710,
+    "name": "Kunai Storm Enhancement",
+    "iconUrl": "gui_condition_change02_12_5.png"
+  },
+  "711": {
+    "conditionId": 711,
+    "name": "Erg Amplification",
+    "iconUrl": "gui_condition_change_1_7.png"
+  },
+  "712": {
+    "conditionId": 712,
+    "name": "Potion Indigestion",
+    "iconUrl": "gui_condition_change03_6_1.png"
+  },
+  "713": {
+    "conditionId": 713,
+    "name": "Production Skill Production Success Rate +20%",
+    "iconUrl": "gui_condition_change02_11_3.png"
+  },
+  "714": {
+    "conditionId": 714,
+    "name": "Way of the Gun Enhancement",
+    "iconUrl": "gui_condition_change02_11_5.png"
+  },
+  "715": {
+    "conditionId": 715,
+    "name": "Final Shot Enhancement",
+    "iconUrl": "gui_condition_change02_5_5.png"
+  },
+  "716": {
+    "conditionId": 716,
+    "name": "Foxyquin's Mark",
+    "iconUrl": "GUI_condition_change03_7_1.png"
+  },
+  "717": {
+    "conditionId": 717,
+    "name": "Foxyquin's Luck",
+    "iconUrl": "GUI_condition_change03_8_1.png"
+  },
+  "718": {
+    "conditionId": 718,
+    "name": "Foxyquin's Special Gift",
+    "iconUrl": "GUI_condition_change03_9_1.png"
+  },
+  "719": {
+    "conditionId": 719,
+    "name": "Sakura Abyss Enhancement",
+    "iconUrl": "gui_condition_change02_12_5.png"
+  },
+  "72": {
+    "conditionId": 72,
+    "name": "Production Skill Success Rate Changed",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "720": {
+    "conditionId": 720,
+    "name": "Intermediate Magic Enhancement",
+    "iconUrl": "gui_condition_change02_7_5.png"
+  },
+  "721": {
+    "conditionId": 721,
+    "name": "Monster Damage Amplification",
+    "iconUrl": "gui_condition_change_1_7.png"
+  },
+  "722": {
+    "conditionId": 722,
+    "name": "Erg Unlock Rate Boost",
+    "iconUrl": "GUI_condition_change03_10_1.png"
+  },
+  "723": {
+    "conditionId": 723,
+    "name": "Echostone Advancement Rate Boost",
+    "iconUrl": "GUI_condition_change03_10_1.png"
+  },
+  "724": {
+    "conditionId": 724,
+    "name": "Recovery Reduction Level 1",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "725": {
+    "conditionId": 725,
+    "name": "Recovery Reduction Level 2",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "726": {
+    "conditionId": 726,
+    "name": "Recovery Reduction Level 3",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "727": {
+    "conditionId": 727,
+    "name": "Armor Corrosion Level 1",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "728": {
+    "conditionId": 728,
+    "name": "Armor Corrosion Level 2",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "729": {
+    "conditionId": 729,
+    "name": "Armor Corrosion Level 3",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "73": {
+    "conditionId": 73,
+    "name": "Item Proficiency Increased",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "730": {
+    "conditionId": 730,
+    "name": "Weapon Corrosion Level 1",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "731": {
+    "conditionId": 731,
+    "name": "Weapon Corrosion Level 2",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "732": {
+    "conditionId": 732,
+    "name": "Weapon Corrosion Level 3",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "733": {
+    "conditionId": 733,
+    "name": "Succubus Temptation",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "734": {
+    "conditionId": 734,
+    "name": "Succubus Temptation",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "735": {
+    "conditionId": 735,
+    "name": "Warmonger's Specter",
+    "iconUrl": "gui_condition_change02_15_7.png"
+  },
+  "736": {
+    "conditionId": 736,
+    "name": "Pioneer's Specter",
+    "iconUrl": "gui_condition_change02_1_1.png"
+  },
+  "737": {
+    "conditionId": 737,
+    "name": "Wanderer's Specter",
+    "iconUrl": "gui_condition_change02_7_0.png"
+  },
+  "738": {
+    "conditionId": 738,
+    "name": "Artist's Specter",
+    "iconUrl": "gui_condition_change02_7_2.png"
+  },
+  "739": {
+    "conditionId": 739,
+    "name": "Leader's Specter",
+    "iconUrl": "gui_condition_change02_0_3.png"
+  },
+  "74": {
+    "conditionId": 74,
+    "name": "Received Alchemy Cloud Effect",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "740": {
+    "conditionId": 740,
+    "name": "Transport Speed Increase Shoes",
+    "iconUrl": "GUI_condition_change03_3_2.png"
+  },
+  "741": {
+    "conditionId": 741,
+    "name": "Transport Speed Increase Potion",
+    "iconUrl": "GUI_condition_change03_4_2.png"
+  },
+  "742": {
+    "conditionId": 742,
+    "name": "Hillwen Engineering Quality Increase Potion",
+    "iconUrl": "GUI_condition_change03_14_1.png"
+  },
+  "743": {
+    "conditionId": 743,
+    "name": "Magic Craft Quality Increase Potion",
+    "iconUrl": "GUI_condition_change03_15_1.png"
+  },
+  "744": {
+    "conditionId": 744,
+    "name": "Blacksmithing Quality Increase Potion",
+    "iconUrl": "GUI_condition_change03_0_2.png"
+  },
+  "745": {
+    "conditionId": 745,
+    "name": "Tailoring Quality Increase Potion",
+    "iconUrl": "GUI_condition_change03_1_2.png"
+  },
+  "746": {
+    "conditionId": 746,
+    "name": "Carpentry Quality Increase Potion",
+    "iconUrl": "GUI_condition_change03_2_2.png"
+  },
+  "747": {
+    "conditionId": 747,
+    "name": "VIP Battler's Boon",
+    "iconUrl": "GUI_condition_change03_11_1.png"
+  },
+  "748": {
+    "conditionId": 748,
+    "name": "VIP Bountiful Boon",
+    "iconUrl": "GUI_condition_change03_12_1.png"
+  },
+  "749": {
+    "conditionId": 749,
+    "name": "Combat VIP Membership Baltane Elite Level Cap Boost",
+    "iconUrl": "GUI_condition_change03_13_1.png"
+  },
+  "75": {
+    "conditionId": 75,
+    "name": "Bot-check failed.",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "750": {
+    "conditionId": 750,
+    "name": "Bandit Encounter Candy",
+    "iconUrl": "GUI_condition_change03_5_2.png"
+  },
+  "751": {
+    "conditionId": 751,
+    "name": "Bandit Encounter Warding Candy",
+    "iconUrl": "GUI_condition_change03_6_2.png"
+  },
+  "752": {
+    "conditionId": 752,
+    "name": "Ninja Stealth Assault",
+    "iconUrl": "gui_condition_change02_12_5.png"
+  },
+  "753": {
+    "conditionId": 753,
+    "name": "_LT[xml.charactercondition.1833]",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "754": {
+    "conditionId": 754,
+    "name": "_LT[xml.charactercondition.1834]",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "755": {
+    "conditionId": 755,
+    "name": "_LT[xml.charactercondition.1835]",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "756": {
+    "conditionId": 756,
+    "name": "Growth Supplies",
+    "iconUrl": "gui_condition_change_2_3.png"
+  },
+  "757": {
+    "conditionId": 757,
+    "name": "Growth Supplies Potion",
+    "iconUrl": "gui_condition_change_7_7.png"
+  },
+  "758": {
+    "conditionId": 758,
+    "name": "Growth Supplies",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "759": {
+    "conditionId": 759,
+    "name": "Special Support",
+    "iconUrl": "gui_condition_change_1_6.png"
+  },
+  "76": {
+    "conditionId": 76,
+    "name": "Snow Storm Status",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "760": {
+    "conditionId": 760,
+    "name": "Element Mastery Damage Increase",
+    "iconUrl": "gui_condition_change02_7_5.png"
+  },
+  "761": {
+    "conditionId": 761,
+    "name": "Mana Shield Enhancement",
+    "iconUrl": "gui_condition_change02_7_5.png"
+  },
+  "762": {
+    "conditionId": 762,
+    "name": "Spellwalk Enhancement",
+    "iconUrl": "gui_condition_change02_7_5.png"
+  },
+  "763": {
+    "conditionId": 763,
+    "name": "Increases Movement Speed",
+    "iconUrl": "gui_condition_change02_7_5.png"
+  },
+  "764": {
+    "conditionId": 764,
+    "name": "Transport Speed +5%",
+    "iconUrl": "gui_condition_change03_7_2.png"
+  },
+  "765": {
+    "conditionId": 765,
+    "name": "Purchase Discount Rate +1%",
+    "iconUrl": "gui_condition_change03_8_2.png"
+  },
+  "766": {
+    "conditionId": 766,
+    "name": "Sales Profit +10%",
+    "iconUrl": "gui_condition_change03_9_2.png"
+  },
+  "767": {
+    "conditionId": 767,
+    "name": "Merchant Rating Increase Rate when Trading +2%",
+    "iconUrl": "gui_condition_change03_10_2.png"
+  },
+  "768": {
+    "conditionId": 768,
+    "name": "Combat 2x EXP",
+    "iconUrl": "gui_condition_change03_11_2.png"
+  },
+  "769": {
+    "conditionId": 769,
+    "name": "Life Skill 2x EXP",
+    "iconUrl": "gui_condition_change03_12_2.png"
+  },
+  "77": {
+    "conditionId": 77,
+    "name": "Doppelganger",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "770": {
+    "conditionId": 770,
+    "name": "Combat Skill 2x EXP",
+    "iconUrl": "gui_condition_change03_13_2.png"
+  },
+  "771": {
+    "conditionId": 771,
+    "name": "Meditation Effect",
+    "iconUrl": "gui_condition_change03_14_2.png"
+  },
+  "772": {
+    "conditionId": 772,
+    "name": "Airship Movement Speed",
+    "iconUrl": "gui_condition_change02_12_0.png"
+  },
+  "773": {
+    "conditionId": 773,
+    "name": "Increased Seasonal Ducat acquisition upon completing Merchant Group Commerce - Air Transport",
+    "iconUrl": "gui_condition_change_7_4.png"
+  },
+  "774": {
+    "conditionId": 774,
+    "name": "Increased Reputation upon completing Merchant Group Commerce - Air Transport",
+    "iconUrl": "gui_condition_change_12_0.png"
+  },
+  "775": {
+    "conditionId": 775,
+    "name": "Airship Ballista Attack Speed Increase",
+    "iconUrl": "gui_condition_change_12_4.png"
+  },
+  "776": {
+    "conditionId": 776,
+    "name": "Airship Damage Decrease",
+    "iconUrl": "gui_condition_change02_12_0.png"
+  },
+  "777": {
+    "conditionId": 777,
+    "name": "Ancient Stela: Barter Goods Profit Increase",
+    "iconUrl": "gui_condition_change_7_4.png"
+  },
+  "778": {
+    "conditionId": 778,
+    "name": "Ancient Stela: Bandit Encounter Protection",
+    "iconUrl": "GUI_condition_change03_6_2.png"
+  },
+  "779": {
+    "conditionId": 779,
+    "name": "Gusty Winds: Airship Speed Increase",
+    "iconUrl": "gui_condition_change02_12_0.png"
+  },
+  "78": {
+    "conditionId": 78,
+    "name": "Demigod",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "780": {
+    "conditionId": 780,
+    "name": "Commerce Penalty Reduction",
+    "iconUrl": "GUI_condition_change03_15_2.png"
+  },
+  "785": {
+    "conditionId": 785,
+    "name": "Skill Damage Increase",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "786": {
+    "conditionId": 786,
+    "name": "Power of Guild Pride",
+    "iconUrl": "gui_condition_change02_3_3.png"
+  },
+  "787": {
+    "conditionId": 787,
+    "name": "Refreshing Aura",
+    "iconUrl": "gui_condition_change_15_6.png"
+  },
+  "788": {
+    "conditionId": 788,
+    "name": "Echostone Advancement Boost",
+    "iconUrl": "gui_condition_change02_13_0.png"
+  },
+  "789": {
+    "conditionId": 789,
+    "name": "Special Upgrade Success Rate Boost",
+    "iconUrl": "gui_condition_change02_11_1.png"
+  },
+  "79": {
+    "conditionId": 79,
+    "name": "Doppelganger's Laugh",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "790": {
+    "conditionId": 790,
+    "name": "Technique Growth Boost",
+    "iconUrl": "gui_condition_change02_15_0.png"
+  },
+  "791": {
+    "conditionId": 791,
+    "name": "Renown Growth Boost",
+    "iconUrl": "gui_condition_change02_9_1.png"
+  },
+  "792": {
+    "conditionId": 792,
+    "name": "Spirit Growth Boost",
+    "iconUrl": "gui_condition_change02_10_1.png"
+  },
+  "793": {
+    "conditionId": 793,
+    "name": "Instill Flame",
+    "iconUrl": "gui_condition_change03_6_3.png"
+  },
+  "794": {
+    "conditionId": 794,
+    "name": "Instill Frost",
+    "iconUrl": "gui_condition_change03_7_3.png"
+  },
+  "795": {
+    "conditionId": 795,
+    "name": "Instill Thunder",
+    "iconUrl": "gui_condition_change03_8_3.png"
+  },
+  "796": {
+    "conditionId": 796,
+    "name": "Blessing of Protection",
+    "iconUrl": "gui_condition_change03_3_3.png"
+  },
+  "797": {
+    "conditionId": 797,
+    "name": "Choirmaster Life Drain + Damage Increase",
+    "iconUrl": "gui_condition_change03_0_0.png"
+  },
+  "798": {
+    "conditionId": 798,
+    "name": "Impending Death",
+    "iconUrl": "gui_condition_change_3_0.png"
+  },
+  "799": {
+    "conditionId": 799,
+    "name": "Choirmaster Attack Buff",
+    "iconUrl": "gui_condition_change03_0_0.png"
+  },
+  "8": {
+    "conditionId": 8,
+    "name": "Confused",
+    "iconUrl": "gui_condition_change_9_0.png"
+  },
+  "80": {
+    "conditionId": 80,
+    "name": "Doppelganger's Pain",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "800": {
+    "conditionId": 800,
+    "name": "Voice of Vitality",
+    "iconUrl": "gui_condition_change03_1_3.png"
+  },
+  "801": {
+    "conditionId": 801,
+    "name": "Echoes of Salvation",
+    "iconUrl": "gui_condition_change03_5_3.png"
+  },
+  "802": {
+    "conditionId": 802,
+    "name": "Hymn of Resurrection",
+    "iconUrl": "gui_condition_change03_4_3.png"
+  },
+  "803": {
+    "conditionId": 803,
+    "name": "Pall of Ruination",
+    "iconUrl": "gui_condition_change03_2_3.png"
+  },
+  "804": {
+    "conditionId": 804,
+    "name": "Frost Hit Effect",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "805": {
+    "conditionId": 805,
+    "name": "도르카 마스터리 강화",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "806": {
+    "conditionId": 806,
+    "name": "연속기 마스터리 강화",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "807": {
+    "conditionId": 807,
+    "name": "Blessing of Protection",
+    "iconUrl": "gui_condition_change03_0_0.png"
+  },
+  "808": {
+    "conditionId": 808,
+    "name": "Pulse of Purification",
+    "iconUrl": "gui_condition_change03_0_0.png"
+  },
+  "809": {
+    "conditionId": 809,
+    "name": "Mana Shield Enhancement",
+    "iconUrl": "gui_condition_change02_7_5.png"
+  },
+  "81": {
+    "conditionId": 81,
+    "name": "발렌타인의 행복",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "810": {
+    "conditionId": 810,
+    "name": "Fairy Light Snare",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "811": {
+    "conditionId": 811,
+    "name": "Sonic Breath Damage",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "812": {
+    "conditionId": 812,
+    "name": "Sonic Wave",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "813": {
+    "conditionId": 813,
+    "name": "Harmony of Valor",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "814": {
+    "conditionId": 814,
+    "name": "Harmony of Abundance",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "815": {
+    "conditionId": 815,
+    "name": "Harmony of Swiftness",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "816": {
+    "conditionId": 816,
+    "name": "Potion Poisoning Danger",
+    "iconUrl": "gui_condition_change03_0_3.png"
+  },
+  "817": {
+    "conditionId": 817,
+    "name": "Baltane Level Cap Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "818": {
+    "conditionId": 818,
+    "name": "Combat EXP Increase",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "819": {
+    "conditionId": 819,
+    "name": "Additional Level Up Upon Rebirth",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "82": {
+    "conditionId": 82,
+    "name": "발렌타인의 불행",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "820": {
+    "conditionId": 820,
+    "name": "AP Gain Increase",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "821": {
+    "conditionId": 821,
+    "name": "Skill Lifter",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "822": {
+    "conditionId": 822,
+    "name": "Skill Training Buff",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "823": {
+    "conditionId": 823,
+    "name": "Crusader EXP Increase",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "824": {
+    "conditionId": 824,
+    "name": "Equipment Proficiency Increase",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "825": {
+    "conditionId": 825,
+    "name": "Pet Perks Training Increase",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "826": {
+    "conditionId": 826,
+    "name": "Pet Points Increase",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "827": {
+    "conditionId": 827,
+    "name": "Pet/Partner Combat EXP Increase",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "828": {
+    "conditionId": 828,
+    "name": "Technique Briogh Increase",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "829": {
+    "conditionId": 829,
+    "name": "Renown EXP Increase",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "83": {
+    "conditionId": 83,
+    "name": "Fashion Show",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "830": {
+    "conditionId": 830,
+    "name": "Society Sponsorship Reward Increase",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "831": {
+    "conditionId": 831,
+    "name": "Spirit EXP Increase",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "832": {
+    "conditionId": 832,
+    "name": "Increases Damage",
+    "iconUrl": "gui_condition_change_1_5.png"
+  },
+  "833": {
+    "conditionId": 833,
+    "name": "Erg EXP is increased.",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "834": {
+    "conditionId": 834,
+    "name": "Special Combat Potion",
+    "iconUrl": "gui_condition_change02_5_3.png"
+  },
+  "836": {
+    "conditionId": 836,
+    "name": "Assimilated with Shyllien",
+    "iconUrl": "gui_condition_change_6_1.png"
+  },
+  "837": {
+    "conditionId": 837,
+    "name": "Assimilated with Hillwen",
+    "iconUrl": "gui_condition_change_6_1.png"
+  },
+  "838": {
+    "conditionId": 838,
+    "name": "Shattering Windmill Freeze",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "839": {
+    "conditionId": 839,
+    "name": "Shattering Windmill Slow Effect",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "84": {
+    "conditionId": 84,
+    "name": "거대상체",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "840": {
+    "conditionId": 840,
+    "name": "Invulnerable while collecting scattered memory fragments",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "841": {
+    "conditionId": 841,
+    "name": "Final Hit Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "842": {
+    "conditionId": 842,
+    "name": "Bash Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "843": {
+    "conditionId": 843,
+    "name": "Final Strike Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "844": {
+    "conditionId": 844,
+    "name": "Critical Increase",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "845": {
+    "conditionId": 845,
+    "name": "Decrease Durability Loss",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "846": {
+    "conditionId": 846,
+    "name": "Giant Full Swing Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "847": {
+    "conditionId": 847,
+    "name": "Stampede Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "848": {
+    "conditionId": 848,
+    "name": "Fusion Bolt Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "849": {
+    "conditionId": 849,
+    "name": "Magic Attack Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "85": {
+    "conditionId": 85,
+    "name": "혀가 꼬임",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "850": {
+    "conditionId": 850,
+    "name": "Hail Storm Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "851": {
+    "conditionId": 851,
+    "name": "Intermediate Magic Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "852": {
+    "conditionId": 852,
+    "name": "Crash Shot Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "853": {
+    "conditionId": 853,
+    "name": "Final Shot Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "854": {
+    "conditionId": 854,
+    "name": "Decrease Chain Cylinder Cooldown",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "855": {
+    "conditionId": 855,
+    "name": "Total Alchemic Element Damage",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "856": {
+    "conditionId": 856,
+    "name": "Increase Combo Damage",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "857": {
+    "conditionId": 857,
+    "name": "Combo Cooldown Reset on Critical Hit",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "858": {
+    "conditionId": 858,
+    "name": "Decrease Puppetry Cooldown",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "859": {
+    "conditionId": 859,
+    "name": "Marionette Critical Damage",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "86": {
+    "conditionId": 86,
+    "name": "거대하체",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "860": {
+    "conditionId": 860,
+    "name": "Chance to Revive Dead Marionette",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "861": {
+    "conditionId": 861,
+    "name": "Sakura Abyss Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "862": {
+    "conditionId": 862,
+    "name": "Kunai Storm Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "863": {
+    "conditionId": 863,
+    "name": "Way of the Gun Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "864": {
+    "conditionId": 864,
+    "name": "Shooting Rush Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "865": {
+    "conditionId": 865,
+    "name": "Chain Impale Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "866": {
+    "conditionId": 866,
+    "name": "Spinning Slasher Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "867": {
+    "conditionId": 867,
+    "name": "Society Sponsorship Reward Increase",
+    "iconUrl": "gui_condition_change02_11_0.png"
+  },
+  "868": {
+    "conditionId": 868,
+    "name": "Spirit EXP Increase",
+    "iconUrl": "gui_condition_change02_11_0.png"
+  },
+  "869": {
+    "conditionId": 869,
+    "name": "Increases Combat EXP and AP Gain",
+    "iconUrl": "gui_condition_change02_11_0.png"
+  },
+  "87": {
+    "conditionId": 87,
+    "name": "키가 커짐",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "870": {
+    "conditionId": 870,
+    "name": "AP Gain Increase",
+    "iconUrl": "gui_condition_change02_11_3.png"
+  },
+  "871": {
+    "conditionId": 871,
+    "name": "Grandmaster Seal Bonus Ticket",
+    "iconUrl": "gui_condition_change_2_3.png"
+  },
+  "872": {
+    "conditionId": 872,
+    "name": "Two-handed Weapon Final Hit Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "873": {
+    "conditionId": 873,
+    "name": "Max Damage Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "874": {
+    "conditionId": 874,
+    "name": "Warmth of Life",
+    "iconUrl": "GUI_condition_change03_0_4.png"
+  },
+  "88": {
+    "conditionId": 88,
+    "name": "키가 작아짐",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "882": {
+    "conditionId": 882,
+    "name": "Monster Piercing",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "883": {
+    "conditionId": 883,
+    "name": "Severe Frostbite",
+    "iconUrl": "gui_condition_change02_1_1.png"
+  },
+  "884": {
+    "conditionId": 884,
+    "name": "Same Talent Attack Resistance",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "885": {
+    "conditionId": 885,
+    "name": "Boss Room Day Team (Right)",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "886": {
+    "conditionId": 886,
+    "name": "Boss Room Night Team (Left)",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "887": {
+    "conditionId": 887,
+    "name": "Ranged Combat Skill Damage Increase",
+    "iconUrl": "gui_condition_change_12_3.png"
+  },
+  "888": {
+    "conditionId": 888,
+    "name": "Invisibility for Monster Teleportation",
+    "iconUrl": "gui_condition_change_1_0.png"
+  },
+  "889": {
+    "conditionId": 889,
+    "name": "Rage Impact Enhancement",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "89": {
+    "conditionId": 89,
+    "name": "Blessed Effect",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "890": {
+    "conditionId": 890,
+    "name": "Unshakable Will Enhancement",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "891": {
+    "conditionId": 891,
+    "name": "Unshakable",
+    "iconUrl": "gui_condition_change03_9_3.png"
+  },
+  "893": {
+    "conditionId": 893,
+    "name": "Taunt Defense/Magic Defense Increase",
+    "iconUrl": "gui_condition_change03_14_0.png"
+  },
+  "894": {
+    "conditionId": 894,
+    "name": "Temporal Rewind",
+    "iconUrl": "gui_condition_change03_14_3.png"
+  },
+  "895": {
+    "conditionId": 895,
+    "name": "Unstable Soul",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "896": {
+    "conditionId": 896,
+    "name": "Recovering Will",
+    "iconUrl": "gui_condition_change03_10_3.png"
+  },
+  "897": {
+    "conditionId": 897,
+    "name": "Chill",
+    "iconUrl": "gui_condition_change03_15_3.png"
+  },
+  "898": {
+    "conditionId": 898,
+    "name": "Temporal Dilation: Day",
+    "iconUrl": "gui_condition_change03_12_3.png"
+  },
+  "899": {
+    "conditionId": 899,
+    "name": "Temporal Dilation: Night",
+    "iconUrl": "gui_condition_change03_13_3.png"
+  },
+  "9": {
+    "conditionId": 9,
+    "name": "Combat 2x EXP",
+    "iconUrl": "gui_condition_change_10_0.png"
+  },
+  "90": {
+    "conditionId": 90,
+    "name": "Outraged Effect",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "900": {
+    "conditionId": 900,
+    "name": "Erg Unlock Rate Increase",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "902": {
+    "conditionId": 902,
+    "name": "Doom",
+    "iconUrl": "gui_condition_change_14_1.png"
+  },
+  "903": {
+    "conditionId": 903,
+    "name": "Gwyllgi Gnaw",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "904": {
+    "conditionId": 904,
+    "name": "Obtained Arcana EXP Increase",
+    "iconUrl": "gui_condition_change02_11_0.png"
+  },
+  "905": {
+    "conditionId": 905,
+    "name": "Critical Boost",
+    "iconUrl": "gui_condition_change02_0_5.png"
+  },
+  "906": {
+    "conditionId": 906,
+    "name": "Alchemic Damage Increase",
+    "iconUrl": "gui_condition_change02_8_5.png"
+  },
+  "907": {
+    "conditionId": 907,
+    "name": "Piercing Resistance Effect",
+    "iconUrl": "gui_condition_change02_9_6.png"
+  },
+  "908": {
+    "conditionId": 908,
+    "name": "Bonus Lifeline Health Effect",
+    "iconUrl": "gui_condition_change03_1_4.png"
+  },
+  "91": {
+    "conditionId": 91,
+    "name": "Mini Potion Used.",
+    "iconUrl": "gui_condition_change_14_2.png"
+  },
+  "912": {
+    "conditionId": 912,
+    "name": "Purrling's Furious Charge",
+    "iconUrl": "gui_condition_change04_4_0.png"
+  },
+  "913": {
+    "conditionId": 913,
+    "name": "Purrling's Furious Charge",
+    "iconUrl": "GUI_condition_change04_4_0.png"
+  },
+  "914": {
+    "conditionId": 914,
+    "name": "Purrling's Blessing",
+    "iconUrl": "gui_condition_change03_6_4.png"
+  },
+  "915": {
+    "conditionId": 915,
+    "name": "Purrling's Blessing",
+    "iconUrl": "gui_condition_change03_7_4.png"
+  },
+  "916": {
+    "conditionId": 916,
+    "name": "Purrling's Luck",
+    "iconUrl": "gui_condition_change03_5_4.png"
+  },
+  "917": {
+    "conditionId": 917,
+    "name": "Progress Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "918": {
+    "conditionId": 918,
+    "name": "Production Success Rate Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "919": {
+    "conditionId": 919,
+    "name": "Huge Lucky Boost",
+    "iconUrl": "gui_condition_change_12_0.png"
+  },
+  "92": {
+    "conditionId": 92,
+    "name": "Unable to consume potions or food.",
+    "iconUrl": "gui_condition_change_1_0.png"
+  },
+  "920": {
+    "conditionId": 920,
+    "name": "Fire Mastery Damage Increased",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "921": {
+    "conditionId": 921,
+    "name": "Ice Mastery Damage Increased",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "922": {
+    "conditionId": 922,
+    "name": "Lightning Mastery Damage Increased",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "923": {
+    "conditionId": 923,
+    "name": "Magic Casting Speed Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "924": {
+    "conditionId": 924,
+    "name": "Healing Effect Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "925": {
+    "conditionId": 925,
+    "name": "Recovers Wounds Equal to Healing Effect",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "926": {
+    "conditionId": 926,
+    "name": "Movement Speed Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "927": {
+    "conditionId": 927,
+    "name": "Polar Vortex Targeting Condition",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "928": {
+    "conditionId": 928,
+    "name": "Bonus Damage Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "929": {
+    "conditionId": 929,
+    "name": "Protection/Magic Protection Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "93": {
+    "conditionId": 93,
+    "name": "Python Stone Barrier Status",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "930": {
+    "conditionId": 930,
+    "name": "Movement Speed Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "931": {
+    "conditionId": 931,
+    "name": "Hexshroud Targeting Condition",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "932": {
+    "conditionId": 932,
+    "name": "Divine Link Enhancement",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "933": {
+    "conditionId": 933,
+    "name": "Eternal Prayer Enhancement",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "934": {
+    "conditionId": 934,
+    "name": "Prayer",
+    "iconUrl": "gui_condition_change03_8_4.png"
+  },
+  "935": {
+    "conditionId": 935,
+    "name": "_LT[xml.charactercondition.2222]",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "936": {
+    "conditionId": 936,
+    "name": "Concentration Recovery",
+    "iconUrl": "gui_condition_change03_9_4.png"
+  },
+  "937": {
+    "conditionId": 937,
+    "name": "_LT[xml.charactercondition.2224]",
+    "iconUrl": "gui_condition_change03_0_0.png"
+  },
+  "938": {
+    "conditionId": 938,
+    "name": "Seething Mana",
+    "iconUrl": "gui_condition_change03_14_4.png"
+  },
+  "939": {
+    "conditionId": 939,
+    "name": "Phaea's Blessing",
+    "iconUrl": "gui_condition_change03_10_4.png"
+  },
+  "94": {
+    "conditionId": 94,
+    "name": "High Voltage",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "940": {
+    "conditionId": 940,
+    "name": "Terra Scourge",
+    "iconUrl": "gui_condition_change03_11_4.png"
+  },
+  "941": {
+    "conditionId": 941,
+    "name": "Hermetic Harmony: Phosphorus",
+    "iconUrl": "gui_condition_change03_12_4.png"
+  },
+  "942": {
+    "conditionId": 942,
+    "name": "Hermetic Harmony: Caustic Surge",
+    "iconUrl": "gui_condition_change03_13_4.png"
+  },
+  "943": {
+    "conditionId": 943,
+    "name": "Render Mana",
+    "iconUrl": "gui_condition_change03_15_4.png"
+  },
+  "944": {
+    "conditionId": 944,
+    "name": "Defender's Will",
+    "iconUrl": "gui_condition_change02_2_2.png"
+  },
+  "945": {
+    "conditionId": 945,
+    "name": "Aggressor's Will",
+    "iconUrl": "gui_condition_change03_6_3.png"
+  },
+  "946": {
+    "conditionId": 946,
+    "name": "Signet Success Rate Boost",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "947": {
+    "conditionId": 947,
+    "name": "Movement Speed Increase",
+    "iconUrl": "gui_condition_change03_2_4.png"
+  },
+  "948": {
+    "conditionId": 948,
+    "name": "Thunderblight Targeting Condition",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "95": {
+    "conditionId": 95,
+    "name": "서서 하는 이펙트",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "950": {
+    "conditionId": 950,
+    "name": "Shooting Rush Enhancement",
+    "iconUrl": "gui_condition_change02_11_5.png"
+  },
+  "951": {
+    "conditionId": 951,
+    "name": "Way of the Gun Enhancement",
+    "iconUrl": "gui_condition_change02_11_5.png"
+  },
+  "952": {
+    "conditionId": 952,
+    "name": "Kunai Storm Enhancement",
+    "iconUrl": "gui_condition_change02_12_5.png"
+  },
+  "953": {
+    "conditionId": 953,
+    "name": "Sakura Abyss Enhancement",
+    "iconUrl": "gui_condition_change02_12_5.png"
+  },
+  "954": {
+    "conditionId": 954,
+    "name": "Windmill Enhancement",
+    "iconUrl": "gui_condition_change02_0_5.png"
+  },
+  "955": {
+    "conditionId": 955,
+    "name": "Final Hit Enhancement",
+    "iconUrl": "gui_condition_change02_4_5.png"
+  },
+  "956": {
+    "conditionId": 956,
+    "name": "Final Strike Enhancement",
+    "iconUrl": "gui_condition_change02_1_5.png"
+  },
+  "957": {
+    "conditionId": 957,
+    "name": "Stampede Enhancement",
+    "iconUrl": "gui_condition_change02_12_2.png"
+  },
+  "958": {
+    "conditionId": 958,
+    "name": "Giant Full Swing Enhancement",
+    "iconUrl": "gui_condition_change02_1_5.png"
+  },
+  "959": {
+    "conditionId": 959,
+    "name": "Smash Enhancement",
+    "iconUrl": "gui_condition_change_5_3.png"
+  },
+  "96": {
+    "conditionId": 96,
+    "name": "Life Skill Training Boost",
+    "iconUrl": "gui_condition_change_13_5.png"
+  },
+  "960": {
+    "conditionId": 960,
+    "name": "Bash Enhancement",
+    "iconUrl": "gui_condition_change02_0_5.png"
+  },
+  "961": {
+    "conditionId": 961,
+    "name": "Bash Enhancement",
+    "iconUrl": "gui_condition_change02_0_5.png"
+  },
+  "962": {
+    "conditionId": 962,
+    "name": "Crash Shot Enhancement",
+    "iconUrl": "gui_condition_change02_5_5.png"
+  },
+  "963": {
+    "conditionId": 963,
+    "name": "Final Shot Enhancement",
+    "iconUrl": "gui_condition_change02_5_5.png"
+  },
+  "964": {
+    "conditionId": 964,
+    "name": "Final Shot Enhancement",
+    "iconUrl": "gui_condition_change02_5_5.png"
+  },
+  "965": {
+    "conditionId": 965,
+    "name": "Hail Storm Enhancement",
+    "iconUrl": "gui_condition_change02_7_5.png"
+  },
+  "966": {
+    "conditionId": 966,
+    "name": "Intermediate Magic Enhancement",
+    "iconUrl": "gui_condition_change02_7_5.png"
+  },
+  "967": {
+    "conditionId": 967,
+    "name": "Fusion Bolt Enhancement",
+    "iconUrl": "gui_condition_change02_7_5.png"
+  },
+  "968": {
+    "conditionId": 968,
+    "name": "Horseback Lance Charge Enhancement",
+    "iconUrl": "gui_condition_change02_3_5.png"
+  },
+  "969": {
+    "conditionId": 969,
+    "name": "Magic Attack Boost",
+    "iconUrl": "gui_condition_change02_7_5.png"
+  },
+  "97": {
+    "conditionId": 97,
+    "name": "Battle Skill Training Boost",
+    "iconUrl": "gui_condition_change_14_5.png"
+  },
+  "970": {
+    "conditionId": 970,
+    "name": "Spinning Slasher Enhancement",
+    "iconUrl": "gui_condition_change02_13_5.png"
+  },
+  "971": {
+    "conditionId": 971,
+    "name": "Chain Impale Enhancement",
+    "iconUrl": "gui_condition_change02_13_5.png"
+  },
+  "972": {
+    "conditionId": 972,
+    "name": "Interrupted Connection",
+    "iconUrl": "gui_condition_change_8_1.png"
+  },
+  "973": {
+    "conditionId": 973,
+    "name": "Lance Charge Enhancement",
+    "iconUrl": "gui_condition_change02_3_5.png"
+  },
+  "974": {
+    "conditionId": 974,
+    "name": "Lance Charge Speed Boost (On Foot)",
+    "iconUrl": "gui_condition_change03_1_5.png"
+  },
+  "975": {
+    "conditionId": 975,
+    "name": "Lance Charge Mount Bonus (On Foot)",
+    "iconUrl": "gui_condition_change03_2_5.png"
+  },
+  "976": {
+    "conditionId": 976,
+    "name": "Bash Dash Applied",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "977": {
+    "conditionId": 977,
+    "name": "Assassin's Advantage Enhancement",
+    "iconUrl": "gui_condition_change02_0_0.png"
+  },
+  "978": {
+    "conditionId": 978,
+    "name": "Assassin's Advantage",
+    "iconUrl": "gui_condition_change03_3_5.png"
+  },
+  "979": {
+    "conditionId": 979,
+    "name": "Probation",
+    "iconUrl": "gui_condition_change03_4_5.png"
+  },
+  "98": {
+    "conditionId": 98,
+    "name": "Magic Skill Training Boost",
+    "iconUrl": "gui_condition_change_15_5.png"
+  },
+  "980": {
+    "conditionId": 980,
+    "name": "Bonus Damage Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "981": {
+    "conditionId": 981,
+    "name": "Protection/Magic Protection Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "982": {
+    "conditionId": 982,
+    "name": "Auto-revival",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "983": {
+    "conditionId": 983,
+    "name": "Movement Speed Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "984": {
+    "conditionId": 984,
+    "name": "Bachram Speed Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "985": {
+    "conditionId": 985,
+    "name": "Pet Attack Boost",
+    "iconUrl": "gui_condition_change_12_2.png"
+  },
+  "986": {
+    "conditionId": 986,
+    "name": "Pet Defense Boost",
+    "iconUrl": "gui_condition_change03_14_0.png"
+  },
+  "987": {
+    "conditionId": 987,
+    "name": "Link Distance Boost",
+    "iconUrl": "gui_condition_change02_7_6.png"
+  },
+  "988": {
+    "conditionId": 988,
+    "name": "Freeze Immunity",
+    "iconUrl": "gui_condition_change02_5_2.png"
+  },
+  "989": {
+    "conditionId": 989,
+    "name": "Knockdown Gauge Reduction",
+    "iconUrl": "gui_condition_change03_9_3.png"
+  },
+  "99": {
+    "conditionId": 99,
+    "name": "Alchemy Skill Training Boost",
+    "iconUrl": "gui_condition_change_0_6.png"
+  },
+  "990": {
+    "conditionId": 990,
+    "name": "Pet Attack and Defense Boost",
+    "iconUrl": "gui_condition_change_10_6.png"
+  },
+  "991": {
+    "conditionId": 991,
+    "name": "Fire Mastery Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "992": {
+    "conditionId": 992,
+    "name": "Ice Mastery Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "993": {
+    "conditionId": 993,
+    "name": "Lightning Mastery Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "994": {
+    "conditionId": 994,
+    "name": "Fire Alchemy Mastery Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "995": {
+    "conditionId": 995,
+    "name": "Water Alchemy Mastery Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "996": {
+    "conditionId": 996,
+    "name": "Earth Alchemy Mastery Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "997": {
+    "conditionId": 997,
+    "name": "Wind Alchemy Mastery Enhancement",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "999": {
+    "conditionId": 999,
+    "name": "Veil of Life",
+    "iconUrl": "gui_condition_change_0_0.png"
+  }
+}

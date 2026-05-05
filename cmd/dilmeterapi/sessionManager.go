@@ -1,0 +1,393 @@
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
+	"github.com/gopacket/gopacket/pcapgo"
+)
+
+const liveSessionFilename = "live-session.ndjson"
+const livePcapFilename = "live-session.pcapng"
+
+type Session struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	StartTime int64  `json:"startTime"`
+	EndTime   int64  `json:"endTime,omitempty"`
+
+	ndjsonFile *os.File       `json:"-"`
+	pcapWriter *pcapgo.Writer `json:"-"`
+	pcapFile   *os.File       `json:"-"`
+}
+
+type SessionManager struct {
+	logDirectory   string
+	currentSession *Session
+	mu             sync.RWMutex
+	recordPcap     bool
+}
+
+func NewSessionManager(logDir string, recordPcap bool) (*SessionManager, error) {
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		return nil, fmt.Errorf("could not create log directory: %w", err)
+	}
+
+	sm := &SessionManager{
+		logDirectory: logDir,
+		recordPcap:   recordPcap,
+	}
+
+	if err := sm.runMigration(); err != nil {
+		logger.Printf("Could not run migration for old session files: %v", err)
+	}
+
+	return sm, nil
+}
+
+// StartLiveSession creates or overwrites the temporary live session file.
+func (sm *SessionManager) StartLiveSession() (*Session, error) {
+	// logger.Println("[Locking] sessionManager.StartLiveSession attempting to lock...")
+	sm.mu.Lock()
+	// logger.Println("...[Locked] sessionManager.StartLiveSession acquired lock.")
+	defer func() {
+		// logger.Println("[Unlocking] sessionManager.StartLiveSession attempting to unlock.")
+		sm.mu.Unlock()
+		// logger.Println("...[Unlocked] sessionManager.StartLiveSession released lock.")
+	}()
+
+	if sm.currentSession != nil {
+		return nil, fmt.Errorf("a session is already active")
+	}
+
+	now := time.Now()
+	s := &Session{
+		ID:        liveSessionFilename,
+		Name:      "Live Session",
+		StartTime: now.Unix(),
+	}
+
+	ndjsonPath := filepath.Join(sm.logDirectory, liveSessionFilename)
+	ndjsonFile, err := os.OpenFile(ndjsonPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open ndjson log file: %w", err)
+	}
+	s.ndjsonFile = ndjsonFile
+
+	if sm.recordPcap {
+		pcapPath := filepath.Join(sm.logDirectory, livePcapFilename)
+		pcapFile, err := os.OpenFile(pcapPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+		if err != nil {
+			ndjsonFile.Close()
+			return nil, fmt.Errorf("failed to open pcapng log file: %w", err)
+		}
+		s.pcapFile = pcapFile
+		pcapWriter := pcapgo.NewWriter(pcapFile)
+		if err := pcapWriter.WriteFileHeader(65536, layers.LinkTypeEthernet); err != nil {
+			pcapFile.Close()
+			ndjsonFile.Close()
+			return nil, fmt.Errorf("failed to write pcapng header: %w", err)
+		}
+		s.pcapWriter = pcapWriter
+	}
+
+	sm.currentSession = s
+	return s, nil
+}
+
+// StopCurrentSession closes the handles on the current session (likely the live one).
+func (sm *SessionManager) StopCurrentSession() {
+	// logger.Println("[Locking] sessionManager.StopCurrentSession attempting to lock...")
+	sm.mu.Lock()
+	// logger.Println("...[Locked] sessionManager.StopCurrentSession acquired lock.")
+	defer func() {
+		// logger.Println("[Unlocking] sessionManager.StopCurrentSession attempting to unlock.")
+		sm.mu.Unlock()
+		// logger.Println("...[Unlocked] sessionManager.StopCurrentSession released lock.")
+	}()
+
+	if sm.currentSession == nil {
+		return
+	}
+
+	if sm.currentSession.ndjsonFile != nil {
+		sm.currentSession.ndjsonFile.Close()
+	}
+	if sm.currentSession.pcapFile != nil {
+		sm.currentSession.pcapFile.Close()
+	}
+
+	sm.currentSession = nil
+}
+
+// SaveLiveSession renames the live session file to a permanent one.
+func (sm *SessionManager) SaveLiveSession(name string) error {
+	// logger.Println("[Locking] sessionManager.SaveLiveSession attempting to lock...")
+	sm.mu.Lock()
+	// logger.Println("...[Locked] sessionManager.SaveLiveSession acquired lock.")
+	defer func() {
+		// logger.Println("[Unlocking] sessionManager.SaveLiveSession attempting to unlock.")
+		sm.mu.Unlock()
+		// logger.Println("...[Unlocked] sessionManager.SaveLiveSession released lock.")
+	}()
+
+	if sm.currentSession == nil || sm.currentSession.ID != liveSessionFilename {
+		return fmt.Errorf("no active live session to save")
+	}
+
+	// Close file handles before renaming
+	if sm.currentSession.ndjsonFile != nil {
+		sm.currentSession.ndjsonFile.Close()
+	}
+	if sm.currentSession.pcapFile != nil {
+		sm.currentSession.pcapFile.Close()
+	}
+	
+	t := time.Unix(sm.currentSession.StartTime, 0)
+	newFilenameBase := fmt.Sprintf("%s_%s", t.Format("2006-01-02_15-04-05"), sanitizeFilename(name))
+	newNdjsonFilename := newFilenameBase + ".ndjson"
+
+	oldPath := filepath.Join(sm.logDirectory, liveSessionFilename)
+	newPath := filepath.Join(sm.logDirectory, newNdjsonFilename)
+
+	if err := os.Rename(oldPath, newPath); err != nil {
+		return fmt.Errorf("failed to rename session file: %w", err)
+	}
+
+	if sm.recordPcap {
+		oldPcapPath := filepath.Join(sm.logDirectory, livePcapFilename)
+		newPcapPath := strings.TrimSuffix(newPath, ".ndjson") + ".pcapng"
+		if _, err := os.Stat(oldPcapPath); err == nil {
+			os.Rename(oldPcapPath, newPcapPath)
+		}
+	}
+
+	sm.currentSession = nil
+	return nil
+}
+
+// GetAllSessions scans for permanent logs, ignoring the live session file.
+func (sm *SessionManager) GetAllSessions() ([]*Session, error) {
+	// (This function remains unchanged from the previous version)
+	sm.mu.RLock()
+	defer sm.mu.RUnlock()
+
+	files, err := os.ReadDir(sm.logDirectory)
+	if err != nil {
+		return nil, err
+	}
+
+	var sessions []*Session
+	for _, file := range files {
+		if file.IsDir() || !strings.HasSuffix(file.Name(), ".ndjson") || file.Name() == liveSessionFilename {
+			continue
+		}
+		parts := strings.SplitN(file.Name(), "_", 3)
+		if len(parts) < 3 {
+			continue
+		}
+		timeStr := parts[0] + " " + strings.ReplaceAll(parts[1], "-", ":")
+		startTime, err := time.Parse("2006-01-02 15:04:05", timeStr)
+		if err != nil {
+			continue
+		}
+		name := strings.TrimSuffix(parts[2], ".ndjson")
+		sessions = append(sessions, &Session{
+			ID:        file.Name(),
+			Name:      name,
+			StartTime: startTime.Unix(),
+		})
+	}
+	sort.Slice(sessions, func(i, j int) bool {
+		return sessions[i].StartTime > sessions[j].StartTime
+	})
+	return sessions, nil
+}
+
+// DeleteSession now also ensures we don't delete the live file accidentally.
+func (sm *SessionManager) DeleteSession(sessionID string) error {
+	if sessionID == liveSessionFilename || sessionID == livePcapFilename {
+		return fmt.Errorf("cannot delete the active live session file")
+	}
+	// logger.Println("[Locking] sessionManager.DeleteSession attempting to lock...")
+	sm.mu.Lock()
+	// logger.Println("...[Locked] sessionManager.DeleteSession acquired lock.")
+	defer func() {
+		// logger.Println("[Unlocking] sessionManager.DeleteSession attempting to unlock.")
+		sm.mu.Unlock()
+		// logger.Println("...[Unlocked] sessionManager.DeleteSession released lock.")
+	}()
+
+	ndjsonPath := filepath.Join(sm.logDirectory, sessionID)
+	if err := os.Remove(ndjsonPath); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to delete ndjson log: %w", err)
+	}
+	pcapPath := strings.TrimSuffix(ndjsonPath, ".ndjson") + ".pcapng"
+	if _, err := os.Stat(pcapPath); err == nil {
+		os.Remove(pcapPath)
+	}
+	return nil
+}
+
+// RenameSession remains unchanged.
+func (sm *SessionManager) RenameSession(sessionID, newName string) (*Session, error) {
+	// (This function is the same as the previous version)
+	// logger.Println("[Locking] sessionManager.RenameSession attempting to lock...")
+	sm.mu.Lock()
+	// logger.Println("...[Locked] sessionManager.RenameSession acquired lock.")
+	defer func() {
+		// logger.Println("[Unlocking] sessionManager.RenameSession attempting to unlock.")
+		sm.mu.Unlock()
+		// logger.Println("...[Unlocked] sessionManager.RenameSession released lock.")
+	}()
+
+	parts := strings.SplitN(sessionID, "_", 3)
+	if len(parts) < 3 {
+		return nil, fmt.Errorf("invalid session ID format for renaming")
+	}
+	timestampPart := parts[0] + "_" + parts[1]
+	sanitizedName := sanitizeFilename(newName)
+	newFilenameBase := fmt.Sprintf("%s_%s", timestampPart, sanitizedName)
+	newNdjsonFilename := newFilenameBase + ".ndjson"
+	oldPath := filepath.Join(sm.logDirectory, sessionID)
+	newPath := filepath.Join(sm.logDirectory, newNdjsonFilename)
+	if err := os.Rename(oldPath, newPath); err != nil {
+		return nil, fmt.Errorf("failed to rename session file: %w", err)
+	}
+	oldPcapPath := strings.TrimSuffix(oldPath, ".ndjson") + ".pcapng"
+	newPcapPath := strings.TrimSuffix(newPath, ".ndjson") + ".pcapng"
+	if _, err := os.Stat(oldPcapPath); err == nil {
+		os.Rename(oldPcapPath, newPcapPath)
+	}
+	return &Session{
+		ID:   newNdjsonFilename,
+		Name: sanitizedName,
+	}, nil
+}
+
+// WriteEventToLog remains unchanged.
+func (sm *SessionManager) WriteEventToLog(e iEvent) error {
+	// (This function is the same as the previous version)
+	sm.mu.RLock()
+	defer sm.mu.RUnlock()
+	s := sm.currentSession
+	if s == nil || s.ndjsonFile == nil {
+		return nil
+	}
+	b, err := json.Marshal(e)
+	if err != nil {
+		return err
+	}
+	b = append(b, '\n')
+	_, err = s.ndjsonFile.Write(b)
+	return err
+}
+
+// WritePacketToLog remains unchanged.
+func (sm *SessionManager) WritePacketToLog(ci gopacket.CaptureInfo, data []byte) {
+	// (This function is the same as the previous version)
+	sm.mu.RLock()
+	defer sm.mu.RUnlock()
+	s := sm.currentSession
+	if s == nil || s.pcapWriter == nil {
+		return
+	}
+	_ = s.pcapWriter.WritePacket(ci, data)
+}
+
+// The migration logic remains unchanged.
+func (sm *SessionManager) runMigration() error {
+	// (This function is the same as the previous version)
+	oldMetadataPath := "sessions.json"
+	if _, err := os.Stat(oldMetadataPath); os.IsNotExist(err) {
+		return nil
+	}
+	logger.Println("Old sessions.json found. Starting one-time migration...")
+	data, err := os.ReadFile(oldMetadataPath)
+	if err != nil {
+		return fmt.Errorf("could not read old sessions.json: %w", err)
+	}
+	var oldSessions []*oldSessionDTO
+	if err := json.Unmarshal(data, &oldSessions); err != nil {
+		return fmt.Errorf("could not parse old sessions.json: %w", err)
+	}
+	metadataMap := make(map[string]*oldSessionDTO)
+	for _, s := range oldSessions {
+		originalFilename := filepath.Base(s.NdjsonLogPath)
+		metadataMap[originalFilename] = s
+	}
+	files, err := os.ReadDir(sm.logDirectory)
+	if err != nil {
+		return fmt.Errorf("could not read log directory for migration: %w", err)
+	}
+	migratedCount := 0
+	for _, file := range files {
+		if file.IsDir() || !strings.HasPrefix(file.Name(), "session-log-") {
+			continue
+		}
+		var name string
+		var startTime int64
+		if metadata, ok := metadataMap[file.Name()]; ok {
+			name = metadata.Name
+			startTime = metadata.StartTime
+		} else {
+			logger.Printf("Orphaned log file found: %s. Attempting to recover start time.", file.Name())
+			f, err := os.Open(filepath.Join(sm.logDirectory, file.Name()))
+			if err != nil {
+				logger.Printf("...could not open orphaned file: %v", err)
+				continue
+			}
+			scanner := bufio.NewScanner(f)
+			if scanner.Scan() {
+				var firstEvent eventBaseForMigration
+				if err := json.Unmarshal(scanner.Bytes(), &firstEvent); err == nil {
+					startTime = firstEvent.At
+					name = "Archived-Session"
+				}
+			}
+			f.Close()
+		}
+		if startTime == 0 {
+			logger.Printf("...could not determine start time for %s. Skipping.", file.Name())
+			continue
+		}
+		t := time.Unix(startTime, 0)
+		newFilename := fmt.Sprintf("%s_%s.ndjson", t.Format("2006-01-02_15-04-05"), sanitizeFilename(name))
+		oldPath := filepath.Join(sm.logDirectory, file.Name())
+		newPath := filepath.Join(sm.logDirectory, newFilename)
+		logger.Printf("Migrating: %s -> %s", file.Name(), newFilename)
+		if err := os.Rename(oldPath, newPath); err != nil {
+			logger.Printf("...failed to rename %s: %v", file.Name(), err)
+			continue
+		}
+		migratedCount++
+		oldPcapPath := strings.Replace(oldPath, "session-log-", "session-pcap-", 1)
+		oldPcapPath = strings.TrimSuffix(oldPcapPath, ".ndjson") + ".pcapng"
+		if _, err := os.Stat(oldPcapPath); err == nil {
+			newPcapPath := strings.TrimSuffix(newPath, ".ndjson") + ".pcapng"
+			os.Rename(oldPcapPath, newPcapPath)
+		}
+	}
+	logger.Printf("Migration complete. Migrated %d files.", migratedCount)
+	return os.Rename(oldMetadataPath, oldMetadataPath+".migrated")
+}
+
+// Helper structs for migration
+type oldSessionDTO struct {
+	ID            string `json:"id"`
+	Name          string `json:"name"`
+	StartTime     int64  `json:"startTime"`
+	NdjsonLogPath string `json:"ndjsonLogPath"`
+}
+type eventBaseForMigration struct {
+	At int64 `json:"At"`
+}

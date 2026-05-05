@@ -1,0 +1,432 @@
+syntax = "proto3";
+
+
+package midir;
+
+message ResourceData {
+    repeated AchievementInfo AchievementList = 26;
+    map<uint32, string> AchievementCategoryNameMap = 27;
+    repeated BarterInfo BarterList = 1;
+    repeated CharCondInfo CharCondList = 28;
+    optional CharStyleData CharStyle = 2;
+    optional EquipColData EquipCol = 4;
+    optional EquipItemData EquipItem = 5;
+    repeated FoodInfo FoodList = 6;
+    repeated ItemExtendMetalWareInfo ItemExtendMetalWareList = 7;
+    repeated ItemExtendRandomProductInfo ItemExtendRandomProductList = 8;
+    repeated ItemExtendSetItemDescInfo ItemExtendSetItemDescList = 9;
+    repeated ItemExtendUpgradeInfo ItemExtendUpgradeList = 10;
+    repeated ItemInfo ItemList = 11;
+    repeated ItemUpgradeInfo ItemUpgradeList = 12;
+    repeated MetalWareAbilityInfo MetalWareAbilityList = 13;
+    repeated MetalWareItemInfo MetalWareItemList = 14;
+    repeated MetalWareLevelInfo MetalWareLevelList = 15;
+    repeated MiniatureInfo MiniatureList = 16;
+    repeated OptionSetInfo OptionSetList = 17;
+    repeated PetInfo PetList = 30;
+    repeated ProductionInfo ProductionList = 18;
+    repeated RaceInfo RaceList = 19;
+    repeated RandomTableInfo RandomTableList = 25;
+    repeated SetItemDescElementInfo SetItemDescElementList = 20;
+    repeated SkillInfo SkillList = 21;
+    repeated SocialMotionInfo SocialMotionList = 22;
+    repeated StringInfo StringTable = 23;
+    repeated TalentInfo TalentList = 29;
+    repeated TitleInfo TitleList = 24;
+
+    ResourceVersion Version = 100;
+}
+
+message ResourceVersion {
+    int64 CreatedAt = 1;
+}
+
+message AchievementInfo {
+    uint32 Id = 1;
+    string Name = 2;
+    string Hint = 3;
+    string Description = 4;
+    uint32 Point = 5;
+    uint32 Category = 6;
+    uint32 Prerequirement = 7;
+    bool Hidden = 8;
+    // repeated uint32 ChildrenAchievement = 9;
+
+}
+
+message BarterInfo {
+    uint32 Id = 1;
+    string Name = 2;
+    uint32 PostId = 3;
+    repeated ItemPrice Prices = 4;
+    string ResetType = 5;
+    uint32 Limit = 6;
+}
+
+message ItemPrice {
+    uint32 Id = 1;
+    uint32 Count = 2;
+}
+
+message CharCondInfo {
+    uint32 Id = 1;
+    string Name = 2;
+    string Desc = 3;
+}
+
+message CharStyleData {
+    repeated CharStyleInfo Races = 1;
+    repeated CharStyleInfo MaleFaces = 2;
+    repeated CharStyleInfo FemaleFaces = 3;
+    repeated CharStyleInfo SkinColors = 4;
+    repeated CharStyleInfo MaleHairs = 5;
+    repeated CharStyleInfo FemaleHairs = 6;
+    repeated CharStyleInfo HairColors = 7;
+    repeated CharStyleInfo EyeColors = 8;
+    repeated CharStyleInfo EyeTypes = 9;
+    repeated CharStyleInfo MouthTypes = 10;
+}
+
+message CharStyleInfo {
+    uint32 Id = 1;
+    string Name = 2;
+    string Color = 3;
+    repeated uint32 AllowRaces = 4;
+    uint32 ColorCount = 5;
+    repeated string DefaultColors = 6;
+}
+
+message EquipColData {
+    repeated uint32 Armor = 1;
+    repeated uint32 Head = 2;
+    repeated uint32 Glove = 3;
+    repeated uint32 Shoes = 4;
+    repeated uint32 Robe = 5;
+    repeated uint32 Acc = 6; // 퍼핏, 헤일로
+    repeated uint32 FaceDeco = 7;
+    repeated uint32 Tail = 8;
+    repeated uint32 Chair = 9;
+}
+
+message EquipItemData {
+    repeated CharStyleInfo Armor = 1;
+    repeated CharStyleInfo Head = 2;
+    repeated CharStyleInfo Glove = 3;
+    repeated CharStyleInfo Shoes = 4;
+    repeated CharStyleInfo Robe = 5;
+    repeated CharStyleInfo Puppet = 6;
+    repeated CharStyleInfo Halo = 7;
+    repeated CharStyleInfo FaceDeco = 8;
+    repeated CharStyleInfo Tail = 9;
+    repeated CharStyleInfo RightHand = 10;
+}
+
+message FoodInfo {
+    uint32 Id = 1;
+    uint32 RecoverFood = 2;
+    int32 BoostStr = 3;
+    int32 BoostInt = 4;
+    int32 BoostDex = 5;
+    int32 BoostWill = 6;
+    int32 BoostLuck = 7;
+    int32 BoostLife = 8;
+    int32 BoostMana = 9;
+    int32 BoostStamina = 10;
+    int32 BoostWeight = 11;
+    int32 BoostUpper = 12;
+    int32 BoostLower = 13;
+}
+
+message ItemExtendMetalWareInfo {
+    uint32 Id = 1;
+    string EquipType = 2;
+    bool Human = 3;
+    bool Elf = 4;
+    bool Giant = 5;
+}
+
+message ItemExtendRandomProductInfo {
+    uint32 Id = 1;
+    repeated RandomProductElement Elements = 2;
+}
+
+message RandomProductElement {
+    string Name = 1;
+    uint32 Min = 2;
+    uint32 Max = 3;
+}
+
+message ItemExtendSetItemDescInfo {
+    uint32 Id = 1;
+    repeated SetItemDescElement Elements = 2;
+    repeated SetItemDescQuality Qualities = 3;
+}
+
+message SetItemDescElement {
+    string Name = 1;
+    uint32 Min = 2;
+    uint32 Max = 3;
+}
+
+message SetItemDescQuality {
+    uint32 Threshold = 1;
+    repeated SetItemDescElement Bonus = 2;
+}
+
+message ItemExtendUpgradeInfo {
+    uint32 Id = 1;
+    uint32 UpgradeMax = 2;
+    uint32 GemUpgradeMax = 3;
+    repeated uint32 UpgradeIds = 4;
+}
+
+message ItemInfo {
+    uint32 Id = 1;
+    string Name = 2;
+    string Desc = 3;
+    bool IsAuctionSearchable = 4;
+    bool HaveMesh = 5;
+}
+
+message ItemUpgradeInfo {
+    uint32 Id = 1;
+    string Name = 2;
+    string Desc = 3;
+    uint32 NeedEp = 4;
+    uint32 NeedGold = 5;
+    repeated ItemUpgradeGem NeedGems = 6;
+    uint32 UpgradedMin = 7;
+    uint32 UpgradedMax = 8;
+    repeated string AvailableNpcs = 9;
+    repeated ItemUpgradeModifyStat ModifyStats = 10;
+    repeated uint32 OptionSetIds = 11;
+    ItemLuckyUpgrade LuckyUpgrade = 12;
+    bool Personalize = 13;
+}
+
+message ItemUpgradeGem {
+    string Name = 1;
+    float Size = 2;
+}
+
+message ItemUpgradeModifyStat {
+    string Name = 1;
+    float Min = 2;
+    float Max = 3;
+    int32 Extra = 4;
+}
+
+message ItemLuckyUpgrade {
+    uint32 Id = 1;
+    uint32 CountTotalRate = 2;
+    repeated ItemLuckyUpgradeCountRate CountRates = 3;
+    uint32 RandomOptionTotalRate = 4;
+    repeated ItemLuckyUpgradeRandomOptionRate RandomOptionRates = 5;
+    repeated uint32 FixedOptions = 6;
+}
+
+message ItemLuckyUpgradeCountRate {
+    uint32 Count = 1;
+    uint32 Rate = 2;
+}
+
+message ItemLuckyUpgradeRandomOptionRate {
+    uint32 Id = 1;
+    uint32 Rate = 2;
+}
+
+message MetalWareAbilityInfo {
+    uint32 Id = 1;
+    string Desc = 2;
+    uint32 BaseMaxLevel = 3;
+    uint32 BaseMaxLevelAcc = 4;
+    uint32 BaseMaxLevelOH = 5;
+    string SubDesc = 6;
+    float InitialValue = 7;
+    float ValuePerLevel = 8;
+    bool LimitBreak = 9;
+    float Standard = 10;
+    map<string, bool> EquipFilterMap = 11;
+    map<string, bool> TypeFilterMap = 12;
+    bool Human = 13;
+    bool Elf = 14;
+    bool Giant = 15;
+}
+
+message MetalWareItemInfo {
+    uint32 Id = 1;
+    uint32 ItemId = 2;
+    string Name = 3;
+    string Desc = 4;
+    uint32 RateRank3 = 5;
+    uint32 RateRank2 = 6;
+    uint32 RateRank1 = 7;
+    uint32 RateAbility1 = 8;
+    uint32 RateAbility2 = 9;
+    uint32 RateAbility3 = 10;
+    uint32 LimitBreakRateFactor = 11;
+    uint32 MinLevelFactor = 12;
+    uint32 MaxLevelFactor = 13;
+    uint32 AbilityLimit = 14;
+}
+
+message MetalWareLevelInfo {
+    uint32 Level = 1;
+    uint32 Rank3MinLevel = 2;
+    uint32 Rank3MaxLevel = 3;
+    uint32 Rank2MinLevel = 4;
+    uint32 Rank2MaxLevel = 5;
+    uint32 Rank1MinLevel = 6;
+    uint32 Rank1MaxLevel = 7;
+    uint32 LimitBreakMinLevel = 8;
+    uint32 LimitBreakMaxLevel = 9;
+}
+
+message MiniatureInfo {
+    uint32 Id = 1;
+    uint32 ItemId = 2;
+    string Name = 3;
+    string Description = 4;
+    map<string, uint32> BonusStatMap = 5;
+    bool IsExtraMiniature = 6;
+    bool IsAuctionSearchable = 7;
+}
+
+message OptionSetInfo {
+    uint32 Id = 1;
+    string Name = 2;
+    string Name2 = 3;
+    string Desc = 4;
+    uint32 Usage = 5;
+    uint32 Level = 6;
+}
+
+message PetInfo {
+    uint32 Id = 1;
+    uint32 LimitTime = 2;
+    
+    // 1살 기준
+    PetStat MinLevelStat = 3;
+    PetStat MaxLevelStat = 4;
+    
+    repeated PetSkill Skills = 5;
+}
+
+message PetSkill {
+    uint32 Id = 1;
+    uint32 Level = 2;
+    uint32 NeedPetLevel = 3;
+}
+
+message PetStat {
+    uint32 Str = 1;
+    uint32 Int = 2;
+    uint32 Dex = 3;
+    uint32 Will = 4;
+    uint32 Luck = 5;
+    uint32 Life = 6;
+    uint32 Mana = 7;
+    uint32 Stamina = 8;
+}
+
+message ProductionInfo {
+    uint32 Type = 1; // production type, 0 ~ production, 0x10000 ~ manualform
+    uint32 ItemId = 2;
+    uint32 FormId = 3; // manualform only
+    uint32 Level = 4;
+    repeated ProductEssential Essentials = 5;
+    repeated ProductCompleteEssential CompleteEssentials = 6; // manualform only
+}
+
+message ProductEssential {
+    repeated uint32 ItemIds = 1;
+    uint32 Count = 2;
+}
+
+message ProductCompleteEssential {
+    repeated ProductEssential Essentials = 1;
+    string ExtraData = 2;
+}
+
+message RaceInfo {
+    uint32 Id = 1;
+    string Name = 2;
+    string ClassName = 3;
+    repeated RaceSkill Skills = 4;
+    repeated RaceWeakenSkill WeakenSkills = 5;
+
+    uint32 InventorySizeX = 6;
+    uint32 InventorySizeY = 7;
+}
+
+message RaceSkill {
+    uint32 Id = 1;
+    uint32 Level = 2;
+}
+
+message RaceWeakenSkill {
+    uint32 Id = 1;
+    uint32 DmgRate = 2;
+}
+
+message RandomTableInfo {
+    uint32 Id = 1;
+    string Name = 2;
+    repeated RandomTableElement Elements = 3;
+    uint32 TotalProb = 4;
+}
+
+message RandomTableElement {
+    string Name = 1;
+    uint32 Type = 2;
+    uint32 Min = 3;
+    uint32 Max = 4;
+    uint32 Extra = 5;
+    uint32 Prob = 6;
+}
+
+message SetItemDescElementInfo {
+    uint32 Id = 1;
+    string Key = 2;
+    string Name = 3;
+    string Desc = 4;
+}
+
+message SkillInfo {
+    uint32 Id = 1;
+    string Name = 2;
+    string Desc = 3;
+    uint32 Category = 5;
+    map<string, string> VariableMap = 4;
+}
+
+message SocialMotionInfo  {
+    uint32 Id = 1;
+    string Name = 2;
+    repeated uint32 AllowRaces = 3;
+}
+
+message StringInfo {
+    string Id = 1;
+    string Str = 2;
+}
+
+message TalentInfo {
+    uint32 Id = 1;
+    string Name = 2;
+    string Subject = 3;
+    string Desc = 4;
+
+    repeated uint32 SkillIds = 5;
+}
+
+message TitleInfo {
+    uint32 Id = 1;
+    uint32 Type = 2;
+    string Name = 3;
+    string MaleName = 4;
+    string FemaleName = 5;
+    string UniName = 6;
+    string Effect = 7;
+    uint32 Duration = 8;
+}

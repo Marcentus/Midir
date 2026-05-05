@@ -1,0 +1,325 @@
+package main
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"os"
+	"strconv"
+	"sync"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
+	"github.com/gopacket/gopacket/pcap"
+	"github.com/Marcentus/Midir/packet"
+)
+
+var activeExitlag bool
+var autodetectCancel context.CancelFunc
+var autodetectMu sync.Mutex
+
+const configFile = "settings.json"
+
+type CaptureConfig struct {
+	NicName string `json:"nicName"`
+	IP      string `json:"ip"`
+	Port    string `json:"port"`
+	ExitLag bool   `json:"exitlag"`
+}
+
+func loadConfig() *CaptureConfig {
+	data, err := os.ReadFile(configFile)
+	if err != nil {
+		return nil
+	}
+	var config CaptureConfig
+	if err := json.Unmarshal(data, &config); err != nil {
+		return nil
+	}
+	return &config
+}
+
+func saveConfig(config *CaptureConfig) {
+	data, err := json.MarshalIndent(config, "", "  ")
+	if err == nil {
+		os.WriteFile(configFile, data, 0644)
+	}
+}
+
+func setupRouter() http.Handler {
+	r := chi.NewRouter()
+
+	r.Get("/status", func(w http.ResponseWriter, r *http.Request) {
+		captureMu.Lock()
+		defer captureMu.Unlock()
+		
+		cfg := loadConfig()
+		var ip, port string
+		if cfg != nil {
+			ip = cfg.IP
+			port = cfg.Port
+		}
+		
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"is_running": isCaptureRunning,
+			"nic":        activeNicName,
+			"exitlag":    activeExitlag,
+			"ip":         ip,
+			"port":       port,
+		})
+	})
+
+	r.Get("/nics", func(w http.ResponseWriter, r *http.Request) {
+		nics, err := pcap.FindAllDevs()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		type NicInfo struct {
+			Name        string `json:"name"`
+			Description string `json:"description"`
+			IP          string `json:"ip"`
+		}
+
+		var result []NicInfo
+		for _, nic := range nics {
+			ipStr := ""
+			if len(nic.Addresses) > 0 {
+				ipStr = nic.Addresses[0].IP.String()
+			}
+			result = append(result, NicInfo{
+				Name:        nic.Name,
+				Description: nic.Description,
+				IP:          ipStr,
+			})
+		}
+
+		json.NewEncoder(w).Encode(result)
+	})
+
+	r.Post("/start", func(w http.ResponseWriter, req *http.Request) {
+		var config CaptureConfig
+		if err := json.NewDecoder(req.Body).Decode(&config); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		// Save the requested settings permanently
+		saveConfig(&config)
+
+		filter := buildPcapFilter(config.IP, config.Port)
+
+		err := startPacketCapture(config.NicName, "", config.ExitLag, filter)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	})
+
+	r.Post("/stop", func(w http.ResponseWriter, req *http.Request) {
+		captureMu.Lock()
+		defer captureMu.Unlock()
+		stopPacketCaptureSync()
+		w.WriteHeader(http.StatusOK)
+	})
+
+	r.Post("/autodetect", func(w http.ResponseWriter, req *http.Request) {
+		var payload struct {
+			NicName string `json:"nicName"`
+		}
+		if err := json.NewDecoder(req.Body).Decode(&payload); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		err := startAutodetect(payload.NicName)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	})
+
+	r.Post("/autodetect/stop", func(w http.ResponseWriter, req *http.Request) {
+		autodetectMu.Lock()
+		defer autodetectMu.Unlock()
+		if autodetectCancel != nil {
+			autodetectCancel()
+			autodetectCancel = nil
+		}
+		w.WriteHeader(http.StatusOK)
+	})
+
+	return r
+}
+
+func startAutodetect(nicName string) error {
+	captureMu.Lock()
+	stopPacketCaptureSync()
+	captureMu.Unlock()
+
+	autodetectMu.Lock()
+	if autodetectCancel != nil {
+		autodetectCancel()
+		autodetectCancel = nil
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	autodetectCancel = cancel
+	autodetectMu.Unlock()
+
+	handle, err := pcap.OpenLive(nicName, 65536, true, pcap.BlockForever)
+	if err != nil {
+		cancel()
+		return err
+	}
+
+	if err := handle.SetBPFFilter("tcp"); err != nil {
+		handle.Close()
+		cancel()
+		return err
+	}
+
+	go func() {
+		defer handle.Close()
+
+		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+		counts := make(map[string]int)
+		targetCount := 5
+		runOpcode := []byte{0x0f, 0x44, 0xbb, 0xa3}
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case packet, ok := <-packetSource.Packets():
+				if !ok {
+					return
+				}
+				tcpLayer := packet.Layer(layers.LayerTypeTCP)
+				ipLayer := packet.Layer(layers.LayerTypeIPv4)
+				if tcpLayer != nil && ipLayer != nil {
+					tcp, _ := tcpLayer.(*layers.TCP)
+					ip, _ := ipLayer.(*layers.IPv4)
+
+					if len(tcp.Payload) > 0 && bytes.Contains(tcp.Payload, runOpcode) {
+						var remoteIP string
+						var remotePort string
+
+						if !ip.SrcIP.IsPrivate() && !ip.SrcIP.IsLoopback() {
+							remoteIP = ip.SrcIP.String()
+							remotePort = strconv.Itoa(int(tcp.SrcPort))
+						} else if !ip.DstIP.IsPrivate() && !ip.DstIP.IsLoopback() {
+							remoteIP = ip.DstIP.String()
+							remotePort = strconv.Itoa(int(tcp.DstPort))
+						}
+
+						if remoteIP == "" {
+							continue
+						}
+
+						key := fmt.Sprintf("%s:%s", remoteIP, remotePort)
+						counts[key]++
+
+						if globalPub != nil {
+							globalPub.Broadcast("autodetect_progress", map[string]interface{}{
+								"current": counts[key],
+								"target":  targetCount,
+							})
+						}
+
+						if counts[key] >= targetCount {
+							if globalPub != nil {
+								globalPub.Broadcast("autodetect_done", map[string]interface{}{
+									"ip":   remoteIP,
+									"port": remotePort,
+								})
+							}
+							return
+						}
+					}
+				}
+			}
+		}
+	}()
+	return nil
+}
+
+// stopPacketCaptureSync must be called with captureMu locked!
+func stopPacketCaptureSync() {
+	if cancelCapture != nil {
+		cancelCapture()
+		// Abruptly closing the reader ensures Npcap returns io.EOF breaking the inner read loop
+		if globalReader != nil {
+			globalReader.Close()
+		}
+		// Wait safely until the goroutine emits completion to guarantee no handles overlap.
+		if captureDone != nil {
+			<-captureDone
+		}
+		cancelCapture = nil
+		captureDone = nil
+		globalReader = nil
+	}
+	isCaptureRunning = false
+	activeNicName = ""
+}
+
+func startPacketCapture(nicName string, fileName string, exitlagEnabled bool, filter string) error {
+	captureMu.Lock()
+	defer captureMu.Unlock()
+
+	stopPacketCaptureSync()
+
+	if globalPub != nil {
+		globalPub.ClearCache()
+		// Ensure old session cache drops out so users start fresh locally
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancelCapture = cancel
+	captureDone = make(chan struct{})
+
+	r, err := packet.NewGameServerPacketReader(&packet.GameServerPacketReaderOpt{
+		Ctx:            ctx,
+		NicName:        nicName,
+		FileName:       fileName,
+		Sm:             globalSm,
+		ExitLagEnabled: exitlagEnabled,
+		Filter:         filter,
+	})
+	
+	if err != nil {
+		cancel()
+		cancelCapture = nil
+		close(captureDone)
+		captureDone = nil
+		isCaptureRunning = false
+		return err
+	}
+
+	globalReader = r
+	isCaptureRunning = true
+	activeNicName = nicName
+	activeExitlag = exitlagEnabled
+
+	go func() {
+		defer close(captureDone) // Critical: Always signal done whenever goroutine exits!
+		defer r.Close()
+
+		for p := range r.PacketCh() {
+			select {
+			case <-ctx.Done():
+				return
+			case globalPacketCh <- p:
+			}
+		}
+	}()
+
+	return nil
+}

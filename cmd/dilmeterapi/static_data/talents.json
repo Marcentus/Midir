@@ -1,0 +1,302 @@
+{
+  "talents": {
+    "Archer": {
+      "talent_name": "Archer",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name_1_0.png",
+        "skill_icon": "/images/talents/gui_icon_name_1_1.png",
+        "master_icon": "/images/talents/gui_icon_name_1_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name_1_3.png"
+      }
+    },
+    "Battle Alchemist": {
+      "talent_name": "Battle Alchemist",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name_3_0.png",
+        "skill_icon": "/images/talents/gui_icon_name_3_1.png",
+        "master_icon": "/images/talents/gui_icon_name_3_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name_3_3.png"
+      }
+    },
+    "Warrior": {
+      "talent_name": "Warrior",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name_0_0.png",
+        "skill_icon": "/images/talents/gui_icon_name_0_1.png",
+        "master_icon": "/images/talents/gui_icon_name_0_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name_0_3.png"
+      }
+    },
+    "Gunslinger": {
+      "talent_name": "Gunslinger",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name_18_0.png",
+        "skill_icon": "/images/talents/gui_icon_name_18_1.png",
+        "master_icon": "/images/talents/gui_icon_name_18_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name_18_3.png"
+      }
+    },
+    "Knight": {
+      "talent_name": "Knight",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name_8_0.png",
+        "skill_icon": "/images/talents/gui_icon_name_8_1.png",
+        "master_icon": "/images/talents/gui_icon_name_8_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name_8_3.png"
+      }
+    },
+    "Mage": {
+      "talent_name": "Mage",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name_2_0.png",
+        "skill_icon": "/images/talents/gui_icon_name_2_1.png",
+        "master_icon": "/images/talents/gui_icon_name_2_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name_2_3.png"
+      }
+    },
+    "Fighter": {
+      "talent_name": "Fighter",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name_5_0.png",
+        "skill_icon": "/images/talents/gui_icon_name_5_1.png",
+        "master_icon": "/images/talents/gui_icon_name_5_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name_5_3.png"
+      }
+    },
+    "Bard": {
+      "talent_name": "Bard",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name_6_0.png",
+        "skill_icon": "/images/talents/gui_icon_name_6_1.png",
+        "master_icon": "/images/talents/gui_icon_name_6_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name_6_3.png"
+      }
+    },
+    "Ninja": {
+      "talent_name": "Ninja",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name_19_0.png",
+        "skill_icon": "/images/talents/gui_icon_name_19_1.png",
+        "master_icon": "/images/talents/gui_icon_name_19_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name_19_3.png"
+      }
+    },
+    "Puppeteer": {
+      "talent_name": "Puppeteer",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name_17_0.png",
+        "skill_icon": "/images/talents/gui_icon_name_17_1.png",
+        "master_icon": "/images/talents/gui_icon_name_17_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name_17_3.png"
+      }
+    },
+    "Construct Alchemist": {
+      "talent_name": "Construct Alchemist",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name_4_0.png",
+        "skill_icon": "/images/talents/gui_icon_name_4_1.png",
+        "master_icon": "/images/talents/gui_icon_name_4_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name_4_3.png"
+      }
+    },
+    "Adventurer": {
+      "talent_name": "Adventurer",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name_15_0.png",
+        "skill_icon": "/images/talents/gui_icon_name_15_1.png",
+        "master_icon": "/images/talents/gui_icon_name_15_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name_15_3.png"
+      }
+    },
+    "Carpenter": {
+      "talent_name": "Carpenter",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name_14_0.png",
+        "skill_icon": "/images/talents/gui_icon_name_14_1.png",
+        "master_icon": "/images/talents/gui_icon_name_14_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name_14_3.png"
+      }
+    },
+    "Chef": {
+      "talent_name": "Chef",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name_9_0.png",
+        "skill_icon": "/images/talents/gui_icon_name_9_1.png",
+        "master_icon": "/images/talents/gui_icon_name_9_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name_9_3.png"
+      }
+    },
+    "Glyphwright": {
+      "talent_name": "Glyphwright",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name002_2_0.png",
+        "skill_icon": "/images/talents/gui_icon_name002_2_1.png",
+        "master_icon": "/images/talents/gui_icon_name002_2_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name002_2_3.png"
+      }
+    },
+    "Cleric": {
+      "talent_name": "Cleric",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name_7_0.png",
+        "skill_icon": "/images/talents/gui_icon_name_7_1.png",
+        "master_icon": "/images/talents/gui_icon_name_7_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name_7_3.png"
+      }
+    },
+    "Apothecary": {
+      "talent_name": "Apothecary",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name_12_0.png",
+        "skill_icon": "/images/talents/gui_icon_name_12_1.png",
+        "master_icon": "/images/talents/gui_icon_name_12_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name_12_3.png"
+      }
+    },
+    "Merchant": {
+      "talent_name": "Merchant",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name_13_0.png",
+        "skill_icon": "/images/talents/gui_icon_name_13_1.png",
+        "master_icon": "/images/talents/gui_icon_name_13_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name_13_3.png"
+      }
+    },
+    "Pet Trainer": {
+      "talent_name": "Pet Trainer",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name002_1_0.png",
+        "skill_icon": "/images/talents/gui_icon_name002_1_1.png",
+        "master_icon": "/images/talents/gui_icon_name002_1_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name002_1_3.png"
+      }
+    },
+    "Blacksmith": {
+      "talent_name": "Blacksmith",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name_10_0.png",
+        "skill_icon": "/images/talents/gui_icon_name_10_1.png",
+        "master_icon": "/images/talents/gui_icon_name_10_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name_10_3.png"
+      }
+    },
+    "Tailor": {
+      "talent_name": "Tailor",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name_11_0.png",
+        "skill_icon": "/images/talents/gui_icon_name_11_1.png",
+        "master_icon": "/images/talents/gui_icon_name_11_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name_11_3.png"
+      }
+    },
+    "Chain Slasher": {
+      "talent_name": "Chain Slasher",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name002_0_0.png",
+        "skill_icon": "/images/talents/gui_icon_name002_0_1.png",
+        "master_icon": "/images/talents/gui_icon_name002_0_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name002_0_3.png"
+      }
+    },
+    "Battle Astrologer": {
+      "talent_name": "Battle Astrologer",
+      "related_skill_ids": [],
+      "icons": {
+        "naive_icon": "/images/talents/gui_icon_name002_3_0.png",
+        "skill_icon": "/images/talents/gui_icon_name002_3_1.png",
+        "master_icon": "/images/talents/gui_icon_name002_3_2.png",
+        "grandmaster_icon": "/images/talents/gui_icon_name002_3_3.png"
+      }
+    }
+  },
+  "arcanas": {
+    "Elemental Knight": {
+      "arcana_name": "Elemental Knight",
+      "related_skill_ids": [59023, 59024, 59025, 59026, 59027, 59028],
+      "talents": ["Warrior", "Mage"],
+      "talent_icon": "/images/talents/gui_icon_name_multi_class_0_0.png",
+      "icon": "/images/skills/gui_icon_skill_005_4_5.png",
+      "color": "#1043A8"
+    },
+    "Harmonic Saint": {
+      "arcana_name": "Harmonic Saint",
+      "related_skill_ids": [
+        59000, 59001, 59002, 59003, 59004, 59005, 59006, 59007, 59008
+      ],
+      "talents": ["Cleric", "Bard"],
+      "talent_icon": "/images/talents/gui_icon_name_multi_class_0_1.png",
+      "icon": "/images/skills/gui_icon_skill_005_7_3.png",
+      "color": "#2E7D32"
+    },
+    "Alchemic Sharpshooter": {
+      "arcana_name": "Alchemic Sharpshooter",
+      "related_skill_ids": [59060, 59061, 59062, 59063, 59064, 59065],
+      "talents": ["Archer", "Battle Alchemist"],
+      "talent_icon": "/images/talents/gui_icon_name_multi_class_0_2.png",
+      "icon": "/images/skills/gui_icon_skill_005_3_7.png",
+      "color": "#D87920"
+    },
+    "Dark Diviner": {
+      "arcana_name": "Dark Diviner",
+      "related_skill_ids": [59040, 59041, 59042, 59043, 59044, 59045, 59046],
+      "talents": ["Mage", "Chain Slasher"],
+      "talent_icon": "/images/talents/gui_icon_name_multi_class_0_3.png",
+      "icon": "/images/skills/gui_icon_skill_005_1_8.png",
+      "color": "#4527A0"
+    },
+    "Sacred Guardian": {
+      "arcana_name": "Sacred Guardian",
+      "related_skill_ids": [59080, 59081, 59082, 59083, 59084, 59085, 59086],
+      "talents": ["Warrior", "Cleric"],
+      "talent_icon": "/images/talents/gui_icon_name_multi_class_1_0.png",
+      "icon": "/images/skills/gui_icon_skill_AR_SG_0_0.png",
+      "color": "#C62828"
+    },
+    "Explosive Vanguard": {
+      "arcana_name": "Explosive Vanguard",
+      "related_skill_ids": [59100, 59101, 59102, 59103, 59104, 59105, 59106],
+      "talents": ["Knight", "Gunslinger"],
+      "talent_icon": "/images/talents/gui_icon_name_multi_class_1_1.png",
+      "icon": "/images/skills/gui_icon_skill_ar_bl_6_0.png",
+      "color": "#007270"
+    },
+    "Forbidden Alchemist": {
+      "arcana_name": "Forbidden Alchemist",
+      "related_skill_ids": [59141, 59142, 59143, 59144, 59145],
+      "talents": ["Battle Alchemist", "Apothecary"],
+      "talent_icon": "/images/talents/gui_icon_name_multi_class_1_3.png",
+      "icon": "/images/skills/gui_icon_skill_005.png _5_14.png",
+      "color": "#1B5E20"
+    },
+    "Arsenal Gunner": {
+      "arcana_name": "Arsenal Gunner",
+      "related_skill_ids": [59120, 59121, 59122, 59123, 59124, 59125, 59126],
+      "talents": ["Battle Alchemist", "Apothecary"],
+      "talent_icon": "/images/talents/gui_icon_name_multi_class_1_2.png",
+      "icon": "/images/skills/gui_icon_skill_005_5_15.png",
+      "color": "#CCB400"
+    }
+  }
+}

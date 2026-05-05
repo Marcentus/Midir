@@ -1,0 +1,835 @@
+package main
+
+import (
+	"fmt"
+	"sort"
+	"strconv"
+	"sync"
+	"time"
+
+	"strings"
+	"unicode"
+
+	"github.com/Marcentus/Midir/packet"
+)
+
+// Aggregator holds the real-time state of the combat encounter.
+type Aggregator struct {
+	mu sync.RWMutex
+	// Damage Dealt Data
+	playerStats        map[uint64]*PlayerStats
+	playerTalents      map[uint64]string
+	playerTalentNames  map[uint64]string
+	playerTalentColors map[uint64]string
+	// Damage Taken Data
+	damageTaken map[uint64]*PlayerDamageTakenStats
+	// Timestamps for accurate, shared DPS calculation
+	targetTimestamps map[uint64]struct {
+		StartTime int64
+		EndTime   int64
+	}
+	encounterStartTime int64
+	encounterEndTime   int64
+	// General Entity Info
+	entityCache map[uint64]*packet.EntityInfo
+
+	// Condition Tracking
+	// playerConditionActive: PlayerID -> ConditionID -> ActiveCondition
+	playerConditionActive map[uint64]map[uint32]ActiveCondition
+	// playerConditionHistory: PlayerID -> ConditionID -> List of intervals
+	playerConditionHistory map[uint64]map[uint32][]ConditionInterval
+	// playerSeenAppear: PlayerID -> bool. True if we've seen an EntityAppear for this session.
+	playerSeenAppear map[uint64]bool
+
+	// Live Session Handling
+	isLive              bool
+	ignorePacketsBefore time.Time
+}
+
+// NewAggregator creates and initializes a new Aggregator.
+func NewAggregator() *Aggregator {
+	return &Aggregator{
+		playerStats:        make(map[uint64]*PlayerStats),
+		playerTalents:      make(map[uint64]string),
+		playerTalentNames:  make(map[uint64]string),
+		playerTalentColors: make(map[uint64]string),
+		damageTaken:        make(map[uint64]*PlayerDamageTakenStats),
+		entityCache:        make(map[uint64]*packet.EntityInfo),
+		targetTimestamps: make(map[uint64]struct {
+			StartTime int64
+			EndTime   int64
+		}),
+		playerConditionActive:  make(map[uint64]map[uint32]ActiveCondition),
+		playerConditionHistory: make(map[uint64]map[uint32][]ConditionInterval),
+		playerSeenAppear:       make(map[uint64]bool),
+		isLive:                 false, // Default to false, explicitly enabled by caller if needed
+	}
+}
+
+func (a *Aggregator) SetLive(live bool) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.isLive = live
+}
+
+// updateTimestamps is a new helper to manage all time tracking logic.
+// It's called for every damage event to keep a shared timer for each target.
+func (a *Aggregator) updateTimestamps(targetId uint64, eventTime time.Time) {
+	eventUnix := eventTime.Unix()
+
+	// Update overall encounter timestamps
+	if a.encounterStartTime == 0 {
+		a.encounterStartTime = eventUnix
+	}
+	a.encounterEndTime = eventUnix
+
+	// Update per-target timestamps
+	timestamps := a.targetTimestamps[targetId]
+	if timestamps.StartTime == 0 {
+		timestamps.StartTime = eventUnix
+	}
+	timestamps.EndTime = eventUnix
+	a.targetTimestamps[targetId] = timestamps
+}
+
+// ProcessPacket is the entry point for new game data.
+func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
+	// If we are in a live session, we want to ignore packets that are "too old" relative to the last Clear() time.
+	// This prevents buffered packets (e.g. from a paused TCP stream or just network lag) from
+	// immediately dirtying a fresh session with old timestamps, effectively determining the "Start Time"
+	// of the new session to be in the past.
+	if a.isLive && !a.ignorePacketsBefore.IsZero() {
+		if p.At.Before(a.ignorePacketsBefore) {
+			// logger.Printf("Skipping old packet (Time: %v < Cutoff: %v)", p.At, a.ignorePacketsBefore)
+			return
+		}
+	}
+
+	if p.Op == opcodeEntityAppear {
+		entity, err := packet.ParseEntityAppearPacket(p.Msg)
+		if err == nil && entity != nil {
+			a.mu.Lock()
+			a.entityCache[entity.Id] = entity
+			// Mark that we have seen this entity appear, so condition tracking is reliable
+			a.playerSeenAppear[entity.Id] = true
+
+			// Initialize existing conditions from the appear packet
+			if a.playerConditionActive[entity.Id] == nil {
+				a.playerConditionActive[entity.Id] = make(map[uint32]ActiveCondition)
+			}
+			for _, cond := range entity.CharacterConditionMap {
+				// If not already active in our tracker, add it
+				if _, exists := a.playerConditionActive[entity.Id][cond.CCId]; !exists {
+					a.playerConditionActive[entity.Id][cond.CCId] = ActiveCondition{
+						Start:      p.At.Unix(),
+						DisableAt:  cond.DisableAt, // NEW
+						MetaData:   normalizeMetaData(cond.MetaData),
+						AttackerID: cond.AttackerId,
+					}
+				}
+			}
+			a.mu.Unlock()
+			playerCache.Update(entity)
+		}
+		return
+	}
+	if p.Op == opcodeEntitiesAppear {
+		entities, err := packet.ParseEntitiesAppearPacket(p)
+		if err == nil {
+			a.mu.Lock()
+			for _, entity := range entities {
+				a.entityCache[entity.Id] = entity
+				a.playerSeenAppear[entity.Id] = true
+
+				if a.playerConditionActive[entity.Id] == nil {
+					a.playerConditionActive[entity.Id] = make(map[uint32]ActiveCondition)
+				}
+				for _, cond := range entity.CharacterConditionMap {
+					if _, exists := a.playerConditionActive[entity.Id][cond.CCId]; !exists {
+						a.playerConditionActive[entity.Id][cond.CCId] = ActiveCondition{
+							Start:      p.At.Unix(),
+							DisableAt:  cond.DisableAt, // NEW
+							MetaData:   normalizeMetaData(cond.MetaData),
+							AttackerID: cond.AttackerId,
+						}
+					}
+				}
+				playerCache.Update(entity)
+			}
+			a.mu.Unlock()
+		}
+		return
+	}
+
+	if p.Op == opcodeCombatAction {
+		a.processCombatAction(p)
+	}
+	if p.Op == opcodeEffectDelayed {
+		a.processEffectDelayed(p)
+	}
+	if p.Op == opcodeCharacterCondition {
+		// Handle condition add/remove updates
+		if cond, err := packet.ParseCharacterConditionPacket(p); err == nil {
+			a.processCharacterCondition(cond, p.At)
+		}
+	}
+	if p.Op == opcodeEntityDisappear {
+		// UPDATED: Use the new parser to get the correct ID
+		if id, err := packet.ParseEntityDisappearPacket(p); err == nil {
+			a.processEntityDisappear(id)
+		}
+	}
+	if p.Op == opcodeEntitiesDisappear {
+		// NEW: Handle batch disappear for the live aggregator
+		if ids, err := packet.ParseEntitiesDisappearPacket(p); err == nil {
+			for _, id := range ids {
+				a.processEntityDisappear(id)
+			}
+		}
+	}
+}
+
+func (a *Aggregator) processCharacterCondition(p *packet.CharacterConditionPacket, at time.Time) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	// Ensure maps exist
+	if a.playerConditionActive[p.Id] == nil {
+		a.playerConditionActive[p.Id] = make(map[uint32]ActiveCondition)
+	}
+	if a.playerConditionHistory[p.Id] == nil {
+		a.playerConditionHistory[p.Id] = make(map[uint32][]ConditionInterval)
+	}
+
+	if p.IsEnable {
+		// Start condition if not already active
+		if _, active := a.playerConditionActive[p.Id][p.CCId]; !active {
+			a.playerConditionActive[p.Id][p.CCId] = ActiveCondition{
+				Start:      at.Unix(),
+				DisableAt:  p.DisableAt, // NEW
+				MetaData:   normalizeMetaData(p.MetaData),
+				AttackerID: p.AttackerId,
+			}
+		} else {
+			// Update existing condition (e.g. refresh duration)
+			// fmt.Printf("[DEBUG] Condition Update - Entity: %d, CCId: %d, DisableAt: %d, Meta: %s\n", p.Id, p.CCId, p.DisableAt, p.MetaData)
+			existing := a.playerConditionActive[p.Id][p.CCId]
+			existing.DisableAt = p.DisableAt
+			existing.MetaData = normalizeMetaData(p.MetaData)
+			if p.AttackerId != 0 {
+				existing.AttackerID = p.AttackerId
+			}
+			a.playerConditionActive[p.Id][p.CCId] = existing
+		}
+	} else {
+		// End condition if active
+		if activeCond, active := a.playerConditionActive[p.Id][p.CCId]; active {
+			interval := ConditionInterval{
+				Start:      activeCond.Start,
+				End:        at.Unix(),
+				MetaData:   activeCond.MetaData,
+				AttackerID: activeCond.AttackerID,
+			}
+			a.playerConditionHistory[p.Id][p.CCId] = append(a.playerConditionHistory[p.Id][p.CCId], interval)
+			delete(a.playerConditionActive[p.Id], p.CCId)
+		}
+	}
+}
+
+func (a *Aggregator) processCombatAction(p *packet.GamePacket) {
+	pack, err := packet.ParseCombatActionPackPacket(p)
+	if err != nil {
+		return
+	}
+
+	// logger.Println("[Locking] Aggregator.CombatAction attempting to lock...")
+	a.mu.Lock()
+	// logger.Println("...[Locked] Aggregator.CombatAction acquired lock.")
+	defer func() {
+		// logger.Println("[Unlocking] Aggregator.CombatAction attempting to unlock.")
+		a.mu.Unlock()
+		// logger.Println("...[Unlocked] Aggregator.CombatAction released lock.")
+	}()
+
+	var attackerId uint64
+	var attackSkillId uint16
+	for _, sub := range pack.SubPackets {
+		if sub.Type&packet.CombatActionTypeAttacker != 0 {
+			attackerId = sub.EntityId
+			attackSkillId = sub.SkillId
+			// Check if we have identified the talent color yet. If not, try to identify it.
+			if _, known := a.playerTalentColors[attackerId]; !known {
+				if iconPath, found := skillToArcanaIcon[attackSkillId]; found {
+					a.playerTalents[attackerId] = iconPath
+					if name, ok := skillToArcanaName[attackSkillId]; ok {
+						a.playerTalentNames[attackerId] = name
+					}
+					if color, ok := skillToArcanaColor[attackSkillId]; ok {
+						a.playerTalentColors[attackerId] = color
+						// logger.Printf("Assigned color %s to attacker %d based on skill %d", color, attackerId, attackSkillId)
+					}
+				}
+			}
+			break
+		}
+	}
+
+	if attackerId == 0 {
+		for _, sub := range pack.SubPackets {
+			if sub.Hit != nil && sub.Hit.AttackerId != 0 {
+				attackerId = sub.Hit.AttackerId
+				break
+			}
+		}
+	}
+
+	if attackerId == 0 {
+		return
+	}
+
+	for _, sub := range pack.SubPackets {
+		if sub.Hit == nil || (sub.Hit.Damage <= 0 && sub.Hit.ManaDamage <= 0) {
+			continue
+		}
+		// Update the shared timers for this target, regardless of who hit it
+		a.updateTimestamps(sub.EntityId, p.At)
+
+		// If the attacker is a player, update their damage dealt stats
+		if sub.Hit.Damage > 0 {
+			if playerInfo, isPlayer := playerCache.Get(attackerId); isPlayer {
+				stats := a.getOrCreatePlayerStats(playerInfo)
+				a.updateBreakdown(&stats.OverallStats, sub, attackSkillId, false)
+				targetIdStr := strconv.FormatUint(sub.EntityId, 10)
+				a.updatePerTargetBreakdown(stats, targetIdStr, sub, attackSkillId, false)
+			}
+		}
+
+		// If the target is a player, update their damage taken stats
+		if targetInfo, isPlayerTarget := playerCache.Get(sub.EntityId); isPlayerTarget {
+			a.updateDamageTaken(targetInfo, attackerId, attackSkillId, sub.Hit.Damage, float32(sub.Hit.ManaDamage))
+		}
+	}
+}
+
+func (a *Aggregator) processEffectDelayed(p *packet.GamePacket) {
+	if len(p.Msg) < 7 ||
+		p.Msg[1].Type() != packet.MessageElemTypeInt ||
+		p.Msg[1].Data().(uint32) != 317 ||
+		p.Msg[2].Type() != packet.MessageElemTypeInt ||
+		p.Msg[5].Type() != packet.MessageElemTypeLong ||
+		p.Msg[6].Type() != packet.MessageElemTypeShort {
+		return
+	}
+	damage := float32(p.Msg[2].Data().(uint32))
+	attackerId := p.Msg[5].Data().(uint64)
+	skillId := p.Msg[6].Data().(uint16)
+	targetId := p.Id
+
+	// logger.Println("[Locking] Aggregator.EffectDelayed attempting to lock...")
+	a.mu.Lock()
+	// logger.Println("...[Locked] Aggregator.EffectDelayed acquired lock.")
+	defer func() {
+		// logger.Println("[Unlocking] Aggregator.EffectDelayed attempting to unlock.")
+		a.mu.Unlock()
+		// logger.Println("...[Unlocked] Aggregator.EffectDelayed released lock.")
+	}()
+
+	// Update the shared timers for this target
+	a.updateTimestamps(targetId, p.At)
+
+	if attackerInfo, isPlayer := playerCache.Get(attackerId); isPlayer {
+		// Check if we have identified the talent color yet.
+		if _, known := a.playerTalentColors[attackerId]; !known {
+			if iconPath, found := skillToArcanaIcon[skillId]; found {
+				a.playerTalents[attackerId] = iconPath
+				if name, ok := skillToArcanaName[skillId]; ok {
+					a.playerTalentNames[attackerId] = name
+				}
+				if color, ok := skillToArcanaColor[skillId]; ok {
+					a.playerTalentColors[attackerId] = color
+					// logger.Printf("Assigned color %s to attacker %d based on delayed skill %d", color, attackerId, skillId)
+				}
+			}
+		}
+		stats := a.getOrCreatePlayerStats(attackerInfo)
+		targetIdStr := strconv.FormatUint(targetId, 10)
+		tempHitPacket := &packet.CombatActionPacket{Hit: &packet.CombatActionPacketHitInfo{Damage: damage}}
+		a.updateBreakdown(&stats.OverallStats, tempHitPacket, skillId, true)
+		a.updatePerTargetBreakdown(stats, targetIdStr, tempHitPacket, skillId, true)
+	}
+
+	if targetInfo, isPlayerTarget := playerCache.Get(targetId); isPlayerTarget {
+		a.updateDamageTaken(targetInfo, attackerId, skillId, damage, 0)
+	}
+}
+
+func (a *Aggregator) getOrCreatePlayerStats(playerInfo *PlayerInfo) *PlayerStats {
+	stats, exists := a.playerStats[playerInfo.ID]
+	if !exists {
+		stats = &PlayerStats{
+			ID:             strconv.FormatUint(playerInfo.ID, 10),
+			Name:           playerInfo.Name,
+			OverallStats:   newDamageBreakdown(),
+			DamageByTarget: make(map[string]DamageBreakdown),
+		}
+		a.playerStats[playerInfo.ID] = stats
+	}
+	return stats
+}
+
+func (a *Aggregator) updatePerTargetBreakdown(stats *PlayerStats, targetIdStr string, hitPacket *packet.CombatActionPacket, skillId uint16, isDelayed bool) {
+	targetBreakdown, exists := stats.DamageByTarget[targetIdStr]
+	if !exists {
+		targetBreakdown = newDamageBreakdown()
+	}
+	a.updateBreakdown(&targetBreakdown, hitPacket, skillId, isDelayed)
+	stats.DamageByTarget[targetIdStr] = targetBreakdown
+}
+
+func (a *Aggregator) updateBreakdown(breakdown *DamageBreakdown, hitPacket *packet.CombatActionPacket, skillId uint16, isDelayed bool) {
+	damage := hitPacket.Hit.Damage
+	isCrit := !isDelayed && (hitPacket.Hit.Options&packet.CombatActionHitOptionsCritical) != 0
+	breakdown.TotalDamage += damage
+	if !isDelayed {
+		breakdown.HitCount++
+		if isCrit {
+			breakdown.CritCount++
+		}
+	}
+	skillStats := breakdown.Skills[skillId]
+	skillStats.ID = skillId
+	skillStats.TotalDamage += damage
+	isPrimaryHit := !isDelayed
+	isCountableDelayedHit := isDelayed && doCountDelayedSkills[skillId]
+	if isPrimaryHit || isCountableDelayedHit {
+		skillStats.Count++
+	}
+	if isCrit {
+		skillStats.CritCount++
+		skillStats.TotalDamageCrit += damage
+		if damage > skillStats.MaxDamageCrit {
+			skillStats.MaxDamageCrit = damage
+		}
+	} else {
+		skillStats.TotalDamageNonCrit += damage
+		if damage > skillStats.MaxDamageNonCrit {
+			skillStats.MaxDamageNonCrit = damage
+		}
+	}
+	if damage > skillStats.MaxDamage {
+		skillStats.MaxDamage = damage
+	}
+	breakdown.Skills[skillId] = skillStats
+}
+
+func (a *Aggregator) updateDamageTaken(target *PlayerInfo, attackerID uint64, skillID uint16, damage float32, manaDamage float32) {
+	stats, exists := a.damageTaken[target.ID]
+	if !exists {
+		stats = &PlayerDamageTakenStats{
+			PlayerID:   strconv.FormatUint(target.ID, 10),
+			PlayerName: target.Name,
+			Breakdown:  make(map[string]DamageTakenDetails),
+		}
+		a.damageTaken[target.ID] = stats
+	}
+	stats.TotalDamage += damage + manaDamage
+	stats.TotalManaDamage += manaDamage
+
+	// Resolve Attacker Name first
+	attackerName := "Unknown"
+	if entity, ok := a.entityCache[attackerID]; ok {
+		attackerName = getRaceName(entity.RaceId)
+	} else if player, ok := playerCache.Get(attackerID); ok {
+		attackerName = player.Name
+	}
+
+	// Group by Attacker Name and Skill ID
+	breakdownKey := fmt.Sprintf("%s-%d", attackerName, skillID)
+	details, exists := stats.Breakdown[breakdownKey]
+	if !exists {
+		details = DamageTakenDetails{
+			AttackerID:   attackerID, // Just use the first one seen as representative
+			AttackerName: attackerName,
+			SkillID:      skillID,
+		}
+	}
+	details.TotalDamage += damage + manaDamage
+	details.TotalManaDamage += manaDamage
+	details.HitCount++
+	totalHitDamage := damage + manaDamage
+	if totalHitDamage > details.MaxDamage {
+		details.MaxDamage = totalHitDamage
+	}
+	if details.MinDamage == 0 || totalHitDamage < details.MinDamage {
+		details.MinDamage = totalHitDamage
+	}
+	stats.Breakdown[breakdownKey] = details
+}
+
+// GetSummary now uses the shared timestamps to calculate all DPS values.
+func (a *Aggregator) GetSummary() FightSummary {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	summary := FightSummary{
+		Players:     make(map[string]PlayerStats),
+		Targets:     make(map[string]TargetStats),
+		DamageTaken: make(map[string]PlayerDamageTakenStats),
+	}
+
+	// Set overall duration from the shared encounter timers
+	if a.encounterEndTime > a.encounterStartTime {
+		summary.EncounterDuration = float64(a.encounterEndTime - a.encounterStartTime)
+	}
+	summary.StartTime = a.encounterStartTime
+	summary.EndTime = a.encounterEndTime
+
+	uniqueTargets := make(map[uint64]bool)
+	var totalDamage float32
+
+	for playerID, pStats := range a.playerStats {
+		playerCopy := PlayerStats{
+			ID:                  pStats.ID,
+			Name:                pStats.Name,
+			TalentIcon:          a.playerTalents[playerID],
+			TalentName:          a.playerTalentNames[playerID],
+			TalentColor:         a.playerTalentColors[playerID],
+			DamageByTarget:      make(map[string]DamageBreakdown),
+			MissingAppearPacket: !a.playerSeenAppear[playerID], // Set the flag
+		}
+
+		// Finalize overall stats using the single overall encounter duration
+		playerCopy.OverallStats = a.finalizeBreakdown(pStats.OverallStats, summary.EncounterDuration, a.encounterStartTime, a.encounterEndTime, playerID)
+		playerCopy.OverallStats.StartTime = a.encounterStartTime
+		playerCopy.OverallStats.EndTime = a.encounterEndTime
+
+		// Finalize per-target stats using the shared duration for each specific target
+		for targetIdStr, breakdown := range pStats.DamageByTarget {
+			targetIdUint, _ := strconv.ParseUint(targetIdStr, 10, 64)
+			targetTimes := a.targetTimestamps[targetIdUint]
+			targetDuration := float64(targetTimes.EndTime - targetTimes.StartTime)
+
+			finalizedBreakdown := a.finalizeBreakdown(breakdown, targetDuration, targetTimes.StartTime, targetTimes.EndTime, playerID)
+			finalizedBreakdown.StartTime = targetTimes.StartTime
+			finalizedBreakdown.EndTime = targetTimes.EndTime
+			playerCopy.DamageByTarget[targetIdStr] = finalizedBreakdown
+			uniqueTargets[targetIdUint] = true
+		}
+
+		summary.Players[pStats.ID] = playerCopy
+		totalDamage += playerCopy.OverallStats.TotalDamage
+	}
+
+	summary.TotalDamage = totalDamage
+	for _, dtStats := range a.damageTaken {
+		summary.DamageTaken[dtStats.PlayerID] = *dtStats
+	}
+
+	for targetId := range uniqueTargets {
+		targetIdStr := strconv.FormatUint(targetId, 10)
+		var name string
+		if entity, ok := a.entityCache[targetId]; ok {
+			name = getRaceName(entity.RaceId)
+		} else {
+			name = "Unknown"
+		}
+
+		// Calculate conditions for target
+		targetTimes := a.targetTimestamps[targetId]
+		targetDuration := float64(targetTimes.EndTime - targetTimes.StartTime)
+		conditions := a.calculateConditions(targetId, targetDuration, targetTimes.StartTime, targetTimes.EndTime)
+
+		summary.Targets[targetIdStr] = TargetStats{
+			Name:       name,
+			Conditions: conditions,
+		}
+	}
+
+	// NEW: Populate Current Entities
+	for entityID, entity := range a.entityCache {
+		// Filter out non-players
+		if !isPlayerEntity(entity) {
+			continue
+		}
+
+		// Calculate conditions for current entity
+		// We use the direct active map for "Current Entities" snapshots
+		var conditions map[uint32]ActiveCondition
+		if active, ok := a.playerConditionActive[entityID]; ok {
+			conditions = active
+		}
+
+		summary.CurrentEntities = append(summary.CurrentEntities, EntityState{
+			ID:         strconv.FormatUint(entityID, 10),
+			Name:       entity.Name,
+			RaceID:     entity.RaceId,
+			Conditions: conditions,
+			CurrentHP:  entity.CurrentHP,
+			MaxHP:      entity.MaxHP,
+		})
+	}
+
+	// Sort entities by name to prevent list jitter
+	sort.Slice(summary.CurrentEntities, func(i, j int) bool {
+		return summary.CurrentEntities[i].Name < summary.CurrentEntities[j].Name
+	})
+
+	return summary
+}
+
+// isPlayerEntity determines if an entity is a player based on Name and OwnerId.
+// Logic:
+// 1. Pets/Summons have OwnerId != 0.
+// 2. NPCs start with "_".
+// 3. Enemies have numeric-only names.
+func isPlayerEntity(entity *packet.EntityInfo) bool {
+	if strings.TrimSpace(entity.Name) == "" {
+		return false
+	}
+
+	if entity.OwnerId != 0 {
+		return false
+	}
+
+	if strings.HasPrefix(entity.Name, "_") {
+		return false
+	}
+
+	// Check if name is numeric (Enemy)
+	if _, err := strconv.Atoi(entity.Name); err == nil {
+		return false
+	}
+
+	return true
+}
+
+// finalizeBreakdown calculates DPS and Condition Uptime based on a provided duration and time window.
+func (a *Aggregator) finalizeBreakdown(breakdown DamageBreakdown, duration float64, windowStart, windowEnd int64, playerID uint64) DamageBreakdown {
+	if duration > 1 {
+		breakdown.DPS = breakdown.TotalDamage / float32(duration)
+	} else if breakdown.TotalDamage > 0 {
+		breakdown.DPS = breakdown.TotalDamage // For very short fights, DPS equals total damage
+	}
+
+	if breakdown.HitCount > 0 {
+		breakdown.CritRate = (float32(breakdown.CritCount) / float32(breakdown.HitCount)) * 100
+	}
+
+	// Calculate Condition Uptime specific to this window using helper
+	breakdown.Conditions = a.calculateConditions(playerID, duration, windowStart, windowEnd)
+
+	return breakdown
+}
+
+// calculateConditions calculates condition uptime for a given entity within a time window.
+// calculateConditions calculates condition uptime for a given entity within a time window.
+func (a *Aggregator) calculateConditions(entityID uint64, duration float64, windowStart, windowEnd int64) map[uint32]*ConditionStats {
+	conditions := make(map[uint32]*ConditionStats)
+	allIntervals := make(map[uint32][]ConditionInterval)
+
+	// 1. Add historical intervals
+	if history, ok := a.playerConditionHistory[entityID]; ok {
+		for ccID, intervals := range history {
+			allIntervals[ccID] = append(allIntervals[ccID], intervals...)
+		}
+	}
+
+	// 2. Add currently active intervals (Start -> Current Window End)
+	if active, ok := a.playerConditionActive[entityID]; ok {
+		for ccID, activeCond := range active {
+			// If the condition started before the window ended, it counts.
+			// We clamp the end of the ongoing condition to the end of the combat window for calculation purposes.
+			if activeCond.Start < windowEnd {
+				allIntervals[ccID] = append(allIntervals[ccID], ConditionInterval{
+					Start:      activeCond.Start,
+					End:        windowEnd,
+					MetaData:   activeCond.MetaData,
+					AttackerID: activeCond.AttackerID,
+				})
+			}
+		}
+	}
+
+	// 3. Calculate Intersection with Window [windowStart, windowEnd]
+	for ccID, intervals := range allIntervals {
+		var totalActiveTime int64
+		var finalIntervals []ConditionInterval
+
+		// Breakdown tracking
+		metaStatsMap := make(map[string]*ConditionMetaStats)
+
+		for _, iv := range intervals {
+			// Intersection logic: max(start1, start2) to min(end1, end2)
+			start := iv.Start
+			if start < windowStart {
+				start = windowStart
+			}
+
+			end := iv.End
+			if end > windowEnd {
+				end = windowEnd
+			}
+
+			if start < end {
+				duration := end - start
+				totalActiveTime += duration
+
+				actualInterval := ConditionInterval{
+					Start:      start,
+					End:        end,
+					MetaData:   iv.MetaData,
+					AttackerID: iv.AttackerID,
+				}
+				finalIntervals = append(finalIntervals, actualInterval)
+
+				// Meta breakdown
+				metaKey := iv.MetaData
+				if metaKey == "" {
+					metaKey = "Unknown"
+				}
+
+				if _, ok := metaStatsMap[metaKey]; !ok {
+					metaStatsMap[metaKey] = &ConditionMetaStats{
+						MetaData:  metaKey,
+						Attackers: []uint64{},
+					}
+				}
+				metaStatsMap[metaKey].Duration += float64(duration)
+
+				// Add attacker if unique
+				found := false
+				for _, id := range metaStatsMap[metaKey].Attackers {
+					if id == iv.AttackerID {
+						found = true
+						break
+					}
+				}
+				if !found && iv.AttackerID != 0 {
+					metaStatsMap[metaKey].Attackers = append(metaStatsMap[metaKey].Attackers, iv.AttackerID)
+				}
+			}
+		}
+
+		// Avoid division by zero
+		var uptimePercent float32
+		if duration > 0 {
+			uptimePercent = (float32(totalActiveTime) / float32(duration)) * 100.0
+		}
+
+		// Only add if there was some uptime relevant to this window
+		if totalActiveTime > 0 {
+			// Convert map to slice
+			var metaBreakdown []ConditionMetaStats
+			for _, stats := range metaStatsMap {
+				if duration > 0 {
+					stats.Uptime = (float32(stats.Duration) / float32(duration)) * 100.0
+				}
+				metaBreakdown = append(metaBreakdown, *stats)
+			}
+
+			conditions[ccID] = &ConditionStats{
+				ID:            ccID,
+				Uptime:        uptimePercent,
+				Duration:      float64(totalActiveTime),
+				Intervals:     finalIntervals,
+				MetaBreakdown: metaBreakdown,
+			}
+		}
+	}
+	return conditions
+}
+
+func (a *Aggregator) processEntityDisappear(entityID uint64) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	// packet ID extraction moved to caller
+
+	// Remove from all tracking maps to free memory and "forget" the entity
+	delete(a.entityCache, entityID)
+	delete(a.playerSeenAppear, entityID)
+	delete(a.playerTalents, entityID)
+	delete(a.playerTalentNames, entityID)
+	delete(a.playerTalentColors, entityID)
+	delete(a.playerConditionActive, entityID)
+	delete(a.playerConditionHistory, entityID)
+
+	// Note: We do NOT delete from playerStats or damageTaken here.
+	// Rationale: If a player does 1M damage and then disconnects/teleports,
+	// their contribution to the *current session* should still be visible until "Clear" is pressed.
+}
+
+func (a *Aggregator) Clear() {
+	// logger.Println("[Locking] Aggregator.Clear attempting to lock...")
+	a.mu.Lock()
+	// logger.Println("...[Locked] Aggregator.Clear acquired lock.")
+	defer func() {
+		// logger.Println("[Unlocking] Aggregator.Clear attempting to unlock.")
+		a.mu.Unlock()
+		// logger.Println("...[Unlocked] Aggregator.Clear released lock.")
+	}()
+
+	// SOFT CLEAR: Reset only the session metrics.
+	// Preserve: entityCache, playerTalents, playerTalentNames, playerTalentColors,
+	//           playerConditionActive, playerSeenAppear.
+
+	a.playerStats = make(map[uint64]*PlayerStats)
+	// We keep entityCache to know who people are if they are still here
+	// We keep playerTalents/Names/Colors to know who people are if they are still here
+
+	a.damageTaken = make(map[uint64]*PlayerDamageTakenStats)
+	a.targetTimestamps = make(map[uint64]struct {
+		StartTime int64
+		EndTime   int64
+	})
+	a.encounterStartTime = 0
+	a.encounterEndTime = 0
+
+	// Clear condition HISTORY, but keep ACTIVE conditions.
+	// This ensures that when the new session starts, we know they still have the buff,
+	// but the *uptime percentage* starts fresh from 0 in the new session.
+	a.playerConditionHistory = make(map[uint64]map[uint32][]ConditionInterval)
+	// playerConditionActive is PRESERVED.
+
+	// If we are live, set the cutoff time to now minus a small grace period (e.g. 3 seconds).
+	// This ensures that when the user clicks "Clear", we mostly start fresh, but don't lose
+	// packets that literally just arrived.
+	if a.isLive {
+		a.ignorePacketsBefore = time.Now().Add(-3 * time.Second)
+	} else {
+		a.ignorePacketsBefore = time.Time{}
+	}
+}
+
+func isPlayer(e *packet.EntityInfo) bool {
+	if e == nil {
+		return false
+	}
+	if e.OwnerId != 0 {
+		return false
+	}
+
+	// Filter out NPCs (names start with _)
+	if strings.HasPrefix(e.Name, "_") {
+		return false
+	}
+
+	// Filter out Monsters (names are all numbers)
+	isNumeric := true
+	for _, c := range e.Name {
+		if !unicode.IsDigit(c) {
+			isNumeric = false
+			break
+		}
+	}
+	if isNumeric && len(e.Name) > 0 {
+		return false
+	}
+
+	switch e.RaceId {
+	case 8001, 8002, 9001, 9002, 10001, 10002:
+		return true
+	default:
+		return false
+	}
+}
