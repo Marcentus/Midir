@@ -165,13 +165,6 @@ export default defineComponent({
       systemErrorVisible.value = true;
     };
 
-    socket.onSystemWarning = (msg) => {
-        console.warn("System Warning Received:", msg);
-        systemErrorMessage.value = msg;
-        systemErrorType.value = "warning";
-        systemErrorVisible.value = true;
-    }
-
     const clearSession = async () => {
       selectedTargetId.value = "";
       Object.assign(fightSummary, {

@@ -126,18 +126,8 @@ func (t *eventPublisher) loop() {
 			}
 
 			if p.Op == packet.OpCodeSystemWarning {
-				logger.Printf("Received SYSTEM WARNING packet. Broadcasting to clients.")
-				warnMsg := string(p.RawPacket)
-				sysMsg := WebSocketMessage{
-					Type: "system_warning",
-					Data: warnMsg,
-				}
-				sysBytes, err := json.Marshal(sysMsg)
-				if err != nil {
-					logger.Println("Failed to marshal system warning:", err)
-				} else {
-					t.publish(sysBytes)
-				}
+				// We no longer broadcast system warnings to the frontend to avoid UX clutter.
+				// They are already logged to the backend console by the packet reader.
 				continue
 			}
 
