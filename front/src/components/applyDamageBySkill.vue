@@ -122,7 +122,7 @@
     <template v-slot:[`item.totalDamage`]="{ item }">
       <div class="text-no-wrap">
         <span class="font-weight-bold text-h6">{{ formatAbbreviated(item.totalDamage) }}</span>
-        <span class="ml-1 text-grey-lighten-2 font-weight-medium" v-if="totalDamageForView > 0">
+        <span class="ml-1 text-white font-weight-medium" v-if="totalDamageForView > 0">
           ({{ ((item.totalDamage / totalDamageForView) * 100).toFixed(1) }}%)
         </span>
       </div>
@@ -186,7 +186,7 @@
             <template v-slot:[`item.totalDamage`]="{ item: skillItem }">
               <span>{{ formatNumber(skillItem.totalDamage) }}</span>
               <span
-                class="ml-2 text-grey-lighten-1"
+                class="ml-2 text-white"
                 v-if="item.totalDamage > 0"
               >
                 ({{
@@ -302,7 +302,7 @@
                 <div class="text-h5 font-weight-bold mb-n1">{{ formatNumber(item.dps) }} DPS</div>
                 <div class="text-subtitle-2 text-medium-emphasis">
                     {{ formatAbbreviated(item.totalDamage) }}
-                    <span v-if="totalDamageForView > 0" class="text-grey-darken-1">
+                    <span v-if="totalDamageForView > 0" class="text-white">
                         ({{ ((item.totalDamage / totalDamageForView) * 100).toFixed(1) }}%)
                     </span>
                 </div>
@@ -367,7 +367,7 @@
                     <template v-slot:item.totalDamage="{ item: skillItem }">
                         <div class="text-no-wrap">
                             <span class="font-weight-bold">{{ formatAbbreviated(skillItem.totalDamage) }}</span>
-                            <span class="text-caption text-medium-emphasis ml-1" v-if="item.totalDamage > 0">
+                            <span class="text-caption text-white ml-1" v-if="item.totalDamage > 0">
                                 ({{ ((skillItem.totalDamage / item.totalDamage) * 100).toFixed(1) }}%)
                             </span>
                         </div>

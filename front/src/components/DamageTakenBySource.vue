@@ -32,7 +32,7 @@
         <template v-slot:[`item.totalDamage`]="{ item }">
           <div class="text-no-wrap">
             <span class="text-white font-weight-bold text-h6">{{ formatNumber(item.totalDamage) }}</span>
-            <span class="ml-1 text-grey-lighten-2 font-weight-medium" v-if="totalDamageForView > 0">
+            <span class="ml-1 text-white font-weight-medium" v-if="totalDamageForView > 0">
               ({{ ((item.totalDamage / totalDamageForView) * 100).toFixed(1) }}%)
             </span>
           </div>
