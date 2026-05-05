@@ -32,6 +32,7 @@ type Aggregator struct {
 	encounterEndTime   int64
 	// General Entity Info
 	entityCache map[uint64]*packet.EntityInfo
+	targetNames map[uint64]string // Cache for entity names to persist after they disappear
 
 	// Condition Tracking
 	// playerConditionActive: PlayerID -> ConditionID -> ActiveCondition
@@ -55,6 +56,7 @@ func NewAggregator() *Aggregator {
 		playerTalentColors: make(map[uint64]string),
 		damageTaken:        make(map[uint64]*PlayerDamageTakenStats),
 		entityCache:        make(map[uint64]*packet.EntityInfo),
+		targetNames:        make(map[uint64]string),
 		targetTimestamps: make(map[uint64]struct {
 			StartTime int64
 			EndTime   int64
@@ -90,6 +92,23 @@ func (a *Aggregator) updateTimestamps(targetId uint64, eventTime time.Time) {
 	}
 	timestamps.EndTime = eventUnix
 	a.targetTimestamps[targetId] = timestamps
+
+	// Ensure the name is cached before the entity potentially disappears
+	a.resolveAndCacheName(targetId)
+}
+
+// resolveAndCacheName attempts to find and store the name of an entity.
+// This is called when an entity is involved in combat to ensure we have a name
+// even if the entity disappears from the area later.
+func (a *Aggregator) resolveAndCacheName(entityID uint64) {
+	if _, exists := a.targetNames[entityID]; exists {
+		return
+	}
+	if entity, ok := a.entityCache[entityID]; ok {
+		a.targetNames[entityID] = getRaceName(entity.RaceId)
+	} else if player, ok := playerCache.Get(entityID); ok {
+		a.targetNames[entityID] = player.Name
+	}
 }
 
 // ProcessPacket is the entry point for new game data.
@@ -528,7 +547,9 @@ func (a *Aggregator) GetSummary() FightSummary {
 	for targetId := range uniqueTargets {
 		targetIdStr := strconv.FormatUint(targetId, 10)
 		var name string
-		if entity, ok := a.entityCache[targetId]; ok {
+		if cachedName, ok := a.targetNames[targetId]; ok {
+			name = cachedName
+		} else if entity, ok := a.entityCache[targetId]; ok {
 			name = getRaceName(entity.RaceId)
 		} else {
 			name = "Unknown"
@@ -778,6 +799,7 @@ func (a *Aggregator) Clear() {
 	// We keep playerTalents/Names/Colors to know who people are if they are still here
 
 	a.damageTaken = make(map[uint64]*PlayerDamageTakenStats)
+	a.targetNames = make(map[uint64]string)
 	a.targetTimestamps = make(map[uint64]struct {
 		StartTime int64
 		EndTime   int64
