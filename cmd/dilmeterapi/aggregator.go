@@ -769,13 +769,9 @@ func (a *Aggregator) processEntityDisappear(entityID uint64) {
 	// Remove from all tracking maps to free memory and "forget" the entity
 	delete(a.entityCache, entityID)
 	delete(a.playerSeenAppear, entityID)
-	delete(a.playerTalents, entityID)
-	delete(a.playerTalentNames, entityID)
-	delete(a.playerTalentColors, entityID)
 	delete(a.playerConditionActive, entityID)
-	delete(a.playerConditionHistory, entityID)
 
-	// Note: We do NOT delete from playerStats or damageTaken here.
+	// Note: We do NOT delete playerStats, targetNames, damageTaken, playerTalents, or playerConditionHistory here.
 	// Rationale: If a player does 1M damage and then disconnects/teleports,
 	// their contribution to the *current session* should still be visible until "Clear" is pressed.
 }
