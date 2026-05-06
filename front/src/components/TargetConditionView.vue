@@ -60,8 +60,8 @@
               <tr>
                 <th width="40">Icon</th>
                 <th>Name</th>
-                <th>Uptime</th>
-                <th>Duration</th>
+                <th width="160">Uptime</th>
+                <th width="80">Duration</th>
                 <th width="100" class="text-end">Actions</th>
               </tr>
             </thead>
@@ -130,7 +130,7 @@
 
                   <!-- Details Button -->
                   <v-btn
-                    v-if="cond.metaBreakdown && cond.metaBreakdown.length > 0"
+                    v-if="(cond.metaBreakdown && cond.metaBreakdown.length > 0) || cond.isCombined"
                     icon
                     variant="text"
                     size="small"
@@ -141,30 +141,115 @@
                   </v-btn>
                 </td>
               </tr>
-              <tr v-if="detailsOpen[cond.id]" class="bg-grey-darken-3">
+              <tr v-if="detailsOpen[cond.id]" :class="cond.isCombined ? 'bg-grey-darken-4' : 'bg-grey-darken-3'">
                 <td colspan="5" class="pa-0">
-                  <v-table density="compact" class="bg-transparent text-caption pl-10">
-                    <thead>
-                      <tr>
-                        <th>Metadata</th>
-                        <th>Uptime</th>
-                        <th>Duration</th>
-                        <th>Attackers</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="meta in cond.metaBreakdown" :key="meta.metaData">
-                        <td style="white-space: normal; word-break: break-word; max-width: 400px;">{{ meta.metaData }}</td>
-                        <td>{{ meta.uptime.toFixed(0) }}%</td>
-                        <td>{{ meta.duration.toFixed(1) }}s</td>
-                        <td>
-                          <span v-for="(attackerId, index) in meta.attackers" :key="attackerId">
-                            {{ getAttackerName(attackerId) }}<span v-if="index < meta.attackers.length - 1">, </span>
-                          </span>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </v-table>
+                  <div :class="['border-s-sm py-1 ms-4', cond.isCombined ? 'border-info' : 'border-yellow']">
+                    <!-- Case 1: Combined Condition -> Show Sub-conditions -->
+                    <template v-if="cond.isCombined && cond.subConditions">
+                      <v-table density="compact" class="bg-transparent text-caption pl-2">
+                        <tbody>
+                          <template v-for="sub in cond.subConditions" :key="sub.id">
+                            <tr>
+                              <td width="30">
+                                <img
+                                  :src="getConditionIcon(sub.id)"
+                                  width="20"
+                                  height="20"
+                                  @error="($event.target as HTMLImageElement).style.display = 'none'"
+                                />
+                              </td>
+                              <td>{{ getConditionName(sub.id) }}</td>
+                              <td class="text-end">
+                                <!-- ADJUST OFFSET HERE: Increase padding-right to move metrics more to the left -->
+                                <div class="d-flex align-center justify-end ga-2" style="padding-right: 60px">
+                                  <v-progress-linear
+                                    :model-value="sub.uptime"
+                                    color="info"
+                                    height="8"
+                                    style="width: 80px"
+                                  >
+                                    <template v-slot:default="{ value }">
+                                      <strong style="font-size: 0.65rem">{{ Math.ceil(value) }}%</strong>
+                                    </template>
+                                  </v-progress-linear>
+                                  <span style="min-width: 45px">{{ sub.duration.toFixed(1) }}s</span>
+                                </div>
+                              </td>
+                              <td width="40" class="text-end">
+                                <!-- Details Button for Sub-condition -->
+                                <v-btn
+                                  v-if="sub.metaBreakdown && sub.metaBreakdown.length > 0"
+                                  icon
+                                  variant="text"
+                                  size="small"
+                                  density="compact"
+                                  @click="toggleDetails(sub.id)"
+                                >
+                                  <v-icon>{{ detailsOpen[sub.id] ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+                                </v-btn>
+                              </td>
+                            </tr>
+                            <!-- Nested Metadata Row for Sub-condition -->
+                            <tr v-if="detailsOpen[sub.id]" class="bg-grey-darken-3">
+                              <td colspan="4" class="pa-0">
+                                 <div class="border-s-sm border-yellow ms-8 py-1">
+                                   <v-table density="compact" class="bg-transparent text-caption pl-2">
+                                      <tbody>
+                                        <tr v-for="meta in sub.metaBreakdown" :key="meta.metaData">
+                                          <td style="white-space: normal; word-break: break-word; max-width: 400px;">{{ meta.metaData }}</td>
+                                          <td class="text-end">
+                                            <!-- ADJUST OFFSET HERE: padding-right moves metrics left -->
+                                            <div class="d-flex align-center justify-end ga-2" style="padding-right: 40px">
+                                               <v-progress-linear
+                                                :model-value="meta.uptime"
+                                                color="info"
+                                                height="6"
+                                                style="width: 60px"
+                                              ></v-progress-linear>
+                                              <span style="min-width: 45px">{{ meta.duration.toFixed(1) }}s</span>
+                                            </div>
+                                          </td>
+                                          <td class="text-grey">
+                                            <span v-for="(attackerId, index) in meta.attackers" :key="attackerId">
+                                              {{ getAttackerName(attackerId) }}<span v-if="index < meta.attackers.length - 1">, </span>
+                                            </span>
+                                          </td>
+                                        </tr>
+                                      </tbody>
+                                    </v-table>
+                                 </div>
+                              </td>
+                            </tr>
+                          </template>
+                        </tbody>
+                      </v-table>
+                    </template>
+
+                    <!-- Case 2: Normal Condition -> Show Metadata Breakdown -->
+                    <v-table v-else density="compact" class="bg-transparent text-caption pl-2">
+                      <tbody>
+                        <tr v-for="meta in cond.metaBreakdown" :key="meta.metaData">
+                          <td style="white-space: normal; word-break: break-word; max-width: 400px;">{{ meta.metaData }}</td>
+                          <td class="text-end">
+                            <div class="d-flex align-center justify-end ga-2">
+                               <v-progress-linear
+                                :model-value="meta.uptime"
+                                color="info"
+                                height="6"
+                                style="width: 60px"
+                              ></v-progress-linear>
+                              <span style="min-width: 45px">{{ meta.duration.toFixed(1) }}s</span>
+                            </div>
+                          </td>
+                          <td class="text-grey">
+                            <span v-for="(attackerId, index) in meta.attackers" :key="attackerId">
+                              {{ getAttackerName(attackerId) }}<span v-if="index < meta.attackers.length - 1">, </span>
+                            </span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </v-table>
+                  </div>
                 </td>
               </tr>
             </template>
@@ -179,7 +264,8 @@
 <script lang="ts" setup>
 import { ref, computed, inject } from "vue";
 import { ConditionStats } from "@/protocols";
-import { favoriteConditions, hiddenConditions, toggleConditionPref } from "@/store";
+import { favoriteConditions, hiddenConditions, toggleConditionPref, fightSummary } from "@/store";
+import { processConditions, ExtendedConditionStats } from "@/conditionCombinations";
 
 const props = defineProps<{
   conditions: { [id: number]: ConditionStats } | undefined;
@@ -212,7 +298,9 @@ const getConditionIcon = (id: number): string => {
 
 const sortedConditions = computed(() => {
   if (!props.conditions) return [];
-  return Object.values(props.conditions).sort((a, b) => {
+  const processed = processConditions(props.conditions, fightSummary.encounterDuration);
+  
+  return processed.sort((a, b) => {
     // 1. Priority: Favorites
     const aFav = favoriteConditions.has(a.id);
     const bFav = favoriteConditions.has(b.id);

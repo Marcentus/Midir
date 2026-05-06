@@ -297,6 +297,16 @@ export default defineComponent({
           }
         }
 
+        // Register virtual combined conditions
+        const { CONDITION_COMBINATIONS } = await import("@/conditionCombinations");
+        for (const combo of CONDITION_COMBINATIONS) {
+          const baseCond = condNameMap.value[combo.iconId];
+          condNameMap.value[combo.id] = {
+            name: combo.name,
+            iconUrl: baseCond?.iconUrl || ""
+          };
+        }
+
       } catch (e) {
         console.error("Failed to load static data:", e);
         alert("Could not load game data from server.");

@@ -53,7 +53,8 @@ import {
   TooltipItem,
 } from "chart.js";
 import { ConditionStats } from "@/protocols";
-import { favoriteConditions, hiddenConditions, customConditionOrder, updateConditionOrder } from "@/store";
+import { favoriteConditions, hiddenConditions, customConditionOrder, updateConditionOrder, fightSummary } from "@/store";
+import { processConditions } from "@/conditionCombinations";
 
 ChartJS.register(
   Title,
@@ -141,7 +142,8 @@ export default defineComponent({
 
     const sortedConditions = computed(() => {
         if (!props.conditions) return [];
-        let list = Object.values(props.conditions).filter(c => !hiddenConditions.has(c.id));
+        const processed = processConditions(props.conditions, fightSummary.encounterDuration);
+        let list = processed.filter(c => !hiddenConditions.has(c.id));
         
         // Custom Order Map
         const orderMap = new Map<number, number>();
