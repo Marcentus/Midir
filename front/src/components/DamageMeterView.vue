@@ -4,7 +4,7 @@
 
     <v-main>
       <div class="dashboard-wrapper">
-        <div class="dashboard-header mb-6">
+        <div class="dashboard-header mb-8">
           <div class="header-main-row">
             <!-- Left: Target Selector -->
             <div class="header-section target-section">
@@ -54,7 +54,7 @@
           <v-tab value="graph">Graph</v-tab>
         </v-tabs>
 
-        <v-window v-model="tab">
+        <v-window v-model="tab" class="mt-4">
           <v-window-item value="damageDealt">
             <apply-damage-by-skill :attackerNameMap="attackerNameMap" />
           </v-window-item>
