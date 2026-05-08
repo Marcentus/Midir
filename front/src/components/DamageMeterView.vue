@@ -224,6 +224,8 @@ export default defineComponent({
   max-width: 1600px;
   margin: 0 auto;
   width: 100%;
+  padding-left: 24px;
+  padding-right: 24px;
 }
 
 .dashboard-header {
