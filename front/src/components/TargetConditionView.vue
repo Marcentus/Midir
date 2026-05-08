@@ -1,5 +1,5 @@
 <template>
-  <div v-if="hasConditions" class="ml-4">
+  <div class="ml-4">
     <v-dialog width="auto" min-width="800">
       <template v-slot:activator="{ props }">
         <div 
@@ -44,6 +44,8 @@
           <span v-if="!sortedConditions.some((c) => favoriteConditions.has(c.id))" class="text-caption text-grey">
              No Favorites
           </span>
+          <v-divider vertical class="mx-2" style="height: 16px; align-self: center;" />
+          <v-icon icon="mdi-format-list-bulleted" size="18" class="text-grey-lighten-1" />
         </div>
       </template>
 
