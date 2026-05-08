@@ -3,52 +3,54 @@
     <session-panel />
 
     <v-main>
-      <v-sheet class="d-flex align-center pa-2">
-        <v-select
-          v-model="selectedTargetId"
-          :items="targetList"
-          item-title="name"
-          item-value="id"
-          label="Filter by Target"
-          variant="outlined"
-          density="compact"
-          hide-details
-          style="max-width: 400px"
-        ></v-select>
+      <div class="dashboard-wrapper">
+        <v-sheet class="d-flex align-center pa-2">
+          <v-select
+            v-model="selectedTargetId"
+            :items="targetList"
+            item-title="name"
+            item-value="id"
+            label="Filter by Target"
+            variant="outlined"
+            density="compact"
+            hide-details
+            style="max-width: 400px"
+          ></v-select>
 
-        <div class="d-flex align-center ml-4">
-          <span class="text-subtitle-1 font-weight-medium">Party DPS: {{ formattedPartyDPS }}</span>
-          <target-condition-view
-            v-if="selectedTargetId"
-            :conditions="selectedTargetConditions"
-            :attackerNameMap="attackerNameMap"
-          />
-        </div>
+          <div class="d-flex align-center ml-4">
+            <span class="text-subtitle-1 font-weight-medium">Party DPS: {{ formattedPartyDPS }}</span>
+            <target-condition-view
+              v-if="selectedTargetId"
+              :conditions="selectedTargetConditions"
+              :attackerNameMap="attackerNameMap"
+            />
+          </div>
 
-        <v-spacer></v-spacer>
-        <div class="d-flex align-center text-h6 px-4">
-          <v-icon start>mdi-timer-outline</v-icon>
-          <span class="font-weight-bold">{{ formattedEncounterDuration }}</span>
-        </div>
-      </v-sheet>
+          <v-spacer></v-spacer>
+          <div class="d-flex align-center text-h6 px-4">
+            <v-icon start>mdi-timer-outline</v-icon>
+            <span class="font-weight-bold">{{ formattedEncounterDuration }}</span>
+          </div>
+        </v-sheet>
 
-      <v-tabs v-model="tab" grow>
-        <v-tab value="damageDealt">Damage Dealt</v-tab>
-        <v-tab value="damageTaken">Damage Taken</v-tab>
-        <v-tab value="graph">Graph</v-tab>
-      </v-tabs>
+        <v-tabs v-model="tab" grow>
+          <v-tab value="damageDealt">Damage Dealt</v-tab>
+          <v-tab value="damageTaken">Damage Taken</v-tab>
+          <v-tab value="graph">Graph</v-tab>
+        </v-tabs>
 
-      <v-window v-model="tab">
-        <v-window-item value="damageDealt">
-          <apply-damage-by-skill :attackerNameMap="attackerNameMap" />
-        </v-window-item>
-        <v-window-item value="damageTaken">
-          <damage-taken-by-source />
-        </v-window-item>
-        <v-window-item value="graph">
-          <damage-graph />
-        </v-window-item>
-      </v-window>
+        <v-window v-model="tab">
+          <v-window-item value="damageDealt">
+            <apply-damage-by-skill :attackerNameMap="attackerNameMap" />
+          </v-window-item>
+          <v-window-item value="damageTaken">
+            <damage-taken-by-source />
+          </v-window-item>
+          <v-window-item value="graph">
+            <damage-graph />
+          </v-window-item>
+        </v-window>
+      </div>
     </v-main>
   </v-layout>
 </template>
@@ -201,3 +203,11 @@ export default defineComponent({
   },
 });
 </script>
+
+<style scoped>
+.dashboard-wrapper {
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+}
+</style>

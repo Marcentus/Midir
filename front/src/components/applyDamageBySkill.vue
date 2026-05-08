@@ -1,53 +1,5 @@
 <template>
-  <div class="d-flex justify-end mb-2 align-center gap-2">
-    <!-- Hide All Button (Card Mode) -->
-    <v-tooltip v-if="viewMode === 'cards'" location="top" :text="globalHideMode ? 'Global Hide Active' : (areAllHidden ? 'Session Hide Active' : 'Hide All')">
-      <template v-slot:activator="{ props }">
-        <v-btn icon variant="text" density="compact" @click="toggleAllPlayersVisibility" v-bind="props" class="mr-2">
-          <v-icon
-            :icon="globalHideMode || areAllHidden ? 'mdi-eye-off' : 'mdi-eye'"
-            :color="globalHideMode ? 'error' : ''"
-          ></v-icon>
-        </v-btn>
-      </template>
-    </v-tooltip>
 
-    <v-btn-toggle
-      v-model="viewMode"
-      mandatory
-      density="compact"
-      color="primary"
-      variant="outlined"
-      divided
-    >
-      <v-btn value="table" prepend-icon="mdi-table">List</v-btn>
-      <v-btn value="cards" prepend-icon="mdi-chart-pie">Cards</v-btn>
-    </v-btn-toggle>
-
-    <v-menu v-if="viewMode === 'cards'" :close-on-content-click="false" location="bottom end">
-      <template v-slot:activator="{ props }">
-        <v-btn variant="outlined" density="compact" prepend-icon="mdi-view-column" v-bind="props" class="ml-2">
-          Columns
-        </v-btn>
-      </template>
-      <v-list density="compact" max-width="300">
-        <v-list-item v-for="(metric, index) in activeMetrics" :key="metric.key">
-          <div class="d-flex align-center w-100">
-            <v-checkbox-btn
-              v-model="metric.visible"
-              :label="ALL_SKILL_METRICS_MAP[metric.key]?.title || metric.key"
-              color="primary"
-              density="compact"
-              hide-details
-              class="flex-grow-1 mr-2"
-            ></v-checkbox-btn>
-            <v-btn icon="mdi-chevron-up" variant="text" density="compact" size="small" :disabled="index === 0" @click="moveMetricUp(index)"></v-btn>
-            <v-btn icon="mdi-chevron-down" variant="text" density="compact" size="small" :disabled="index === activeMetrics.length - 1" @click="moveMetricDown(index)"></v-btn>
-          </div>
-        </v-list-item>
-      </v-list>
-    </v-menu>
-  </div>
 
   <v-data-table
     v-if="viewMode === 'table'"
@@ -57,7 +9,7 @@
     expand-on-click
     :expanded="expanded"
     @update:expanded="expanded = $event"
-    class="elevation-1"
+    class="elevation-1 pb-16"
     :row-props="getRowProps"
     show-expand
     density="compact"
@@ -254,7 +206,7 @@
     </template>
   </v-data-table>
 
-  <v-container v-else-if="viewMode === 'cards'" fluid>
+  <v-container v-else-if="viewMode === 'cards'" fluid class="pb-16">
     <div :style="{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${cardGridMinWidth}px, 1fr))`, gap: '16px' }">
       <div
         v-for="item in playerDisplayData"
@@ -433,7 +385,128 @@
       </div>
     </div>
   </v-container>
+
+  <!-- Floating View Controls -->
+  <div class="view-controls-fab">
+    <div class="fab-blur-bg"></div>
+    <div class="fab-content">
+      <!-- Hide All Button (Card Mode) -->
+      <v-tooltip v-if="viewMode === 'cards'" location="top" :text="globalHideMode ? 'Global Hide Active' : (areAllHidden ? 'Session Hide Active' : 'Hide All')">
+        <template v-slot:activator="{ props }">
+          <v-btn icon variant="text" density="compact" @click="toggleAllPlayersVisibility" v-bind="props" class="mr-1">
+            <v-icon
+              :icon="globalHideMode || areAllHidden ? 'mdi-eye-off' : 'mdi-eye'"
+              :color="globalHideMode ? 'error' : ''"
+              size="small"
+            ></v-icon>
+          </v-btn>
+        </template>
+      </v-tooltip>
+
+      <v-btn-toggle
+        v-model="viewMode"
+        mandatory
+        density="compact"
+        color="primary"
+        variant="text"
+        class="view-toggle-group"
+      >
+        <v-btn value="table" prepend-icon="mdi-table" class="rounded-pill px-3">List</v-btn>
+        <v-btn value="cards" prepend-icon="mdi-chart-pie" class="rounded-pill px-3">Cards</v-btn>
+      </v-btn-toggle>
+
+      <!-- Columns Menu (Card Mode) -->
+      <v-menu v-if="viewMode === 'cards'" :close-on-content-click="false" location="top end" offset="12">
+        <template v-slot:activator="{ props }">
+          <v-btn icon="mdi-view-column" variant="text" density="compact" v-bind="props" class="ml-1">
+          </v-btn>
+        </template>
+        <v-list density="compact" max-width="300" class="glass-menu">
+          <v-list-item v-for="(metric, index) in activeMetrics" :key="metric.key">
+            <div class="d-flex align-center w-100">
+              <v-checkbox-btn
+                v-model="metric.visible"
+                :label="ALL_SKILL_METRICS_MAP[metric.key]?.title || metric.key"
+                color="primary"
+                density="compact"
+                hide-details
+                class="flex-grow-1 mr-2"
+              ></v-checkbox-btn>
+              <v-btn icon="mdi-chevron-up" variant="text" density="compact" size="small" :disabled="index === 0" @click="moveMetricUp(index)"></v-btn>
+              <v-btn icon="mdi-chevron-down" variant="text" density="compact" size="small" :disabled="index === activeMetrics.length - 1" @click="moveMetricDown(index)"></v-btn>
+            </div>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+    </div>
+  </div>
 </template>
+
+<style scoped>
+.view-controls-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+}
+
+.fab-blur-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(var(--v-theme-surface), 0.5);
+  backdrop-filter: blur(12px) saturate(160%);
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.fab-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  gap: 4px;
+}
+
+.view-toggle-group {
+  background: transparent !important;
+  border: none !important;
+}
+
+:deep(.view-toggle-group .v-btn) {
+  border: none !important;
+  text-transform: none;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+}
+
+:deep(.view-toggle-group .v-btn--active) {
+  opacity: 1;
+  background: rgba(var(--v-theme-primary), 0.15) !important;
+  color: rgb(var(--v-theme-primary)) !important;
+}
+
+.glass-menu {
+  background: rgba(var(--v-theme-surface), 0.85) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  border-radius: 12px !important;
+}
+
+/* Ensure data table and container have space at the bottom */
+:deep(.v-data-table) {
+  background: transparent !important;
+}
+
+.pb-16 {
+  padding-bottom: 80px !important;
+}
+</style>
 
 <script lang="ts" setup>
 import { inject, ref, computed, watch } from "vue";
