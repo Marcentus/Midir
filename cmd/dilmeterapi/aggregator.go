@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"strings"
-	"unicode"
 
 	"github.com/Marcentus/Midir/packet"
 )
@@ -819,35 +818,3 @@ func (a *Aggregator) Clear() {
 	}
 }
 
-func isPlayer(e *packet.EntityInfo) bool {
-	if e == nil {
-		return false
-	}
-	if e.OwnerId != 0 {
-		return false
-	}
-
-	// Filter out NPCs (names start with _)
-	if strings.HasPrefix(e.Name, "_") {
-		return false
-	}
-
-	// Filter out Monsters (names are all numbers)
-	isNumeric := true
-	for _, c := range e.Name {
-		if !unicode.IsDigit(c) {
-			isNumeric = false
-			break
-		}
-	}
-	if isNumeric && len(e.Name) > 0 {
-		return false
-	}
-
-	switch e.RaceId {
-	case 8001, 8002, 9001, 9002, 10001, 10002:
-		return true
-	default:
-		return false
-	}
-}

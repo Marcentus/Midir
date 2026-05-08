@@ -135,6 +135,7 @@ func handleGetSessionSummary(sm *SessionManager) http.HandlerFunc {
 					continue
 				}
 				entitiesInLog[appearEvent.Id] = appearEvent
+				playerCache.UpdateFromAppear(appearEvent)
 			}
 		}
 
