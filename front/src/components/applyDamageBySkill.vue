@@ -9,7 +9,7 @@
     expand-on-click
     :expanded="expanded"
     @update:expanded="expanded = $event"
-    class="elevation-1 pb-16"
+    class="elevation-1 pb-16 dps-table"
     :row-props="getRowProps"
     show-expand
     density="compact"
@@ -452,6 +452,41 @@
   align-items: center;
 }
 
+.dps-table {
+  /* Border handled by parent container */
+}
+
+.dps-table :deep(thead tr) {
+  background-color: transparent !important;
+}
+
+.dps-table :deep(th) {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  font-size: 0.95rem !important;
+  letter-spacing: 0.05em !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  height: 48px !important;
+  position: relative;
+}
+
+.dps-table :deep(.v-data-table-header__content) {
+  justify-content: center !important;
+  width: 100%;
+}
+
+.dps-table :deep(th:nth-child(2) .v-data-table-header__content) {
+  justify-content: flex-start !important;
+}
+
+/* Absolute position sort icon to keep text centered */
+.dps-table :deep(.v-data-table-header__icon) {
+  position: absolute !important;
+  right: 8px !important;
+  opacity: 0.5;
+}
+
 .fab-blur-bg {
   position: absolute;
   inset: 0;
@@ -817,9 +852,9 @@ const toggleAllPlayersVisibility = () => {
 const mainTableHeaders = [
   { title: "Hide", key: "isHidden", sortable: false, width: "1%" },
   { title: "Character", key: "name", sortable: true },
-  { title: "DPS", key: "dps", sortable: true, align: "end", width: "15%" },
-  { title: "Total Damage", key: "totalDamage", sortable: true, align: "end", width: "20%" },
-  { title: "Crit %", key: "critRate", sortable: true, align: "end", width: "15%" },
+  { title: "DPS", key: "dps", sortable: true, align: "center", width: "15%" },
+  { title: "Total Damage", key: "totalDamage", sortable: true, align: "center", width: "20%" },
+  { title: "Crit %", key: "critRate", sortable: true, align: "center", width: "15%" },
   { title: "", key: "data-table-expand" },
   ] as const;
 

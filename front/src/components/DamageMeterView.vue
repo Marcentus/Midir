@@ -48,23 +48,25 @@
           </div>
         </div>
 
-        <v-tabs v-model="tab" grow density="compact" class="modern-tabs">
-          <v-tab value="damageDealt">Damage Dealt</v-tab>
-          <v-tab value="damageTaken">Damage Taken</v-tab>
-          <v-tab value="graph">Graph</v-tab>
-        </v-tabs>
+        <div class="main-dashboard-content">
+          <v-tabs v-model="tab" grow density="compact" class="modern-tabs mb-6">
+            <v-tab value="damageDealt">Damage Dealt</v-tab>
+            <v-tab value="damageTaken">Damage Taken</v-tab>
+            <v-tab value="graph">Graph</v-tab>
+          </v-tabs>
 
-        <v-window v-model="tab" class="mt-4">
-          <v-window-item value="damageDealt">
-            <apply-damage-by-skill :attackerNameMap="attackerNameMap" />
-          </v-window-item>
-          <v-window-item value="damageTaken">
-            <damage-taken-by-source />
-          </v-window-item>
-          <v-window-item value="graph">
-            <damage-graph />
-          </v-window-item>
-        </v-window>
+          <v-window v-model="tab">
+            <v-window-item value="damageDealt">
+              <apply-damage-by-skill :attackerNameMap="attackerNameMap" />
+            </v-window-item>
+            <v-window-item value="damageTaken">
+              <damage-taken-by-source />
+            </v-window-item>
+            <v-window-item value="graph">
+              <damage-graph />
+            </v-window-item>
+          </v-window>
+        </div>
       </div>
     </v-main>
   </v-layout>
@@ -302,6 +304,14 @@ export default defineComponent({
   padding: 10px 16px;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.main-dashboard-content {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.01);
+  padding: 24px;
 }
 
 .modern-tabs {
