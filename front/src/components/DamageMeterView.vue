@@ -4,34 +4,49 @@
 
     <v-main>
       <div class="dashboard-wrapper">
-        <v-sheet class="d-flex align-center pa-2">
-          <v-select
-            v-model="selectedTargetId"
-            :items="targetList"
-            item-title="name"
-            item-value="id"
-            label="Filter by Target"
-            variant="outlined"
-            density="compact"
-            hide-details
-            style="max-width: 400px"
-          ></v-select>
+        <div class="dashboard-header mb-6">
+          <div class="header-main-row">
+            <!-- Left: Target Selector -->
+            <div class="header-section target-section">
+              <div class="header-label">COMBAT TARGET</div>
+              <v-select
+                v-model="selectedTargetId"
+                :items="targetList"
+                item-title="name"
+                item-value="id"
+                variant="solo-filled"
+                flat
+                density="compact"
+                hide-details
+                class="target-select-refined"
+                placeholder="All Targets"
+              ></v-select>
+            </div>
 
-          <div class="d-flex align-center ml-4">
-            <span class="text-subtitle-1 font-weight-medium">Party DPS: {{ formattedPartyDPS }}</span>
+            <!-- Right: Vital Stats -->
+            <div class="header-section stats-section">
+              <div class="stat-item">
+                <div class="header-label text-right">PARTY DPS</div>
+                <div class="stat-value amber-text">{{ formattedPartyDPS }}</div>
+              </div>
+              <div class="stat-divider mx-8"></div>
+              <div class="stat-item">
+                <div class="header-label text-right">DURATION</div>
+                <div class="stat-value">{{ formattedEncounterDuration }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Conditions Row (Metadata) -->
+          <div class="conditions-bar mt-4" v-if="selectedTargetId">
+            <div class="header-label mr-4 opacity-50">TARGET CONDITIONS</div>
             <target-condition-view
-              v-if="selectedTargetId"
               :conditions="selectedTargetConditions"
               :attackerNameMap="attackerNameMap"
+              class="ml-0"
             />
           </div>
-
-          <v-spacer></v-spacer>
-          <div class="d-flex align-center text-h6 px-4">
-            <v-icon start>mdi-timer-outline</v-icon>
-            <span class="font-weight-bold">{{ formattedEncounterDuration }}</span>
-          </div>
-        </v-sheet>
+        </div>
 
         <v-tabs v-model="tab" grow>
           <v-tab value="damageDealt">Damage Dealt</v-tab>
@@ -209,5 +224,81 @@ export default defineComponent({
   max-width: 1600px;
   margin: 0 auto;
   width: 100%;
+}
+
+.dashboard-header {
+  padding: 16px 0 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.header-main-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.header-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.target-section {
+  width: 320px;
+}
+
+.header-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 8px;
+}
+
+.target-select-refined :deep(.v-field) {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: border-color 0.2s ease;
+}
+
+.target-select-refined :deep(.v-field--focused) {
+  border-color: rgba(var(--v-theme-primary), 0.4);
+}
+
+.stats-section {
+  flex-direction: row;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1;
+}
+
+.amber-text {
+  color: #ffb74d;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.1);
+  align-self: center;
+}
+
+.conditions-bar {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 </style>
