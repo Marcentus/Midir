@@ -4,7 +4,7 @@
 
     <v-main>
       <div class="dashboard-wrapper">
-        <div class="dashboard-header mb-8">
+        <div class="dashboard-header mb-4">
           <div class="header-main-row">
             <!-- Left: Target Selector -->
             <div class="header-section target-section">
@@ -48,7 +48,7 @@
           </div>
         </div>
 
-        <v-tabs v-model="tab" grow>
+        <v-tabs v-model="tab" grow density="compact" class="modern-tabs">
           <v-tab value="damageDealt">Damage Dealt</v-tab>
           <v-tab value="damageTaken">Damage Taken</v-tab>
           <v-tab value="graph">Graph</v-tab>
@@ -229,7 +229,7 @@ export default defineComponent({
 }
 
 .dashboard-header {
-  padding: 16px 0 24px;
+  padding: 16px 0 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -302,5 +302,31 @@ export default defineComponent({
   padding: 10px 16px;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.modern-tabs {
+  min-height: 40px !important;
+  height: 40px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.modern-tabs :deep(.v-tab) {
+  text-transform: none !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  font-size: 0.875rem !important;
+  opacity: 0.4;
+  transition: all 0.2s ease;
+}
+
+.modern-tabs :deep(.v-tab--selected) {
+  opacity: 1;
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.modern-tabs :deep(.v-tab__slider) {
+  height: 2px !important;
+  bottom: 0 !important;
 }
 </style>
