@@ -39,7 +39,7 @@
 
           <!-- Conditions Row (Metadata) -->
           <div class="conditions-bar mt-4" v-if="selectedTargetId">
-            <div class="header-label mr-4 opacity-50">TARGET CONDITIONS</div>
+            <div class="header-label opacity-50">TARGET CONDITIONS</div>
             <target-condition-view
               :conditions="selectedTargetConditions"
               :attackerNameMap="attackerNameMap"
@@ -299,9 +299,10 @@ export default defineComponent({
 
 .conditions-bar {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   background: rgba(255, 255, 255, 0.02);
-  padding: 10px 16px;
+  padding: 12px 16px;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.05);
 }

@@ -1,5 +1,5 @@
 <template>
-  <div class="ml-4">
+  <div>
     <v-dialog width="auto" min-width="800">
       <template v-slot:activator="{ props }">
         <div 
