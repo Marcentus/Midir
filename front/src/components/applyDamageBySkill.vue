@@ -541,6 +541,84 @@
 .pb-16 {
   padding-bottom: 80px !important;
 }
+
+/* Modern Table Styling with Gaps and Rounded Bars */
+.dps-table :deep(table) {
+  border-spacing: 0 6px !important;
+  border-collapse: separate !important;
+}
+
+.dps-table :deep(tbody tr.character-row) {
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dps-table :deep(tbody tr.character-row:hover) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  z-index: 1;
+}
+
+/* Explicitly disable hover effects for ANY other row (like skill breakdown rows or expansion rows) */
+.dps-table :deep(tbody tr:not(.character-row):hover) {
+  filter: none !important;
+  transform: none !important;
+}
+
+.dps-table :deep(td) {
+  border-bottom: none !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  background-color: rgba(255, 255, 255, 0.03); /* Subtle row background */
+}
+
+/* Bar Rounding - Applying to TR and its TD children */
+.dps-table :deep(tbody tr) {
+  border-radius: 6px !important;
+}
+
+.dps-table :deep(tbody tr td:first-child) {
+  border-top-left-radius: 6px !important;
+  border-bottom-left-radius: 6px !important;
+}
+
+.dps-table :deep(tbody tr td:last-child) {
+  border-top-right-radius: 6px !important;
+  border-bottom-right-radius: 6px !important;
+}
+
+/* Ensure the expanded detail row doesn't have the same styling and never hovers */
+.dps-table :deep(tr.v-data-table-expanded__content) {
+  background: transparent !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+.dps-table :deep(tr.v-data-table-expanded__content:hover) {
+  filter: none !important;
+  transform: none !important;
+}
+
+.dps-table :deep(tr.v-data-table-expanded__content td) {
+  background: transparent !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
+/* Skill Breakdown table nested inside also gets rounding but smaller gaps */
+.dps-table :deep(.v-data-table.ma-2 table) {
+  border-spacing: 0 2px !important;
+}
+
+.dps-table :deep(.v-data-table.ma-2 tr td:first-child) {
+  border-top-left-radius: 4px !important;
+  border-bottom-left-radius: 4px !important;
+}
+
+.dps-table :deep(.v-data-table.ma-2 tr td:last-child) {
+  border-top-right-radius: 4px !important;
+  border-bottom-right-radius: 4px !important;
+}
 </style>
 
 <script lang="ts" setup>
@@ -771,8 +849,10 @@ const getSkillBreakdown = (playerData: DamageBreakdown): SkillStats[] => {
   const bgColor = color;
 
   return {
+    class: "character-row",
     style: {
       background: `linear-gradient(to right, ${bgColor} ${percentage}%, transparent ${percentage}%)`,
+      backgroundClip: 'padding-box',
     },
   };
 };
@@ -809,6 +889,7 @@ const getSkillRowProps = (
   return {
     style: {
       background: `linear-gradient(to right, ${bgColor} ${percentage}%, transparent ${percentage}%)`,
+      backgroundClip: 'padding-box',
     },
   };
 };
