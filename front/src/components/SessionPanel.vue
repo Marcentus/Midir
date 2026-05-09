@@ -3,7 +3,7 @@
     v-model="isNavDrawerOpen"
     :rail="!isNavDrawerOpen"
     expand-on-hover
-
+    class="modern-drawer"
   >
     <div class="d-flex flex-column fill-height" ref="mainContainerRef">
       <!-- Sticky Header Section -->
@@ -532,6 +532,12 @@ getConditionName: (id: number) => condNameMap.value[id]?.name || `Unknown Status
 });
 </script>
 <style scoped>
+.modern-drawer {
+  background: rgba(18, 18, 18, 0.4) !important;
+  backdrop-filter: blur(10px);
+  border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
 .session-item .session-actions {
   opacity: 0;
   transition: opacity 0.2s ease-in-out;
