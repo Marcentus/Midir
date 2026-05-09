@@ -338,7 +338,7 @@ export default defineComponent({
 
 <style scoped>
 .modern-header {
-  background: rgba(10, 10, 12, 0.8) !important;
+  background: rgba(14, 16, 21, 0.8) !important;
   backdrop-filter: blur(16px);
   z-index: 1000;
 }

@@ -18,8 +18,8 @@ const vuetify = createVuetify({
       midirTheme: {
         dark: true,
         colors: {
-          background: "#0a0a0c",
-          surface: "#111114",
+          background: "#0e1015",
+          surface: "#171b24",
           primary: "#818cf8", // Indigo 400
           secondary: "#c084fc", // Purple 400
           error: "#f87171",

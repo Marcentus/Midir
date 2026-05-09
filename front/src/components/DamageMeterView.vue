@@ -259,10 +259,10 @@ export default defineComponent({
 }
 
 .target-select-refined :deep(.v-field) {
-  background: rgba(255, 255, 255, 0.03) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: border-color 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
 }
 
 .target-select-refined :deep(.v-field--focused) {
@@ -301,18 +301,19 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(23, 27, 36, 0.6);
   padding: 12px 16px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .main-dashboard-content {
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(129, 138, 248, 0.15);
   border-radius: 12px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.01);
+  background: #171b24; /* Pop color */
   padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .modern-tabs {

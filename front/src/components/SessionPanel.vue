@@ -533,7 +533,7 @@ getConditionName: (id: number) => condNameMap.value[id]?.name || `Unknown Status
 </script>
 <style scoped>
 .modern-drawer {
-  background: rgba(10, 10, 12, 0.7) !important;
+  background: rgba(23, 27, 36, 0.75) !important;
   backdrop-filter: blur(16px);
   border: 1px solid rgba(129, 138, 248, 0.15) !important;
   margin: 12px !important;
