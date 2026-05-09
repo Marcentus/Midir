@@ -39,7 +39,7 @@
 
           <!-- Conditions Row (Metadata) -->
           <div class="conditions-bar mt-4" v-if="selectedTargetId">
-            <div class="header-label opacity-50">TARGET CONDITIONS</div>
+            <div class="header-label" style="opacity: 0.9;">TARGET CONDITIONS</div>
             <target-condition-view
               :conditions="selectedTargetConditions"
               :attackerNameMap="attackerNameMap"
@@ -254,7 +254,8 @@ export default defineComponent({
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+  opacity: 0.9;
   margin-bottom: 8px;
 }
 
@@ -312,7 +313,7 @@ export default defineComponent({
   border-radius: 12px;
   overflow: hidden;
   background: #171b24; /* Pop color */
-  padding: 24px;
+  padding: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
@@ -327,7 +328,8 @@ export default defineComponent({
   font-weight: 600 !important;
   letter-spacing: 0 !important;
   font-size: 0.875rem !important;
-  opacity: 0.4;
+  opacity: 0.7;
+  color: #fff !important;
   transition: all 0.2s ease;
 }
 

@@ -252,7 +252,7 @@
             <v-spacer></v-spacer>
             <div class="text-right">
                 <div class="text-h5 font-weight-bold mb-n1">{{ formatNumber(item.dps) }} DPS</div>
-                <div class="text-subtitle-2 text-medium-emphasis">
+                <div class="text-subtitle-2 text-white" style="opacity: 0.9;">
                     {{ formatAbbreviated(item.totalDamage) }}
                     <span v-if="totalDamageForView > 0" class="text-white">
                         ({{ ((item.totalDamage / totalDamageForView) * 100).toFixed(1) }}%)

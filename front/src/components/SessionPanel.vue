@@ -92,7 +92,7 @@
       >
         <v-divider></v-divider>
         <v-list-item>
-          <v-list-item-title class="text-caption font-weight-bold text-uppercase text-medium-emphasis">
+          <v-list-item-title class="text-caption font-weight-bold text-uppercase text-white" style="opacity: 0.9;">
             Players in Area ({{ currentEntities.length }})
           </v-list-item-title>
         </v-list-item>
@@ -204,8 +204,8 @@
                  <div 
                     v-for="(metaPart, idx) in selectedEntity.conditions[id].metaData.split(';').map(s => s.trim()).filter(s => s).sort()" 
                     :key="idx"
-                    class="text-caption text-medium-emphasis" 
-                    style="white-space: normal; line-height: 1.2;">
+                    class="text-caption text-white" 
+                    style="white-space: normal; line-height: 1.2; opacity: 0.85;">
                     • {{ metaPart }}
                  </div>
               </div>

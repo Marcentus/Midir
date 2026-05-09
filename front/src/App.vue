@@ -9,7 +9,7 @@
         @click="isNavDrawerOpen = !isNavDrawerOpen"
       ></v-btn>
       <div class="brand-section">
-        <div class="logo-text">MIDIR</div>
+        <div class="logo-text">Midir</div>
       </div>
 
       <v-spacer></v-spacer>
@@ -338,8 +338,7 @@ export default defineComponent({
 
 <style scoped>
 .modern-header {
-  background: rgba(14, 16, 21, 0.8) !important;
-  backdrop-filter: blur(16px);
+  background: transparent !important;
   z-index: 1000;
 }
 
@@ -364,7 +363,7 @@ export default defineComponent({
 .action-btn {
   font-weight: 700 !important;
   letter-spacing: 0.02em !important;
-  color: rgba(255, 255, 255, 0.7) !important;
+  color: #fff !important;
   transition: all 0.2s ease;
 }
 
@@ -377,3 +376,10 @@ export default defineComponent({
   padding: 0 24px !important;
 }
 </style>
+
+<style>
+.v-application {
+  background: linear-gradient(145deg, #161922 0%, #0e1015 100%) !important;
+}
+</style>
+
