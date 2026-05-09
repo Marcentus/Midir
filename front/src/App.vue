@@ -9,6 +9,7 @@
         @click="isNavDrawerOpen = !isNavDrawerOpen"
       ></v-btn>
       <div class="brand-section">
+        <img src="/images/Midir.png" class="mascot-img" alt="Midir Logo" />
         <div class="logo-text">Midir</div>
       </div>
 
@@ -345,6 +346,21 @@ export default defineComponent({
 .brand-section {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.mascot-img {
+  height: 42px;
+  width: 42px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 0px solid rgba(129, 138, 248, 0.3);
+  box-shadow: 0 0 20px rgba(129, 138, 248, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.mascot-img:hover {
+  transform: scale(1.1) rotate(5deg);
 }
 
 .logo-text {
