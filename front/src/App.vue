@@ -1,6 +1,13 @@
 <template>
   <v-app>
     <v-app-bar flat class="modern-header" height="64">
+      <v-btn
+        icon="mdi-menu"
+        variant="text"
+        size="small"
+        class="mr-2 action-btn"
+        @click="isNavDrawerOpen = !isNavDrawerOpen"
+      ></v-btn>
       <div class="brand-section">
         <div class="logo-text">MIDIR</div>
       </div>
@@ -109,6 +116,7 @@ import {
 } from "@/apicall";
 import {
   activeSessionId,
+  isNavDrawerOpen,
   fightSummary,
   selectedTargetId,
   activeTool,
@@ -319,6 +327,7 @@ export default defineComponent({
       clearSession,
       promptAndSaveSession,
       activeTool,
+      isNavDrawerOpen,
       systemErrorVisible,
       systemErrorMessage,
       systemErrorType,

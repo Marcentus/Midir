@@ -1,9 +1,9 @@
 <template>
   <v-navigation-drawer
     v-model="isNavDrawerOpen"
-    :rail="!isNavDrawerOpen"
-    expand-on-hover
+    floating
     class="modern-drawer"
+    width="320"
   >
     <div class="d-flex flex-column fill-height" ref="mainContainerRef">
       <!-- Sticky Header Section -->
@@ -533,9 +533,13 @@ getConditionName: (id: number) => condNameMap.value[id]?.name || `Unknown Status
 </script>
 <style scoped>
 .modern-drawer {
-  background: rgba(18, 18, 18, 0.4) !important;
-  backdrop-filter: blur(10px);
-  border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+  background: rgba(10, 10, 12, 0.7) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(129, 138, 248, 0.15) !important;
+  margin: 12px !important;
+  height: calc(100% - 24px) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .session-item .session-actions {
