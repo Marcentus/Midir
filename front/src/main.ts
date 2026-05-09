@@ -13,7 +13,22 @@ console.log("1. Starting main.ts");
 
 const vuetify = createVuetify({
   theme: {
-    defaultTheme: "dark",
+    defaultTheme: "midirTheme",
+    themes: {
+      midirTheme: {
+        dark: true,
+        colors: {
+          background: "#0e1015",
+          surface: "#171b24",
+          primary: "#818cf8", // Indigo 400
+          secondary: "#c084fc", // Purple 400
+          error: "#f87171",
+          info: "#60a5fa",
+          success: "#4ade80",
+          warning: "#fbbf24",
+        },
+      },
+    },
   },
 });
 

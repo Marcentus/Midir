@@ -1,53 +1,5 @@
 <template>
-  <div class="d-flex justify-end mb-2 align-center gap-2">
-    <!-- Hide All Button (Card Mode) -->
-    <v-tooltip v-if="viewMode === 'cards'" location="top" :text="globalHideMode ? 'Global Hide Active' : (areAllHidden ? 'Session Hide Active' : 'Hide All')">
-      <template v-slot:activator="{ props }">
-        <v-btn icon variant="text" density="compact" @click="toggleAllPlayersVisibility" v-bind="props" class="mr-2">
-          <v-icon
-            :icon="globalHideMode || areAllHidden ? 'mdi-eye-off' : 'mdi-eye'"
-            :color="globalHideMode ? 'error' : ''"
-          ></v-icon>
-        </v-btn>
-      </template>
-    </v-tooltip>
 
-    <v-btn-toggle
-      v-model="viewMode"
-      mandatory
-      density="compact"
-      color="primary"
-      variant="outlined"
-      divided
-    >
-      <v-btn value="table" prepend-icon="mdi-table">List</v-btn>
-      <v-btn value="cards" prepend-icon="mdi-chart-pie">Cards</v-btn>
-    </v-btn-toggle>
-
-    <v-menu v-if="viewMode === 'cards'" :close-on-content-click="false" location="bottom end">
-      <template v-slot:activator="{ props }">
-        <v-btn variant="outlined" density="compact" prepend-icon="mdi-view-column" v-bind="props" class="ml-2">
-          Columns
-        </v-btn>
-      </template>
-      <v-list density="compact" max-width="300">
-        <v-list-item v-for="(metric, index) in activeMetrics" :key="metric.key">
-          <div class="d-flex align-center w-100">
-            <v-checkbox-btn
-              v-model="metric.visible"
-              :label="ALL_SKILL_METRICS_MAP[metric.key]?.title || metric.key"
-              color="primary"
-              density="compact"
-              hide-details
-              class="flex-grow-1 mr-2"
-            ></v-checkbox-btn>
-            <v-btn icon="mdi-chevron-up" variant="text" density="compact" size="small" :disabled="index === 0" @click="moveMetricUp(index)"></v-btn>
-            <v-btn icon="mdi-chevron-down" variant="text" density="compact" size="small" :disabled="index === activeMetrics.length - 1" @click="moveMetricDown(index)"></v-btn>
-          </div>
-        </v-list-item>
-      </v-list>
-    </v-menu>
-  </div>
 
   <v-data-table
     v-if="viewMode === 'table'"
@@ -57,7 +9,7 @@
     expand-on-click
     :expanded="expanded"
     @update:expanded="expanded = $event"
-    class="elevation-1"
+    class="elevation-1 pb-16 dps-table"
     :row-props="getRowProps"
     show-expand
     density="compact"
@@ -254,7 +206,7 @@
     </template>
   </v-data-table>
 
-  <v-container v-else-if="viewMode === 'cards'" fluid>
+  <v-container v-else-if="viewMode === 'cards'" fluid class="pb-16">
     <div :style="{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${cardGridMinWidth}px, 1fr))`, gap: '16px' }">
       <div
         v-for="item in playerDisplayData"
@@ -300,7 +252,7 @@
             <v-spacer></v-spacer>
             <div class="text-right">
                 <div class="text-h5 font-weight-bold mb-n1">{{ formatNumber(item.dps) }} DPS</div>
-                <div class="text-subtitle-2 text-medium-emphasis">
+                <div class="text-subtitle-2 text-white" style="opacity: 0.9;">
                     {{ formatAbbreviated(item.totalDamage) }}
                     <span v-if="totalDamageForView > 0" class="text-white">
                         ({{ ((item.totalDamage / totalDamageForView) * 100).toFixed(1) }}%)
@@ -433,7 +385,241 @@
       </div>
     </div>
   </v-container>
+
+  <!-- Floating View Controls -->
+  <div class="view-controls-fab">
+    <div class="fab-blur-bg"></div>
+    <div class="fab-content">
+      <!-- Hide All Button (Card Mode) -->
+      <v-tooltip v-if="viewMode === 'cards'" location="top" :text="globalHideMode ? 'Global Hide Active' : (areAllHidden ? 'Session Hide Active' : 'Hide All')">
+        <template v-slot:activator="{ props }">
+          <v-btn icon variant="text" density="compact" @click="toggleAllPlayersVisibility" v-bind="props" class="mr-1">
+            <v-icon
+              :icon="globalHideMode || areAllHidden ? 'mdi-eye-off' : 'mdi-eye'"
+              :color="globalHideMode ? 'error' : ''"
+              size="small"
+            ></v-icon>
+          </v-btn>
+        </template>
+      </v-tooltip>
+
+      <v-btn-toggle
+        v-model="viewMode"
+        mandatory
+        density="compact"
+        color="primary"
+        variant="text"
+        class="view-toggle-group"
+      >
+        <v-btn value="table" prepend-icon="mdi-table" class="rounded-pill px-3">List</v-btn>
+        <v-btn value="cards" prepend-icon="mdi-chart-pie" class="rounded-pill px-3">Cards</v-btn>
+      </v-btn-toggle>
+
+      <!-- Columns Menu (Card Mode) -->
+      <v-menu v-if="viewMode === 'cards'" :close-on-content-click="false" location="top end" offset="12">
+        <template v-slot:activator="{ props }">
+          <v-btn icon="mdi-view-column" variant="text" density="compact" v-bind="props" class="ml-1">
+          </v-btn>
+        </template>
+        <v-list density="compact" max-width="300" class="glass-menu">
+          <v-list-item v-for="(metric, index) in activeMetrics" :key="metric.key">
+            <div class="d-flex align-center w-100">
+              <v-checkbox-btn
+                v-model="metric.visible"
+                :label="ALL_SKILL_METRICS_MAP[metric.key]?.title || metric.key"
+                color="primary"
+                density="compact"
+                hide-details
+                class="flex-grow-1 mr-2"
+              ></v-checkbox-btn>
+              <v-btn icon="mdi-chevron-up" variant="text" density="compact" size="small" :disabled="index === 0" @click="moveMetricUp(index)"></v-btn>
+              <v-btn icon="mdi-chevron-down" variant="text" density="compact" size="small" :disabled="index === activeMetrics.length - 1" @click="moveMetricDown(index)"></v-btn>
+            </div>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+    </div>
+  </div>
 </template>
+
+<style scoped>
+.view-controls-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+}
+
+.dps-table {
+  /* Border handled by parent container */
+}
+
+.dps-table :deep(thead tr) {
+  background-color: transparent !important;
+}
+
+.dps-table :deep(th) {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  font-size: 0.95rem !important;
+  letter-spacing: 0.05em !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  height: 48px !important;
+  position: relative;
+}
+
+.dps-table :deep(.v-data-table-header__content) {
+  justify-content: center !important;
+  width: 100%;
+}
+
+.dps-table :deep(th:nth-child(2) .v-data-table-header__content) {
+  justify-content: flex-start !important;
+}
+
+/* Absolute position sort icon to keep text centered */
+.dps-table :deep(.v-data-table-header__icon) {
+  position: absolute !important;
+  right: 8px !important;
+  opacity: 0.5;
+}
+
+.fab-blur-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(var(--v-theme-surface), 0.5);
+  backdrop-filter: blur(12px) saturate(160%);
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.fab-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  gap: 4px;
+}
+
+.view-toggle-group {
+  background: transparent !important;
+  border: none !important;
+}
+
+:deep(.view-toggle-group .v-btn) {
+  border: none !important;
+  text-transform: none;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+}
+
+:deep(.view-toggle-group .v-btn--active) {
+  opacity: 1;
+  background: rgba(var(--v-theme-primary), 0.15) !important;
+  color: rgb(var(--v-theme-primary)) !important;
+}
+
+.glass-menu {
+  background: rgba(var(--v-theme-surface), 0.85) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  border-radius: 12px !important;
+}
+
+/* Ensure data table and container have space at the bottom */
+:deep(.v-data-table) {
+  background: transparent !important;
+}
+
+.pb-16 {
+  padding-bottom: 80px !important;
+}
+
+/* Modern Table Styling with Gaps and Rounded Bars */
+.dps-table :deep(table) {
+  border-spacing: 0 6px !important;
+  border-collapse: separate !important;
+}
+
+.dps-table :deep(tbody tr.character-row) {
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dps-table :deep(tbody tr.character-row:hover) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  z-index: 1;
+}
+
+/* Explicitly disable hover effects for ANY other row (like skill breakdown rows or expansion rows) */
+.dps-table :deep(tbody tr:not(.character-row):hover) {
+  filter: none !important;
+  transform: none !important;
+}
+
+.dps-table :deep(td) {
+  border-bottom: none !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  background-color: rgba(255, 255, 255, 0.03); /* Subtle row background */
+}
+
+/* Bar Rounding - Applying to TR and its TD children */
+.dps-table :deep(tbody tr) {
+  border-radius: 6px !important;
+}
+
+.dps-table :deep(tbody tr td:first-child) {
+  border-top-left-radius: 6px !important;
+  border-bottom-left-radius: 6px !important;
+}
+
+.dps-table :deep(tbody tr td:last-child) {
+  border-top-right-radius: 6px !important;
+  border-bottom-right-radius: 6px !important;
+}
+
+/* Ensure the expanded detail row doesn't have the same styling and never hovers */
+.dps-table :deep(tr.v-data-table-expanded__content) {
+  background: transparent !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+.dps-table :deep(tr.v-data-table-expanded__content:hover) {
+  filter: none !important;
+  transform: none !important;
+}
+
+.dps-table :deep(tr.v-data-table-expanded__content td) {
+  background: transparent !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
+/* Skill Breakdown table nested inside also gets rounding but smaller gaps */
+.dps-table :deep(.v-data-table.ma-2 table) {
+  border-spacing: 0 2px !important;
+}
+
+.dps-table :deep(.v-data-table.ma-2 tr td:first-child) {
+  border-top-left-radius: 4px !important;
+  border-bottom-left-radius: 4px !important;
+}
+
+.dps-table :deep(.v-data-table.ma-2 tr td:last-child) {
+  border-top-right-radius: 4px !important;
+  border-bottom-right-radius: 4px !important;
+}
+</style>
 
 <script lang="ts" setup>
 import { inject, ref, computed, watch } from "vue";
@@ -663,8 +849,10 @@ const getSkillBreakdown = (playerData: DamageBreakdown): SkillStats[] => {
   const bgColor = color;
 
   return {
+    class: "character-row",
     style: {
       background: `linear-gradient(to right, ${bgColor} ${percentage}%, transparent ${percentage}%)`,
+      backgroundClip: 'padding-box',
     },
   };
 };
@@ -701,6 +889,7 @@ const getSkillRowProps = (
   return {
     style: {
       background: `linear-gradient(to right, ${bgColor} ${percentage}%, transparent ${percentage}%)`,
+      backgroundClip: 'padding-box',
     },
   };
 };
@@ -744,9 +933,9 @@ const toggleAllPlayersVisibility = () => {
 const mainTableHeaders = [
   { title: "Hide", key: "isHidden", sortable: false, width: "1%" },
   { title: "Character", key: "name", sortable: true },
-  { title: "DPS", key: "dps", sortable: true, align: "end", width: "15%" },
-  { title: "Total Damage", key: "totalDamage", sortable: true, align: "end", width: "20%" },
-  { title: "Crit %", key: "critRate", sortable: true, align: "end", width: "15%" },
+  { title: "DPS", key: "dps", sortable: true, align: "center", width: "15%" },
+  { title: "Total Damage", key: "totalDamage", sortable: true, align: "center", width: "20%" },
+  { title: "Crit %", key: "critRate", sortable: true, align: "center", width: "15%" },
   { title: "", key: "data-table-expand" },
   ] as const;
 

@@ -71,7 +71,7 @@
       <v-divider class="my-4"></v-divider>
 
       <div class="text-subtitle-2 mb-2">Live Preview</div>
-      <div class="d-flex flex-wrap gap-2 preview-container pa-2 rounded bg-grey-darken-4">
+      <div class="d-flex flex-wrap gap-2 preview-container pa-3 rounded" style="background: rgba(var(--v-theme-surface), 0.8); border: 1px solid rgba(255,255,255,0.05);">
         <v-chip
           v-for="name in previewNames"
           :key="name"

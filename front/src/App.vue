@@ -1,54 +1,79 @@
 <template>
   <v-app>
-    <navigation />
+    <v-app-bar flat class="modern-header" height="64">
+      <v-btn
+        icon="mdi-menu"
+        variant="text"
+        size="small"
+        class="mr-2 action-btn"
+        @click="isNavDrawerOpen = !isNavDrawerOpen"
+      ></v-btn>
+      <div class="brand-section">
+        <img src="/images/Midir.png" class="mascot-img" alt="Midir Logo" />
+        <div class="logo-text">Midir</div>
+      </div>
 
-    <v-app-bar>
-      <v-app-bar-nav-icon 
-        v-if="activeTool === 'dps'"
-        @click="toggleNavDrawer"
-      ></v-app-bar-nav-icon>
-      <v-toolbar-title>{{ currentToolTitle }}</v-toolbar-title>
       <v-spacer></v-spacer>
 
-      <v-progress-circular
-        v-if="isLoading"
-        indeterminate
-        color="primary"
-        size="24"
-        width="2"
-        class="mr-4"
-      ></v-progress-circular>
-
-      <span class="mr-4">
-        API:
-        <span v-if="socketConnected">
-          <v-icon icon="mdi-check" color="success" /> Connected
-        </span>
-        <span v-else>
-          <v-icon icon="mdi-close" color="error" /> Disconnected
-        </span>
-      </span>
-
-      <template v-if="activeTool === 'dps'">
-        <v-btn
-          @click="promptAndSaveSession"
+      <div class="action-section">
+        <v-progress-circular
+          v-if="isLoading"
+          indeterminate
           color="primary"
-          size="small"
-          prepend-icon="mdi-content-save"
-          class="ml-1"
-          >Save Session</v-btn
-        >
+          size="20"
+          width="2"
+          class="mr-4"
+        ></v-progress-circular>
 
-        <v-btn
-          @click="clearSession"
-          color="primary"
-          size="small"
-          prepend-icon="mdi-close"
-          class="ml-1"
-          >Clear</v-btn
-        >
-      </template>
+        <template v-if="activeTool === 'dps'">
+          <v-btn
+            variant="text"
+            size="small"
+            prepend-icon="mdi-content-save"
+            class="action-btn"
+            @click="promptAndSaveSession"
+          >
+            Save Session
+          </v-btn>
+
+          <v-btn
+            variant="text"
+            size="small"
+            prepend-icon="mdi-refresh"
+            class="action-btn"
+            @click="clearSession"
+          >
+            Clear
+          </v-btn>
+
+          <v-btn
+            icon="mdi-cog"
+            variant="text"
+            size="small"
+            class="ml-2 action-btn"
+            @click="activeTool = 'settings'"
+          ></v-btn>
+        </template>
+
+        <template v-else-if="activeTool === 'settings'">
+          <v-btn
+            variant="tonal"
+            size="small"
+            prepend-icon="mdi-arrow-left"
+            color="primary"
+            class="font-weight-bold"
+            @click="activeTool = 'dps'"
+          >
+            Back to Meter
+          </v-btn>
+        </template>
+      </div>
     </v-app-bar>
+
+    <v-main>
+      <damage-meter-view v-if="activeTool === 'dps'" />
+      <settings-view v-else-if="activeTool === 'settings'" />
+    </v-main>
 
     <v-snackbar
       v-model="systemErrorVisible"
@@ -71,11 +96,6 @@
         </v-btn>
       </template>
     </v-snackbar>
-
-    <v-main>
-      <damage-meter-view v-if="activeTool === 'dps'" />
-      <settings-view v-else-if="activeTool === 'settings'" />
-    </v-main>
   </v-app>
 </template>
 
@@ -86,7 +106,6 @@ import { FightSummary } from "./protocols";
 import { initPlayerCache } from "@/playerCache";
 import DamageMeterView from "@/components/DamageMeterView.vue";
 import SettingsView from "@/components/SettingsView.vue";
-import Navigation from "@/components/Navigation.vue";
 import {
   getSessionSummary,
   saveSession,
@@ -111,7 +130,6 @@ export default defineComponent({
   components: {
     DamageMeterView,
     SettingsView,
-    Navigation,
   },
   setup() {
     const raceNameMap = inject("raceNameMap");
@@ -124,18 +142,6 @@ export default defineComponent({
     const appEvent = inject("appEvent");
 
     const socketConnected = ref(false);
-
-    const toggleNavDrawer = () => {
-      isNavDrawerOpen.value = !isNavDrawerOpen.value;
-    };
-
-    const currentToolTitle = computed(() => {
-      switch (activeTool.value) {
-        case 'dps': return 'Damage Meter';
-        case 'settings': return 'Settings';
-        default: return 'Midir';
-      }
-    });
 
     // Socket is now statically imported
     socket.onConnect = (isConnected) => (socketConnected.value = isConnected);
@@ -321,9 +327,8 @@ export default defineComponent({
       socketConnected,
       clearSession,
       promptAndSaveSession,
-      toggleNavDrawer,
       activeTool,
-      currentToolTitle,
+      isNavDrawerOpen,
       systemErrorVisible,
       systemErrorMessage,
       systemErrorType,
@@ -331,3 +336,66 @@ export default defineComponent({
   },
 });
 </script>
+
+<style scoped>
+.modern-header {
+  background: transparent !important;
+  z-index: 1000;
+}
+
+.brand-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mascot-img {
+  height: 42px;
+  width: 42px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 0px solid rgba(129, 138, 248, 0.3);
+  box-shadow: 0 0 20px rgba(129, 138, 248, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.mascot-img:hover {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  color: #fff;
+  text-shadow: 0 0 15px rgba(129, 138, 248, 0.4);
+}
+
+.action-section {
+  display: flex;
+  align-items: center;
+}
+
+.action-btn {
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  color: #fff !important;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  color: #818cf8 !important; /* Primary Indigo */
+  background: rgba(129, 138, 248, 0.08);
+}
+
+:deep(.v-toolbar__content) {
+  padding: 0 24px !important;
+}
+</style>
+
+<style>
+.v-application {
+  background: linear-gradient(145deg, #161922 0%, #0e1015 100%) !important;
+}
+</style>
+

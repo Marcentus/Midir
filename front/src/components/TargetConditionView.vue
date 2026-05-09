@@ -1,11 +1,11 @@
 <template>
-  <div v-if="hasConditions" class="ml-4">
+  <div>
     <v-dialog width="auto" min-width="800">
       <template v-slot:activator="{ props }">
         <div 
           v-bind="props" 
-          class="d-flex flex-wrap ga-1 cursor-pointer bg-grey-darken-4 rounded px-2 py-1"
-          style="min-height: 32px; align-items: center;"
+          class="d-flex flex-wrap ga-1 cursor-pointer rounded px-2 py-1"
+          style="min-height: 32px; align-items: center; background: rgba(var(--v-theme-surface), 0.8); border: 1px solid rgba(255,255,255,0.05);"
         >
           <div
             v-for="cond in sortedConditions.filter((c) => favoriteConditions.has(c.id))"
@@ -44,12 +44,14 @@
           <span v-if="!sortedConditions.some((c) => favoriteConditions.has(c.id))" class="text-caption text-grey">
              No Favorites
           </span>
+          <v-divider vertical class="mx-2" style="height: 16px; align-self: center;" />
+          <v-icon icon="mdi-format-list-bulleted" size="18" class="text-grey-lighten-1" />
         </div>
       </template>
 
       <template v-slot:default="{ isActive }">
         <v-card>
-          <v-card-title class="d-flex justify-space-between align-center pa-2 bg-grey-darken-3">
+          <v-card-title class="d-flex justify-space-between align-center pa-2" style="background: rgba(var(--v-theme-surface), 1); border-bottom: 1px solid rgba(255,255,255,0.1);">
             <span class="text-subtitle-2">Detailed Conditions</span>
             <v-btn icon variant="text" size="small" @click="isActive.value = false">
               <v-icon>mdi-close</v-icon>
@@ -141,7 +143,7 @@
                   </v-btn>
                 </td>
               </tr>
-              <tr v-if="detailsOpen[cond.id]" :class="cond.isCombined ? 'bg-grey-darken-4' : 'bg-grey-darken-3'">
+              <tr v-if="detailsOpen[cond.id]" :style="{ background: cond.isCombined ? 'rgba(var(--v-theme-surface), 0.4)' : 'rgba(var(--v-theme-surface), 0.2)' }">
                 <td colspan="5" class="pa-0">
                   <div :class="['border-s-sm py-1 ms-4', cond.isCombined ? 'border-info' : 'border-yellow']">
                     <!-- Case 1: Combined Condition -> Show Sub-conditions -->
@@ -190,7 +192,7 @@
                               </td>
                             </tr>
                             <!-- Nested Metadata Row for Sub-condition -->
-                            <tr v-if="detailsOpen[sub.id]" class="bg-grey-darken-3">
+                            <tr v-if="detailsOpen[sub.id]" style="background: rgba(var(--v-theme-surface), 0.3)">
                               <td colspan="4" class="pa-0">
                                  <div class="border-s-sm border-yellow ms-8 py-1">
                                    <v-table density="compact" class="bg-transparent text-caption pl-2">

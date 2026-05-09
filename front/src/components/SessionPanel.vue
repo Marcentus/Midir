@@ -1,9 +1,9 @@
 <template>
   <v-navigation-drawer
     v-model="isNavDrawerOpen"
-    :rail="!isNavDrawerOpen"
-    expand-on-hover
-
+    floating
+    class="modern-drawer"
+    width="320"
   >
     <div class="d-flex flex-column fill-height" ref="mainContainerRef">
       <!-- Sticky Header Section -->
@@ -92,7 +92,7 @@
       >
         <v-divider></v-divider>
         <v-list-item>
-          <v-list-item-title class="text-caption font-weight-bold text-uppercase text-medium-emphasis">
+          <v-list-item-title class="text-caption font-weight-bold text-uppercase text-white" style="opacity: 0.9;">
             Players in Area ({{ currentEntities.length }})
           </v-list-item-title>
         </v-list-item>
@@ -204,8 +204,8 @@
                  <div 
                     v-for="(metaPart, idx) in selectedEntity.conditions[id].metaData.split(';').map(s => s.trim()).filter(s => s).sort()" 
                     :key="idx"
-                    class="text-caption text-medium-emphasis" 
-                    style="white-space: normal; line-height: 1.2;">
+                    class="text-caption text-white" 
+                    style="white-space: normal; line-height: 1.2; opacity: 0.85;">
                     • {{ metaPart }}
                  </div>
               </div>
@@ -532,6 +532,16 @@ getConditionName: (id: number) => condNameMap.value[id]?.name || `Unknown Status
 });
 </script>
 <style scoped>
+.modern-drawer {
+  background: rgba(23, 27, 36, 0.75) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(129, 138, 248, 0.15) !important;
+  margin: 12px !important;
+  height: calc(100% - 24px) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
 .session-item .session-actions {
   opacity: 0;
   transition: opacity 0.2s ease-in-out;
