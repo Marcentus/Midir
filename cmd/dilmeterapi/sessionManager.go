@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -19,11 +20,33 @@ import (
 const liveSessionFilename = "live-session.ndjson"
 const livePcapFilename = "live-session.pcapng"
 
+type SessionSummaryPlayer struct {
+	Name        string  `json:"name"`
+	DPS         float32 `json:"dps"`
+	ArcanaName  string  `json:"arcanaName"`
+	ArcanaIcon  string  `json:"arcanaIcon"`
+	TotalDamage float32 `json:"totalDamage"`
+}
+
+type SessionSummaryEnemy struct {
+	Name        string  `json:"name"`
+	TotalDamage float32 `json:"totalDamage"`
+}
+
+type SessionSummaryData struct {
+	Duration    float64                `json:"duration"`
+	TotalDamage float32                `json:"totalDamage"`
+	Players     []SessionSummaryPlayer `json:"players"`
+	Enemies     []SessionSummaryEnemy  `json:"enemies"`
+}
+
 type Session struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
 	StartTime int64  `json:"startTime"`
 	EndTime   int64  `json:"endTime,omitempty"`
+
+	Summary *SessionSummaryData `json:"summary,omitempty"`
 
 	ndjsonFile *os.File       `json:"-"`
 	pcapWriter *pcapgo.Writer `json:"-"`
@@ -159,9 +182,67 @@ func (sm *SessionManager) SaveLiveSession(name string) error {
 	oldPath := filepath.Join(sm.logDirectory, liveSessionFilename)
 	newPath := filepath.Join(sm.logDirectory, newNdjsonFilename)
 
-	if err := os.Rename(oldPath, newPath); err != nil {
-		return fmt.Errorf("failed to rename session file: %w", err)
+	summary, err := GenerateSummaryFromFile(oldPath)
+	var summaryData SessionSummaryData
+	if err == nil && summary != nil {
+		summaryData.Duration = summary.EncounterDuration
+		summaryData.TotalDamage = summary.TotalDamage
+		
+		targetDamageMap := make(map[string]float32)
+
+		for _, pstat := range summary.Players {
+			summaryData.Players = append(summaryData.Players, SessionSummaryPlayer{
+				Name:        pstat.Name,
+				DPS:         pstat.OverallStats.DPS,
+				ArcanaName:  pstat.TalentName,
+				ArcanaIcon:  pstat.TalentIcon,
+				TotalDamage: pstat.OverallStats.TotalDamage,
+			})
+			for tID, tBreakdown := range pstat.DamageByTarget {
+				targetDamageMap[tID] += tBreakdown.TotalDamage
+			}
+		}
+		
+		sort.Slice(summaryData.Players, func(i, j int) bool {
+			return summaryData.Players[i].TotalDamage > summaryData.Players[j].TotalDamage
+		})
+		
+		for tID, dmg := range targetDamageMap {
+			name := "Unknown"
+			if tStat, ok := summary.Targets[tID]; ok {
+				name = tStat.Name
+			}
+			summaryData.Enemies = append(summaryData.Enemies, SessionSummaryEnemy{
+				Name:        name,
+				TotalDamage: dmg,
+			})
+		}
+		sort.Slice(summaryData.Enemies, func(i, j int) bool {
+			return summaryData.Enemies[i].TotalDamage > summaryData.Enemies[j].TotalDamage
+		})
 	}
+
+	newF, err := os.Create(newPath)
+	if err != nil {
+		return fmt.Errorf("failed to create permanent session file: %w", err)
+	}
+	
+	sumEvent := eventSessionSummary{
+		eventBase: eventBase{EventId: eventIdSessionSummary, At: time.Now().Unix(), Id: ""},
+		Type:      "SessionSummary",
+		Summary:   summaryData,
+	}
+	sumBytes, _ := json.Marshal(sumEvent)
+	newF.Write(sumBytes)
+	newF.Write([]byte("\n"))
+
+	oldF, err := os.Open(oldPath)
+	if err == nil {
+		io.Copy(newF, oldF)
+		oldF.Close()
+	}
+	newF.Close()
+	os.Remove(oldPath)
 
 	if sm.recordPcap {
 		oldPcapPath := filepath.Join(sm.logDirectory, livePcapFilename)
@@ -201,11 +282,30 @@ func (sm *SessionManager) GetAllSessions() ([]*Session, error) {
 			continue
 		}
 		name := strings.TrimSuffix(parts[2], ".ndjson")
-		sessions = append(sessions, &Session{
+		sess := &Session{
 			ID:        file.Name(),
 			Name:      name,
 			StartTime: startTime.Unix(),
-		})
+		}
+
+		// Read the first line to check for a summary header
+		logFile, err := os.Open(filepath.Join(sm.logDirectory, file.Name()))
+		if err == nil {
+			scanner := bufio.NewScanner(logFile)
+			if scanner.Scan() {
+				var summaryEvent eventSessionSummary
+				if err := json.Unmarshal(scanner.Bytes(), &summaryEvent); err == nil && summaryEvent.EventId == eventIdSessionSummary {
+					summaryBytes, _ := json.Marshal(summaryEvent.Summary)
+					var sumData SessionSummaryData
+					if err := json.Unmarshal(summaryBytes, &sumData); err == nil {
+						sess.Summary = &sumData
+					}
+				}
+			}
+			logFile.Close()
+		}
+
+		sessions = append(sessions, sess)
 	}
 	sort.Slice(sessions, func(i, j int) bool {
 		return sessions[i].StartTime > sessions[j].StartTime

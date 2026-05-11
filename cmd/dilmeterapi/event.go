@@ -8,6 +8,7 @@ const (
 	eventIdDamage
 	eventIdCharacterConditionEnable
 	eventIdCharacterConditionDisable
+	eventIdSessionSummary eventId = 9999
 )
 
 type iEvent interface {
@@ -73,4 +74,10 @@ type eventCharacterConditionEnable struct {
 type eventCharacterConditionDisable struct {
 	eventBase
 	CCId uint32
+}
+
+type eventSessionSummary struct {
+	eventBase
+	Type    string      `json:"type"`
+	Summary interface{} `json:"summary"` // Will hold SessionSummaryData
 }

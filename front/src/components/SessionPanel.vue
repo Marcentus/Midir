@@ -12,6 +12,19 @@
           <v-list-item-title class="text-h6"> Sessions </v-list-item-title>
         </v-list-item>
 
+        <div class="px-3 pb-2">
+          <v-text-field
+            v-model="searchQuery"
+            density="compact"
+            variant="solo-filled"
+            hide-details
+            placeholder="Search name, player, arcana..."
+            prepend-inner-icon="mdi-magnify"
+            clearable
+            class="text-caption"
+          ></v-text-field>
+        </div>
+
         <v-divider></v-divider>
 
         <v-list density="compact" nav>
@@ -40,34 +53,63 @@
       >
           <v-list density="compact" nav class="fill-height pa-0 overflow-hidden">
             <v-virtual-scroll
-              :items="sessions"
-              item-height="40"
+              :items="filteredSessions"
+              item-height="95"
               height="100%"
             >
               <template v-slot="{ item }">
                 <v-list-item
                   :key="item.id"
-                  :title="item.name"
-                  :subtitle="formatSessionTime(item)"
                   :active="activeSessionId === item.id"
                   @click="selectSession(item.id)"
-                  class="session-item"
+                  class="session-item py-2"
                 >
+                  <div class="d-flex flex-column w-100">
+                    <div class="d-flex align-center justify-space-between w-100">
+                      <div class="text-subtitle-2 font-weight-bold text-truncate">{{ item.name }}</div>
+                      <div class="text-caption text-grey">{{ formatSessionTime(item) }}</div>
+                    </div>
+                    
+                    <div v-if="item.summary" class="mt-1 d-flex flex-column" style="gap: 2px;">
+                      <div class="d-flex align-center justify-space-between text-caption text-grey-lighten-1" style="font-size: 10px !important;">
+                        <span>{{ formatDuration(item.summary.duration) }}</span>
+                        <span>{{ formatDamage(item.summary.totalDamage) }}</span>
+                      </div>
+                      
+                      <!-- Top Players -->
+                      <div v-if="item.summary.players && item.summary.players.length > 0" class="d-flex align-center mt-1" style="gap: 4px;">
+                        <v-icon size="x-small" color="blue-lighten-2">mdi-account-group</v-icon>
+                        <div class="d-flex align-center overflow-hidden" style="gap: 6px;">
+                          <template v-for="(p, idx) in item.summary.players.slice(0, 3)" :key="idx">
+                            <v-tooltip :text="p.name + ' - ' + formatDamage(p.totalDamage)" location="top">
+                              <template v-slot:activator="{ props }">
+                                <div v-bind="props" class="d-flex align-center" style="gap: 2px;">
+                                  <v-img v-if="p.arcanaIcon" :src="p.arcanaIcon" width="14" height="14" class="rounded"></v-img>
+                                  <span class="text-truncate" style="font-size: 10px; max-width: 50px;">{{ p.name }}</span>
+                                </div>
+                              </template>
+                            </v-tooltip>
+                          </template>
+                          <span v-if="item.summary.players.length > 3" class="text-grey" style="font-size: 10px;">
+                            +{{ item.summary.players.length - 3 }}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <!-- Top Enemies -->
+                      <div v-if="item.summary.enemies && item.summary.enemies.length > 0" class="d-flex align-center" style="gap: 4px;">
+                        <v-icon size="x-small" color="red-lighten-2">mdi-sword-cross</v-icon>
+                        <div class="text-truncate text-grey" style="flex: 1; font-size: 10px;">
+                          {{ item.summary.enemies.slice(0, 3).map(e => e.name).join(', ') }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <template v-slot:append>
-                    <div class="session-actions">
-                      <v-btn
-                        variant="text"
-                        icon="mdi-pencil"
-                        size="x-small"
-                        @click.stop="openRenameDialog(item)"
-                      ></v-btn>
-                      <v-btn
-                        variant="text"
-                        icon="mdi-delete"
-                        color="red-lighten-2"
-                        size="x-small"
-                        @click.stop="openDeleteDialog(item)"
-                      ></v-btn>
+                    <div class="session-actions align-self-start mt-1">
+                      <v-btn variant="text" icon="mdi-pencil" size="x-small" @click.stop="openRenameDialog(item)" density="compact"></v-btn>
+                      <v-btn variant="text" icon="mdi-delete" color="red-lighten-2" size="x-small" @click.stop="openDeleteDialog(item)" density="compact"></v-btn>
                     </div>
                   </template>
                 </v-list-item>
@@ -281,6 +323,21 @@ export default defineComponent({
   setup() {
     const appEvent = inject("appEvent");
 
+    const searchQuery = ref("");
+
+    const filteredSessions = computed(() => {
+      if (!searchQuery.value) return sessions.value;
+      const q = searchQuery.value.toLowerCase();
+      return sessions.value.filter(s => {
+        if (s.name.toLowerCase().includes(q)) return true;
+        if (s.summary) {
+          if (s.summary.players?.some(p => p.name.toLowerCase().includes(q) || (p.arcanaName && p.arcanaName.toLowerCase().includes(q)))) return true;
+          if (s.summary.enemies?.some(e => e.name.toLowerCase().includes(q))) return true;
+        }
+        return false;
+      });
+    });
+
     const renameDialog = reactive({
       visible: false,
       session: null as Session | null,
@@ -463,8 +520,25 @@ export default defineComponent({
     };
 
 
+    const formatDuration = (seconds: number) => {
+      if (!seconds) return "0s";
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      if (m > 0) return `${m}m ${s}s`;
+      return `${s}s`;
+    };
+
+    const formatDamage = (dmg: number) => {
+      if (!dmg) return "0";
+      if (dmg >= 1000000) return (dmg / 1000000).toFixed(1) + "M";
+      if (dmg >= 1000) return (dmg / 1000).toFixed(1) + "K";
+      return dmg.toFixed(0);
+    };
+
     return {
       sessions,
+      searchQuery,
+      filteredSessions,
       activeSessionId,
       isNavDrawerOpen,
       selectSession,
@@ -476,6 +550,8 @@ export default defineComponent({
       openDeleteDialog,
       confirmDelete,
       formatSessionTime,
+      formatDuration,
+      formatDamage,
       currentEntities: computed(() => fightSummary.currentEntities || []),
      // Helper to format duration
       getConditionTimeRemaining,
