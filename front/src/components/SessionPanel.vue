@@ -43,14 +43,7 @@
         <v-divider></v-divider>
       </div>
 
-      <!-- Scrollable Sessions List Container -->
-      <!-- We use style binding to dynamic flex-grow based on splitRatio if activeSession is live, else full height -->
-      <div 
-        class="d-flex flex-column"
-        :style="activeSessionId === 'live' 
-            ? { flex: `0 0 ${splitRatio * 100}%`, height: `${splitRatio * 100}%`, minHeight: '100px', overflow: 'hidden' } 
-            : { flex: '1 1 auto', overflow: 'hidden' }"
-      >
+      <div class="d-flex flex-column" style="flex: 1 1 auto; overflow: hidden;">
           <v-list density="compact" nav class="fill-height pa-0 overflow-hidden">
             <v-virtual-scroll
               :items="filteredSessions"
@@ -124,155 +117,8 @@
             </v-virtual-scroll>
           </v-list>
       </div>
-
-      <!-- RESIZER BAR -->
-      <div 
-        v-if="activeSessionId === 'live'" 
-        class="resizer"
-        @mousedown.prevent="startResize"
-      ></div>
-
-      <!-- Entities in Area Section -->
-      <!-- This fills the remaining space -->
-      <div 
-        v-if="activeSessionId === 'live'"
-        class="d-flex flex-column"
-        style="flex: 1 1 0px; min-height: 100px; overflow: hidden;"
-      >
-        <v-divider></v-divider>
-        <v-list-item>
-          <v-list-item-title class="text-caption font-weight-bold text-uppercase text-white" style="opacity: 0.9;">
-            Players in Area ({{ currentEntities.length }})
-          </v-list-item-title>
-        </v-list-item>
-
-        <v-list density="compact" nav class="flex-grow-1 pa-0 overflow-y-auto">
-          <v-virtual-scroll
-            :items="currentEntities"
-            item-height="32"
-            height="100%"
-          >
-            <template v-slot="{ item }">
-              <v-list-item :key="item.id" class="px-2 py-0" min-height="32" @click="selectEntity(item)" link>
-                <div class="d-flex align-center justify-space-between w-100" style="gap: 8px;">
-                    <div class="d-flex flex-column" style="flex: 1; min-width: 0;">
-                      <div class="d-flex align-center justify-space-between w-100">
-                        <div class="text-body-2 text-truncate">{{ item.name }}</div>
-                        <div v-if="item.conditions && Object.keys(item.conditions).length > 0" class="d-flex align-center justify-end overflow-hidden" style="gap: 2px;">
-                          <v-img
-                              v-for="condId in getPreviewConditions(item)"
-                              :key="condId"
-                              :src="getConditionIcon(condId)"
-                              width="16"
-                              height="16"
-                              class="condition-icon"
-                              :title="getConditionName(condId)"
-                            >
-                              <template v-slot:placeholder>
-                                <v-sheet color="grey-darken-2" width="100%" height="100%"></v-sheet>
-                              </template>
-                            </v-img>
-                        </div>
-                      </div>
-                      
-                      <!-- HP BAR -->
-                      <div v-if="item.maxHp > 0" class="mt-1">
-                         <v-progress-linear
-                            :model-value="(item.currentHp / item.maxHp) * 100"
-                            color="red-darken-2"
-                            height="14"
-                            rounded
-                         >
-                            <template v-slot:default>
-                                <div class="text-caption font-weight-bold textual-shadow" style="font-size: 10px; color: white;">
-                                    {{ Math.ceil(item.currentHp).toLocaleString() }} / {{ Math.ceil(item.maxHp).toLocaleString() }}
-                                </div>
-                            </template>
-                         </v-progress-linear>
-                      </div>
-                    </div>
-                </div>
-              </v-list-item>
-            </template>
-          </v-virtual-scroll>
-        </v-list>
-      </div>
-
-    <!-- Entity Details Dialog -->
-    <v-dialog v-model="detailsOpen" max-width="600">
-      <v-card>
-        <v-card-title class="text-h6">
-          {{ selectedEntity?.name }}
-        </v-card-title>
-        <v-card-subtitle>
-          ID: {{ selectedEntity?.id }} | Race: {{ selectedEntity?.raceId }}
-        </v-card-subtitle>
-
-        <v-card-text>
-          <div class="text-subtitle-1 font-weight-bold mb-2">Active Conditions</div>
-          <v-list density="compact" v-if="selectedEntity?.conditions && Object.keys(selectedEntity.conditions).length > 0" class="overflow-y-auto" style="max-height: 400px">
-            <v-list-item v-for="id in getAllSortedConditions(selectedEntity)" :key="id" :value="id" class="align-start py-2">
-              <template v-slot:prepend>
-                 <div class="d-flex align-center mr-2 align-self-start mt-1">
-                    <v-btn icon density="compact" variant="text" size="small" 
-                        :color="liveFavoriteConditions.has(id) ? 'amber' : 'grey'" 
-                        @click.stop="toggleLiveConditionPref(id, 'fav')">
-                        <v-icon>{{ liveFavoriteConditions.has(id) ? 'mdi-star' : 'mdi-star-outline' }}</v-icon>
-                    </v-btn>
-                    <v-btn icon density="compact" variant="text" size="small" 
-                        :color="liveHiddenConditions.has(id) ? 'red' : 'grey'" 
-                        @click.stop="toggleLiveConditionPref(id, 'hide')">
-                        <v-icon>{{ liveHiddenConditions.has(id) ? 'mdi-eye-off' : 'mdi-eye' }}</v-icon>
-                    </v-btn>
-
-
-                 </div>
-                <v-img
-                  :src="getConditionIcon(id)"
-                  width="24"
-                  height="24"
-                  class="mr-3 align-self-start mt-1"
-                  :style="{ opacity: liveHiddenConditions.has(id) ? 0.5 : 1, flex: 'none' }"
-                >
-                  <template v-slot:placeholder>
-                    <v-sheet color="grey-darken-2" width="100%" height="100%"></v-sheet>
-                  </template>
-                </v-img>
-              </template>
-              <v-list-item-title :class="{'text-decoration-line-through text-grey': liveHiddenConditions.has(id)}">
-                  {{ getConditionName(id) }}
-              </v-list-item-title>
-              <v-list-item-subtitle class="text-caption">
-                Start: {{ new Date(selectedEntity.conditions[id].start * 1000).toLocaleTimeString() }}
-                <span v-if="selectedEntity.conditions[id].attackerId"> | Source: {{ selectedEntity.conditions[id].attackerId }}</span>
-                <span v-if="getConditionTimeRemaining(selectedEntity.conditions[id])" class="text-warning font-weight-bold ml-1">
-                  | {{ getConditionTimeRemaining(selectedEntity.conditions[id]) }}
-                </span>
-              </v-list-item-subtitle>
-              <div v-if="selectedEntity.conditions[id].metaData" class="mt-1">
-                 <div 
-                    v-for="(metaPart, idx) in selectedEntity.conditions[id].metaData.split(';').map(s => s.trim()).filter(s => s).sort()" 
-                    :key="idx"
-                    class="text-caption text-white" 
-                    style="white-space: normal; line-height: 1.2; opacity: 0.85;">
-                    • {{ metaPart }}
-                 </div>
-              </div>
-            </v-list-item>
-          </v-list>
-          <div v-else class="text-caption text-grey">No active conditions</div>
-        </v-card-text>
-
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="detailsOpen = false">Close</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
     </div>
   </v-navigation-drawer>
-
-
   <v-dialog v-model="renameDialog.visible" max-width="500px">
     <v-card>
       <v-card-title> Rename Session </v-card-title>
@@ -438,14 +284,6 @@ export default defineComponent({
       activeSessionId.value = id;
     };
 
-    const detailsOpen = ref(false);
-    const selectedEntityId = ref<string | null>(null);
-
-    const selectEntity = (entity: EntityState) => {
-      selectedEntityId.value = entity.id;
-      detailsOpen.value = true;
-    };
-
     const openRenameDialog = (session: Session) => {
       renameDialog.session = session;
       renameDialog.newName = session.name;
@@ -501,31 +339,6 @@ export default defineComponent({
 
     appEvent.value.addEventListener("refresh-sessions", fetchSessions);
 
-    const getConditionTimeRemaining = (condition: ActiveCondition) => {
-        if (!condition.disableAt || condition.disableAt === 0) return null;
-        
-        const now = Math.floor(Date.now() / 1000);
-        const diff = condition.disableAt - now;
-
-        if (diff <= 0) return null;
-
-        if (diff > 3600) {
-            return Math.floor(diff / 3600) + 'h';
-        } else if (diff > 60) {
-            return Math.floor(diff / 60) + 'm';
-        } else {
-            return diff + 's';
-        }
-    };
-
-
-    const getConditionIcon = (id: number) => {
-        if (condNameMap && condNameMap.value[id]) {
-            return condNameMap.value[id].iconUrl;
-        }
-        return ""; 
-    };
-
 
     const formatDuration = (seconds: number) => {
       if (!seconds) return "0s";
@@ -558,58 +371,7 @@ export default defineComponent({
       confirmDelete,
       formatSessionTime,
       formatDuration,
-      formatDamage,
-      currentEntities: computed(() => fightSummary.currentEntities || []),
-     // Helper to format duration
-      getConditionTimeRemaining,
-      getConditionIcon,
-getConditionName: (id: number) => condNameMap.value[id]?.name || `Unknown Status ${id}`,
-      // NEW: Entity Details
-      detailsOpen,
-      selectedEntity: computed(() => {
-        if (!selectedEntityId.value) return null;
-        return (fightSummary.currentEntities || []).find(e => e.id === selectedEntityId.value) || null;
-      }),
-      selectEntity,
-      // LIVE CONDITION PREFS
-      liveFavoriteConditions,
-      liveHiddenConditions,
-      toggleLiveConditionPref,
-      getPreviewConditions: (entity: EntityState) => {
-        if (!entity.conditions) return [];
-        const allIds = Object.keys(entity.conditions).map(Number);
-        // ONLY show favorites in the preview list
-        const favorites = allIds.filter(id => liveFavoriteConditions.has(id));
-        favorites.sort((a, b) => a - b);
-        return favorites.slice(0, 20); 
-      },
-      getAllSortedConditions: (entity: EntityState) => {
-        if (!entity.conditions) return [];
-        const allIds = Object.keys(entity.conditions).map(Number);
-        // Sort: Favorites first, then Normal, then Hidden
-        allIds.sort((a, b) => {
-           const aFav = liveFavoriteConditions.has(a);
-           const bFav = liveFavoriteConditions.has(b);
-           const aHide = liveHiddenConditions.has(a);
-           const bHide = liveHiddenConditions.has(b);
-           
-           // Favorites always on top
-           if (aFav && !bFav) return -1;
-           if (!aFav && bFav) return 1;
-           
-           // Hidden always at bottom
-           if (aHide && !bHide) return 1;
-           if (!aHide && bHide) return -1;
-           
-           return a - b;
-        });
-        return allIds;
-      },
-      // RESIZE
-      splitRatio,
-      startResize,
-      mainContainerRef,
-      headerRef,
+      formatDamage
     };
   },
 });
@@ -634,38 +396,5 @@ getConditionName: (id: number) => condNameMap.value[id]?.name || `Unknown Status
   opacity: 1;
 }
 
-.condition-icon {
-  border: 1px solid #616161; /* Thin dark gray */
-  border-radius: 2px;
-  /* Force fixed, non-stretching size */
-  width: 16px !important;
-  height: 16px !important;
-  flex: 0 0 16px;
-  display: block;
-}
 
-.resizer {
-  height: 8px;
-  background: rgba(var(--v-theme-on-surface), 0.1);
-  cursor: ns-resize;
-  transition: background 0.2s;
-  flex: 0 0 8px; /* Fixed height */
-  position: relative;
-  z-index: 10;
-}
-.resizer:hover, .resizer:active {
-  background: rgba(var(--v-theme-primary), 0.5);
-}
-.resizer::after {
-   /* Handle indicator */
-   content: "";
-   position: absolute;
-   top: 50%;
-   left: 50%;
-   transform: translate(-50%, -50%);
-   width: 40px;
-   height: 2px;
-   background: rgba(var(--v-theme-on-surface), 0.3);
-   border-radius: 2px;
-}
 </style>
