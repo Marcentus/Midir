@@ -69,7 +69,7 @@
                             @error="($event.target as HTMLImageElement).style.display = 'none'"
                           />
                         </template>
-                        <span>{{ buff.name }} ({{ buff.playerName }})</span>
+                        <span>{{ buff.name }}</span>
                       </v-tooltip>
                       <div class="d-flex flex-column align-end">
                         <span v-for="val in buff.displayValue" :key="val" class="text-caption font-weight-bold text-info" style="font-size: 0.75rem !important; line-height: 1.1;">
@@ -346,8 +346,8 @@ export default defineComponent({
                   const mfcp = parsed.MFCP || 0;
                   val = Math.max(lsma, mfcp);
                   const labels: string[] = [];
-                  if (lsma > 0) labels.push(`Magic Att: ${lsma.toFixed(2)}%`);
-                  if (mfcp > 0) labels.push(`Cast Speed: ${mfcp.toFixed(2)}%`);
+                  if (lsma > 0) labels.push(`Mgk Att: ${lsma.toFixed(2)}%`);
+                  if (mfcp > 0) labels.push(`Speed: ${mfcp.toFixed(2)}%`);
                   display = labels;
                 }
 
