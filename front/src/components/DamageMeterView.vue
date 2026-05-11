@@ -129,7 +129,15 @@
                             <div class="text-body-2 font-weight-bold text-info">{{ metric.highestUptime.toFixed(2) }}%</div>
                           </v-col>
                           <v-col cols="4" class="border-s-sm border-white-05">
-                            <div class="text-caption text-grey">Weighted Avg</div>
+                            <div class="text-caption text-grey">
+                              Weighted Avg
+                              <span class="ml-1">
+                                <v-icon size="12" color="grey-lighten-1">mdi-information-outline</v-icon>
+                                <v-tooltip activator="parent" location="top" max-width="300">
+                                  Average strength while active, weighted by the damage contribution of players who primarily used this buff.
+                                </v-tooltip>
+                              </span>
+                            </div>
                             <div class="text-body-2 font-weight-bold text-amber">{{ metric.weightedAvg.toFixed(2) }}%</div>
                           </v-col>
                         </v-row>
