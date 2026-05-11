@@ -34,6 +34,8 @@ type SessionSummaryEnemy struct {
 }
 
 type SessionSummaryData struct {
+	Name        string                 `json:"name"`
+	StartTime   int64                  `json:"startTime"`
 	Duration    float64                `json:"duration"`
 	TotalDamage float32                `json:"totalDamage"`
 	Players     []SessionSummaryPlayer `json:"players"`
@@ -175,15 +177,16 @@ func (sm *SessionManager) SaveLiveSession(name string) error {
 		sm.currentSession.pcapFile.Close()
 	}
 	
-	t := time.Unix(sm.currentSession.StartTime, 0)
-	newFilenameBase := fmt.Sprintf("%s_%s", t.Format("2006-01-02_15-04-05"), sanitizeFilename(name))
-	newNdjsonFilename := newFilenameBase + ".ndjson"
+	newNdjsonFilename := fmt.Sprintf("session-%d.ndjson", time.Now().UnixMilli())
 
 	oldPath := filepath.Join(sm.logDirectory, liveSessionFilename)
 	newPath := filepath.Join(sm.logDirectory, newNdjsonFilename)
 
 	summary, err := GenerateSummaryFromFile(oldPath)
 	var summaryData SessionSummaryData
+	summaryData.Name = name
+	summaryData.StartTime = sm.currentSession.StartTime
+	
 	if err == nil && summary != nil {
 		summaryData.Duration = summary.EncounterDuration
 		summaryData.TotalDamage = summary.TotalDamage
@@ -272,21 +275,8 @@ func (sm *SessionManager) GetAllSessions() ([]*Session, error) {
 		if file.IsDir() || !strings.HasSuffix(file.Name(), ".ndjson") || file.Name() == liveSessionFilename {
 			continue
 		}
-		parts := strings.SplitN(file.Name(), "_", 3)
-		if len(parts) < 3 {
-			continue
-		}
-		timeStr := parts[0] + " " + strings.ReplaceAll(parts[1], "-", ":")
-		startTime, err := time.Parse("2006-01-02 15:04:05", timeStr)
-		if err != nil {
-			continue
-		}
-		name := strings.TrimSuffix(parts[2], ".ndjson")
-		sess := &Session{
-			ID:        file.Name(),
-			Name:      name,
-			StartTime: startTime.Unix(),
-		}
+
+		var sess *Session
 
 		// Read the first line to check for a summary header
 		logFile, err := os.Open(filepath.Join(sm.logDirectory, file.Name()))
@@ -298,14 +288,37 @@ func (sm *SessionManager) GetAllSessions() ([]*Session, error) {
 					summaryBytes, _ := json.Marshal(summaryEvent.Summary)
 					var sumData SessionSummaryData
 					if err := json.Unmarshal(summaryBytes, &sumData); err == nil {
-						sess.Summary = &sumData
+						sess = &Session{
+							ID:        file.Name(),
+							Name:      sumData.Name,
+							StartTime: sumData.StartTime,
+							Summary:   &sumData,
+						}
 					}
 				}
 			}
 			logFile.Close()
 		}
 
-		sessions = append(sessions, sess)
+		if sess == nil {
+			parts := strings.SplitN(file.Name(), "_", 3)
+			if len(parts) >= 3 {
+				timeStr := parts[0] + " " + strings.ReplaceAll(parts[1], "-", ":")
+				startTime, err := time.Parse("2006-01-02 15:04:05", timeStr)
+				if err == nil {
+					name := strings.TrimSuffix(parts[2], ".ndjson")
+					sess = &Session{
+						ID:        file.Name(),
+						Name:      name,
+						StartTime: startTime.Unix(),
+					}
+				}
+			}
+		}
+
+		if sess != nil && sess.StartTime > 0 {
+			sessions = append(sessions, sess)
+		}
 	}
 	sort.Slice(sessions, func(i, j int) bool {
 		return sessions[i].StartTime > sessions[j].StartTime
