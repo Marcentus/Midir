@@ -71,9 +71,11 @@
                         </template>
                         <span>{{ buff.name }} ({{ buff.playerName }})</span>
                       </v-tooltip>
-                      <span class="text-caption font-weight-bold text-info" style="font-size: 0.75rem !important;">
-                        {{ buff.displayValue }}
-                      </span>
+                      <div class="d-flex flex-column align-end">
+                        <span v-for="val in buff.displayValue" :key="val" class="text-caption font-weight-bold text-info" style="font-size: 0.75rem !important; line-height: 1.1;">
+                          {{ val }}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -335,10 +337,10 @@ export default defineComponent({
               for (const meta of cond.metaBreakdown) {
                 const parsed = parseMabinogiMetadata(meta.metaData);
                 let val = 0;
-                let display = "";
+                let display: string[] = [];
                 if (id === 680) {
                   val = parsed.MCMBAMAX || 0;
-                  display = `Max Att: ${val.toFixed(2)}%`;
+                  display = [`Max Att: ${val.toFixed(2)}%`];
                 } else if (id === 192) {
                   const lsma = parsed.LSMA || 0;
                   const mfcp = parsed.MFCP || 0;
@@ -346,7 +348,7 @@ export default defineComponent({
                   const labels: string[] = [];
                   if (lsma > 0) labels.push(`Magic Att: ${lsma.toFixed(2)}%`);
                   if (mfcp > 0) labels.push(`Cast Speed: ${mfcp.toFixed(2)}%`);
-                  display = labels.join(", ");
+                  display = labels;
                 }
 
                 if (val > bestValue) {
