@@ -58,14 +58,13 @@
                   class="session-item py-2"
                 >
                   <div class="d-flex flex-column w-100">
-                    <!-- Top Row: Name | Timer -->
+                    <!-- Top Row: Name | Datetime -->
                     <div class="d-flex align-center justify-space-between w-100 mb-2">
                       <div class="text-subtitle-2 font-weight-bold text-truncate" style="flex: 1; min-width: 0;">{{ item.name }}</div>
                       
-                      <!-- Right: Timer -->
-                      <div class="text-caption font-weight-bold text-grey-lighten-1 text-right" style="flex: 1;">
-                        <span v-if="item.summary">{{ formatDuration(item.summary.duration) }}</span>
-                        <span v-else>--:--</span>
+                      <!-- Right: Datetime -->
+                      <div class="text-caption text-grey text-right" style="flex: 1;">
+                        {{ formatSessionTime(item) }}
                       </div>
                     </div>
                     
@@ -97,11 +96,6 @@
                           +{{ item.summary.enemies.length - 3 }} more
                         </span>
                       </div>
-                    </div>
-
-                    <!-- Bottom Footer: Datetime -->
-                    <div class="text-grey mt-2 text-left" style="font-size: 9px !important;">
-                      {{ formatSessionTime(item) }}
                     </div>
                   </div>
 
