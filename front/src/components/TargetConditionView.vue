@@ -83,6 +83,9 @@
                 </td>
                 <td>
                   {{ getConditionName(cond.id) }}
+                  <span v-if="getMetadataDisplay(cond)" class="text-caption text-info ml-1">
+                    {{ getMetadataDisplay(cond) }}
+                  </span>
                   <span v-if="hiddenConditions.has(cond.id)" class="text-caption font-italic ml-1"
                     >(Hidden)</span
                   >
@@ -160,7 +163,12 @@
                                   @error="($event.target as HTMLImageElement).style.display = 'none'"
                                 />
                               </td>
-                              <td>{{ getConditionName(sub.id) }}</td>
+                              <td>
+                                {{ getConditionName(sub.id) }}
+                                <span v-if="getMetadataDisplay(sub)" class="text-caption text-info ml-1">
+                                  {{ getMetadataDisplay(sub) }}
+                                </span>
+                              </td>
                               <td class="text-end">
                                 <!-- ADJUST OFFSET HERE: Increase padding-right to move metrics more to the left -->
                                 <div class="d-flex align-center justify-end ga-2" style="padding-right: 60px">
@@ -268,6 +276,7 @@ import { ref, computed, inject } from "vue";
 import { ConditionStats } from "@/protocols";
 import { favoriteConditions, hiddenConditions, toggleConditionPref, fightSummary } from "@/store";
 import { processConditions, ExtendedConditionStats } from "@/conditionCombinations";
+import { parseMabinogiMetadata } from "@/utils/metadata";
 
 const props = defineProps<{
   conditions: { [id: number]: ConditionStats } | undefined;
@@ -296,6 +305,32 @@ const getConditionName = (id: number): string => {
 
 const getConditionIcon = (id: number): string => {
   return condNameMap.value[id]?.iconUrl || "";
+};
+
+const getMetadataDisplay = (cond: ExtendedConditionStats): string => {
+  if (cond.id !== 192 && cond.id !== 680) return "";
+  if (!cond.metaBreakdown || cond.metaBreakdown.length === 0) return "";
+
+  // Find the entry with the highest uptime
+  const bestMeta = [...cond.metaBreakdown].sort((a, b) => b.uptime - a.uptime)[0];
+  const parsed = parseMabinogiMetadata(bestMeta.metaData);
+
+  const parts: string[] = [];
+  if (cond.id === 680) {
+    if (parsed.MCMBAMAX !== undefined) {
+      parts.push(`Max Att: ${parsed.MCMBAMAX.toFixed(2)}%`);
+    }
+  } else if (cond.id === 192) {
+    if (parsed.LSMA !== undefined) {
+      parts.push(`Magic Att: ${parsed.LSMA.toFixed(2)}%`);
+    }
+    if (parsed.MFCP !== undefined) {
+      parts.push(`Cast Speed: ${parsed.MFCP.toFixed(2)}%`);
+    }
+  }
+
+  if (parts.length === 0) return "";
+  return `(${parts.join(", ")})`;
 };
 
 const sortedConditions = computed(() => {
