@@ -38,13 +38,45 @@
           </div>
 
           <!-- Conditions Row (Metadata) -->
-          <div class="conditions-bar mt-4" v-if="selectedTargetId">
-            <div class="header-label" style="opacity: 0.9;">TARGET CONDITIONS</div>
-            <target-condition-view
-              :conditions="selectedTargetConditions"
-              :attackerNameMap="attackerNameMap"
-              class="ml-0"
-            />
+          <div class="conditions-bar mt-4" v-if="selectedTargetId || hasPartyBuffs">
+            <div class="d-flex w-100 justify-space-between align-center">
+              <!-- Left: Target Conditions -->
+              <div class="d-flex flex-column" v-if="selectedTargetId">
+                <div class="header-label" style="opacity: 0.9;">TARGET CONDITIONS</div>
+                <target-condition-view
+                  :conditions="selectedTargetConditions"
+                  :attackerNameMap="attackerNameMap"
+                  class="ml-0"
+                />
+              </div>
+              <div v-else></div> <!-- Spacer -->
+
+              <!-- Right: Party Buffs -->
+              <div class="d-flex flex-column align-end" v-if="hasPartyBuffs && partyBuffs.length > 0">
+                <div class="header-label" style="opacity: 0.9;">PARTY BUFFS</div>
+                <div class="d-flex flex-column ga-1 align-end">
+                  <div v-for="buff in partyBuffs" :key="buff.id" class="d-flex align-center ga-2">
+                    <v-tooltip location="top">
+                      <template v-slot:activator="{ props }">
+                        <img 
+                          v-bind="props" 
+                          :src="buff.iconUrl" 
+                          width="28" 
+                          height="28" 
+                          class="rounded-sm" 
+                          style="border: 1px solid rgba(255,255,255,0.1);"
+                          @error="($event.target as HTMLImageElement).style.display = 'none'"
+                        />
+                      </template>
+                      <span>{{ buff.name }} ({{ buff.playerName }})</span>
+                    </v-tooltip>
+                    <span class="text-caption font-weight-bold text-info" style="font-size: 0.75rem !important;">
+                      {{ buff.displayValue }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -73,8 +105,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from "vue";
+import { defineComponent, ref, computed, inject } from "vue";
 import { fightSummary, selectedTargetId } from "@/store";
+import { parseMabinogiMetadata } from "@/utils/metadata";
 import SessionPanel from "@/components/SessionPanel.vue";
 import ApplyDamageBySkillComponent from "@/components/applyDamageBySkill.vue";
 import DamageTakenBySourceComponent from "@/components/DamageTakenBySource.vue";
@@ -92,6 +125,7 @@ export default defineComponent({
   },
   setup() {
     const tab = ref("damageDealt");
+    const condNameMap = inject("condNameMap") as any;
 
     const formatNumber = (num: number | undefined | null): string => {
       if (num === undefined || num === null) return "0";
@@ -216,6 +250,69 @@ export default defineComponent({
         if (!selectedTargetId.value) return undefined;
         return fightSummary.targets[selectedTargetId.value]?.conditions;
       }),
+      partyBuffs: computed(() => {
+        const ids = [680, 192];
+        const results: any[] = [];
+
+        if (!fightSummary.players) return results;
+
+        for (const id of ids) {
+          let bestValue = -1;
+          let bestCond: any = null;
+
+          for (const player of Object.values(fightSummary.players)) {
+            const conditions = selectedTargetId.value 
+              ? player.damageByTarget[selectedTargetId.value]?.conditions 
+              : player.overallStats.conditions;
+
+            const cond = conditions?.[id];
+            if (cond && cond.metaBreakdown && cond.metaBreakdown.length > 0) {
+              for (const meta of cond.metaBreakdown) {
+                const parsed = parseMabinogiMetadata(meta.metaData);
+                let val = 0;
+                let display = "";
+                if (id === 680) {
+                  val = parsed.MCMBAMAX || 0;
+                  display = `Max Att: ${val.toFixed(2)}%`;
+                } else if (id === 192) {
+                  const lsma = parsed.LSMA || 0;
+                  const mfcp = parsed.MFCP || 0;
+                  val = Math.max(lsma, mfcp);
+                  const labels: string[] = [];
+                  if (lsma > 0) labels.push(`Magic Att: ${lsma.toFixed(2)}%`);
+                  if (mfcp > 0) labels.push(`Cast Speed: ${mfcp.toFixed(2)}%`);
+                  display = labels.join(", ");
+                }
+
+                if (val > bestValue) {
+                  bestValue = val;
+                  const staticData = condNameMap.value[id];
+                  bestCond = {
+                    id,
+                    name: staticData?.name || `Buff ${id}`,
+                    iconUrl: staticData?.iconUrl || "",
+                    displayValue: display,
+                    playerName: player.name
+                  };
+                }
+              }
+            }
+          }
+          if (bestCond) results.push(bestCond);
+        }
+        return results;
+      }),
+      hasPartyBuffs: computed(() => {
+        // Find if ANY player has ANY condition in the list
+        if (!fightSummary.players) return false;
+        const ids = [680, 192];
+        return Object.values(fightSummary.players).some(p => {
+           const conditions = selectedTargetId.value 
+              ? p.damageByTarget[selectedTargetId.value]?.conditions 
+              : p.overallStats.conditions;
+           return conditions && ids.some(id => conditions[id]);
+        });
+      }),
     };
   },
 });
@@ -300,12 +397,12 @@ export default defineComponent({
 
 .conditions-bar {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
   background: rgba(23, 27, 36, 0.6);
-  padding: 12px 16px;
+  padding: 8px 16px;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  min-height: 60px;
+  align-items: center;
 }
 
 .main-dashboard-content {
