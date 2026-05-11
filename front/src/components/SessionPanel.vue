@@ -65,54 +65,61 @@
                   class="session-item py-2"
                 >
                   <div class="d-flex flex-column w-100">
-                    <div class="d-flex align-center justify-space-between w-100">
-                      <div class="text-subtitle-2 font-weight-bold text-truncate">{{ item.name }}</div>
-                      <div class="text-caption text-grey">{{ formatSessionTime(item) }}</div>
+                    <!-- Top Row: Name | Timer -->
+                    <div class="d-flex align-center justify-space-between w-100 mb-2">
+                      <div class="text-subtitle-2 font-weight-bold text-truncate" style="flex: 1; min-width: 0;">{{ item.name }}</div>
+                      
+                      <!-- Right: Timer -->
+                      <div class="text-caption font-weight-bold text-grey-lighten-1 text-right" style="flex: 1;">
+                        <span v-if="item.summary">{{ formatDuration(item.summary.duration) }}</span>
+                        <span v-else>--:--</span>
+                      </div>
                     </div>
                     
-                    <div v-if="item.summary" class="mt-1 d-flex flex-column" style="gap: 2px;">
-                      <div class="d-flex align-center justify-space-between text-caption text-grey-lighten-1" style="font-size: 10px !important;">
-                        <span>{{ formatDuration(item.summary.duration) }}</span>
-                        <span>{{ formatDamage(item.summary.totalDamage) }}</span>
+                    <!-- Middle Row: Players & Enemies -->
+                    <div v-if="item.summary" class="d-flex" style="gap: 16px;">
+                      <!-- Players Column -->
+                      <div v-if="item.summary.players && item.summary.players.length > 0" class="d-flex flex-column" style="gap: 2px; flex: 1; min-width: 0;">
+                        <template v-for="(p, idx) in item.summary.players.slice(0, 3)" :key="'p'+idx">
+                          <div class="d-flex align-center" style="gap: 4px;">
+                            <v-img v-if="p.arcanaIcon" :src="p.arcanaIcon" width="14" height="14" class="rounded flex-shrink-0" style="flex: 0 0 14px;"></v-img>
+                            <v-icon v-else size="14" color="grey" style="flex: 0 0 14px;">mdi-account</v-icon>
+                            <span class="text-truncate" style="font-size: 11px;">{{ p.name }}</span>
+                          </div>
+                        </template>
+                        <span v-if="item.summary.players.length > 3" class="text-grey mt-1" style="font-size: 10px;">
+                          +{{ item.summary.players.length - 3 }} more
+                        </span>
                       </div>
                       
-                      <!-- Top Players -->
-                      <div v-if="item.summary.players && item.summary.players.length > 0" class="d-flex align-center mt-1" style="gap: 4px;">
-                        <v-icon size="x-small" color="blue-lighten-2">mdi-account-group</v-icon>
-                        <div class="d-flex align-center overflow-hidden" style="gap: 6px;">
-                          <template v-for="(p, idx) in item.summary.players.slice(0, 3)" :key="idx">
-                            <v-tooltip :text="p.name + ' - ' + formatDamage(p.totalDamage)" location="top">
-                              <template v-slot:activator="{ props }">
-                                <div v-bind="props" class="d-flex align-center" style="gap: 2px;">
-                                  <v-img v-if="p.arcanaIcon" :src="p.arcanaIcon" width="14" height="14" class="rounded"></v-img>
-                                  <span class="text-truncate" style="font-size: 10px; max-width: 50px;">{{ p.name }}</span>
-                                </div>
-                              </template>
-                            </v-tooltip>
-                          </template>
-                          <span v-if="item.summary.players.length > 3" class="text-grey" style="font-size: 10px;">
-                            +{{ item.summary.players.length - 3 }}
-                          </span>
-                        </div>
+                      <!-- Enemies Column -->
+                      <div v-if="item.summary.enemies && item.summary.enemies.length > 0" class="d-flex flex-column" style="gap: 2px; flex: 1; min-width: 0;">
+                        <template v-for="(e, idx) in item.summary.enemies.slice(0, 3)" :key="'e'+idx">
+                          <div class="d-flex align-center" style="gap: 4px;">
+                            <v-icon size="14" color="red-lighten-2" style="flex: 0 0 14px;">mdi-sword-cross</v-icon>
+                            <span class="text-truncate text-grey" style="font-size: 11px;">{{ e.name }}</span>
+                          </div>
+                        </template>
+                        <span v-if="item.summary.enemies.length > 3" class="text-grey mt-1" style="font-size: 10px;">
+                          +{{ item.summary.enemies.length - 3 }} more
+                        </span>
                       </div>
-                      
-                      <!-- Top Enemies -->
-                      <div v-if="item.summary.enemies && item.summary.enemies.length > 0" class="d-flex align-center" style="gap: 4px;">
-                        <v-icon size="x-small" color="red-lighten-2">mdi-sword-cross</v-icon>
-                        <div class="text-truncate text-grey" style="flex: 1; font-size: 10px;">
-                          {{ item.summary.enemies.slice(0, 3).map(e => e.name).join(', ') }}
-                        </div>
-                      </div>
+                    </div>
+
+                    <!-- Bottom Footer: Datetime -->
+                    <div class="text-grey mt-2 text-left" style="font-size: 9px !important;">
+                      {{ formatSessionTime(item) }}
                     </div>
                   </div>
 
                   <template v-slot:append>
-                    <div class="session-actions align-self-start mt-1">
+                    <div class="session-actions align-self-start pl-2">
                       <v-btn variant="text" icon="mdi-pencil" size="x-small" @click.stop="openRenameDialog(item)" density="compact"></v-btn>
                       <v-btn variant="text" icon="mdi-delete" color="red-lighten-2" size="x-small" @click.stop="openDeleteDialog(item)" density="compact"></v-btn>
                     </div>
                   </template>
                 </v-list-item>
+                <v-divider></v-divider>
               </template>
             </v-virtual-scroll>
           </v-list>
