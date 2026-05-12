@@ -774,6 +774,9 @@ func finalizeSummaryFromLog(
 			Conditions: conditions,
 		}
 	}
+
+	computePartyBuffs(&summary)
+
 	return summary
 }
 

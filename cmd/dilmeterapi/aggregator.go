@@ -594,6 +594,8 @@ func (a *Aggregator) GetSummary() FightSummary {
 		return summary.CurrentEntities[i].Name < summary.CurrentEntities[j].Name
 	})
 
+	computePartyBuffs(&summary)
+
 	return summary
 }
 
