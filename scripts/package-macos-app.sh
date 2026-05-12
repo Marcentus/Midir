@@ -86,10 +86,24 @@ mkdir -p "$SUPPORT_DIR"
 chmod 755 "$SUPPORT_DIR" 2>/dev/null || true
 
 # Launch in a visible Terminal window, like the Windows .exe console.
-# Midir needs packet-capture privileges, so sudo runs in Terminal and prompts
-# there. Closing the Terminal window terminates Midir.
+# This Mac's daily user may be non-admin. Ask which admin account to use, then
+# run through su + sudo in Terminal. Closing the Terminal window terminates Midir.
 /usr/bin/osascript <<OSA
-set midirCommand to "cd " & quoted form of "$SUPPORT_DIR" & "; clear; echo 'Midir Damage Meter for macOS'; echo; echo 'Enter your macOS admin password if sudo asks.'; echo 'Close this Terminal window to stop Midir.'; echo; sudo " & quoted form of "$BIN" & "; echo; echo 'Midir exited. You can close this window.'; read -n 1 -s -r -p 'Press any key to close...'"
+try
+  set dialogResult to display dialog "Enter the macOS admin username to run Midir packet capture:" default answer "" buttons {"Cancel", "Run"} default button "Run"
+  set adminUser to text returned of dialogResult
+on error number -128
+  return
+end try
+
+if adminUser is "" then return
+
+set quotedAdminUser to quoted form of adminUser
+set quotedSupportDir to quoted form of "$SUPPORT_DIR"
+set quotedBin to quoted form of "$BIN"
+set innerCommand to "cd " & quotedSupportDir & " && sudo " & quotedBin
+set midirCommand to "clear; echo 'Midir Damage Meter for macOS'; echo; echo 'Admin user: " & adminUser & "'; echo 'Enter that admin account password when prompted.'; echo 'Close this Terminal window to stop Midir.'; echo; su -l " & quotedAdminUser & " -c " & quoted form of innerCommand & "; echo; echo 'Midir exited. You can close this window.'; read -n 1 -s -r -p 'Press any key to close...'"
+
 tell application "Terminal"
   activate
   do script midirCommand
