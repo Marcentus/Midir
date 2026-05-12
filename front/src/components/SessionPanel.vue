@@ -12,6 +12,19 @@
           <v-list-item-title class="text-h6"> Sessions </v-list-item-title>
         </v-list-item>
 
+        <div class="px-3 pb-2">
+          <v-text-field
+            v-model="searchQuery"
+            density="compact"
+            variant="solo-filled"
+            hide-details
+            placeholder="Search name, player, arcana..."
+            prepend-inner-icon="mdi-magnify"
+            clearable
+            class="text-caption"
+          ></v-text-field>
+        </div>
+
         <v-divider></v-divider>
 
         <v-list density="compact" nav>
@@ -30,200 +43,82 @@
         <v-divider></v-divider>
       </div>
 
-      <!-- Scrollable Sessions List Container -->
-      <!-- We use style binding to dynamic flex-grow based on splitRatio if activeSession is live, else full height -->
-      <div 
-        class="d-flex flex-column"
-        :style="activeSessionId === 'live' 
-            ? { flex: `0 0 ${splitRatio * 100}%`, height: `${splitRatio * 100}%`, minHeight: '100px', overflow: 'hidden' } 
-            : { flex: '1 1 auto', overflow: 'hidden' }"
-      >
+      <div class="d-flex flex-column" style="flex: 1 1 auto; overflow: hidden;">
           <v-list density="compact" nav class="fill-height pa-0 overflow-hidden">
             <v-virtual-scroll
-              :items="sessions"
-              item-height="40"
+              :items="filteredSessions"
+              item-height="95"
               height="100%"
             >
               <template v-slot="{ item }">
                 <v-list-item
                   :key="item.id"
-                  :title="item.name"
-                  :subtitle="formatSessionTime(item)"
                   :active="activeSessionId === item.id"
                   @click="selectSession(item.id)"
-                  class="session-item"
+                  class="session-item py-2 align-start"
+                  style="height: 115px;"
                 >
+                  <div class="d-flex flex-column w-100 justify-start">
+                    <!-- Top Row: Name | Datetime -->
+                    <div class="d-flex align-center justify-space-between w-100 mb-2">
+                      <div class="text-subtitle-2 font-weight-bold text-truncate" style="flex: 1; min-width: 0;">{{ item.name }}</div>
+                      
+                      <!-- Right: Datetime -->
+                      <div class="text-caption text-grey text-right" style="flex: 1;">
+                        <v-tooltip :text="getExactSessionTime(item)" location="top">
+                          <template v-slot:activator="{ props }">
+                            <span v-bind="props" style="cursor: help;">{{ formatSessionTime(item) }}</span>
+                          </template>
+                        </v-tooltip>
+                        <template v-if="item.summary && item.summary.duration"> &bull; {{ formatDuration(item.summary.duration) }}</template>
+                      </div>
+                    </div>
+                    
+                    <!-- Middle Row: Players & Enemies -->
+                    <div v-if="item.summary" class="d-flex" style="gap: 16px;">
+                      <!-- Players Column -->
+                      <div v-if="item.summary.players && item.summary.players.length > 0" class="d-flex flex-column" style="gap: 2px; flex: 1; min-width: 0;">
+                        <template v-for="(p, idx) in item.summary.players.slice(0, 3)" :key="'p'+idx">
+                          <div class="d-flex align-center" style="gap: 4px;">
+                            <v-img v-if="p.arcanaIcon" :src="p.arcanaIcon" width="14" height="14" class="rounded flex-shrink-0" style="flex: 0 0 14px;"></v-img>
+                            <v-icon v-else size="14" color="grey" style="flex: 0 0 14px;">mdi-account</v-icon>
+                            <span class="text-truncate" style="font-size: 11px;">{{ p.name }}</span>
+                          </div>
+                        </template>
+                        <span v-if="item.summary.players.length > 3" class="text-grey mt-1" style="font-size: 10px;">
+                          +{{ item.summary.players.length - 3 }} more
+                        </span>
+                      </div>
+                      
+                      <!-- Enemies Column -->
+                      <div v-if="item.summary.enemies && item.summary.enemies.length > 0" class="d-flex flex-column" style="gap: 2px; flex: 1; min-width: 0;">
+                        <template v-for="(e, idx) in getUniqueEnemies(item.summary.enemies).slice(0, 3)" :key="'e'+idx">
+                          <div class="d-flex align-center" style="gap: 4px;">
+                            <v-icon size="14" color="red-lighten-2" style="flex: 0 0 14px;">mdi-sword-cross</v-icon>
+                            <span class="text-truncate text-grey" style="font-size: 11px;">{{ e.name }}</span>
+                          </div>
+                        </template>
+                        <span v-if="getUniqueEnemies(item.summary.enemies).length > 3" class="text-grey mt-1" style="font-size: 10px;">
+                          +{{ getUniqueEnemies(item.summary.enemies).length - 3 }} more
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
                   <template v-slot:append>
-                    <div class="session-actions">
-                      <v-btn
-                        variant="text"
-                        icon="mdi-pencil"
-                        size="x-small"
-                        @click.stop="openRenameDialog(item)"
-                      ></v-btn>
-                      <v-btn
-                        variant="text"
-                        icon="mdi-delete"
-                        color="red-lighten-2"
-                        size="x-small"
-                        @click.stop="openDeleteDialog(item)"
-                      ></v-btn>
+                    <div class="session-actions align-self-start pl-2">
+                      <v-btn variant="text" icon="mdi-pencil" size="x-small" @click.stop="openRenameDialog(item)" density="compact"></v-btn>
+                      <v-btn variant="text" icon="mdi-delete" color="red-lighten-2" size="x-small" @click.stop="openDeleteDialog(item)" density="compact"></v-btn>
                     </div>
                   </template>
                 </v-list-item>
+                <v-divider></v-divider>
               </template>
             </v-virtual-scroll>
           </v-list>
       </div>
-
-      <!-- RESIZER BAR -->
-      <div 
-        v-if="activeSessionId === 'live'" 
-        class="resizer"
-        @mousedown.prevent="startResize"
-      ></div>
-
-      <!-- Entities in Area Section -->
-      <!-- This fills the remaining space -->
-      <div 
-        v-if="activeSessionId === 'live'"
-        class="d-flex flex-column"
-        style="flex: 1 1 0px; min-height: 100px; overflow: hidden;"
-      >
-        <v-divider></v-divider>
-        <v-list-item>
-          <v-list-item-title class="text-caption font-weight-bold text-uppercase text-white" style="opacity: 0.9;">
-            Players in Area ({{ currentEntities.length }})
-          </v-list-item-title>
-        </v-list-item>
-
-        <v-list density="compact" nav class="flex-grow-1 pa-0 overflow-y-auto">
-          <v-virtual-scroll
-            :items="currentEntities"
-            item-height="32"
-            height="100%"
-          >
-            <template v-slot="{ item }">
-              <v-list-item :key="item.id" class="px-2 py-0" min-height="32" @click="selectEntity(item)" link>
-                <div class="d-flex align-center justify-space-between w-100" style="gap: 8px;">
-                    <div class="d-flex flex-column" style="flex: 1; min-width: 0;">
-                      <div class="d-flex align-center justify-space-between w-100">
-                        <div class="text-body-2 text-truncate">{{ item.name }}</div>
-                        <div v-if="item.conditions && Object.keys(item.conditions).length > 0" class="d-flex align-center justify-end overflow-hidden" style="gap: 2px;">
-                          <v-img
-                              v-for="condId in getPreviewConditions(item)"
-                              :key="condId"
-                              :src="getConditionIcon(condId)"
-                              width="16"
-                              height="16"
-                              class="condition-icon"
-                              :title="getConditionName(condId)"
-                            >
-                              <template v-slot:placeholder>
-                                <v-sheet color="grey-darken-2" width="100%" height="100%"></v-sheet>
-                              </template>
-                            </v-img>
-                        </div>
-                      </div>
-                      
-                      <!-- HP BAR -->
-                      <div v-if="item.maxHp > 0" class="mt-1">
-                         <v-progress-linear
-                            :model-value="(item.currentHp / item.maxHp) * 100"
-                            color="red-darken-2"
-                            height="14"
-                            rounded
-                         >
-                            <template v-slot:default>
-                                <div class="text-caption font-weight-bold textual-shadow" style="font-size: 10px; color: white;">
-                                    {{ Math.ceil(item.currentHp).toLocaleString() }} / {{ Math.ceil(item.maxHp).toLocaleString() }}
-                                </div>
-                            </template>
-                         </v-progress-linear>
-                      </div>
-                    </div>
-                </div>
-              </v-list-item>
-            </template>
-          </v-virtual-scroll>
-        </v-list>
-      </div>
-
-    <!-- Entity Details Dialog -->
-    <v-dialog v-model="detailsOpen" max-width="600">
-      <v-card>
-        <v-card-title class="text-h6">
-          {{ selectedEntity?.name }}
-        </v-card-title>
-        <v-card-subtitle>
-          ID: {{ selectedEntity?.id }} | Race: {{ selectedEntity?.raceId }}
-        </v-card-subtitle>
-
-        <v-card-text>
-          <div class="text-subtitle-1 font-weight-bold mb-2">Active Conditions</div>
-          <v-list density="compact" v-if="selectedEntity?.conditions && Object.keys(selectedEntity.conditions).length > 0" class="overflow-y-auto" style="max-height: 400px">
-            <v-list-item v-for="id in getAllSortedConditions(selectedEntity)" :key="id" :value="id" class="align-start py-2">
-              <template v-slot:prepend>
-                 <div class="d-flex align-center mr-2 align-self-start mt-1">
-                    <v-btn icon density="compact" variant="text" size="small" 
-                        :color="liveFavoriteConditions.has(id) ? 'amber' : 'grey'" 
-                        @click.stop="toggleLiveConditionPref(id, 'fav')">
-                        <v-icon>{{ liveFavoriteConditions.has(id) ? 'mdi-star' : 'mdi-star-outline' }}</v-icon>
-                    </v-btn>
-                    <v-btn icon density="compact" variant="text" size="small" 
-                        :color="liveHiddenConditions.has(id) ? 'red' : 'grey'" 
-                        @click.stop="toggleLiveConditionPref(id, 'hide')">
-                        <v-icon>{{ liveHiddenConditions.has(id) ? 'mdi-eye-off' : 'mdi-eye' }}</v-icon>
-                    </v-btn>
-
-
-                 </div>
-                <v-img
-                  :src="getConditionIcon(id)"
-                  width="24"
-                  height="24"
-                  class="mr-3 align-self-start mt-1"
-                  :style="{ opacity: liveHiddenConditions.has(id) ? 0.5 : 1, flex: 'none' }"
-                >
-                  <template v-slot:placeholder>
-                    <v-sheet color="grey-darken-2" width="100%" height="100%"></v-sheet>
-                  </template>
-                </v-img>
-              </template>
-              <v-list-item-title :class="{'text-decoration-line-through text-grey': liveHiddenConditions.has(id)}">
-                  {{ getConditionName(id) }}
-              </v-list-item-title>
-              <v-list-item-subtitle class="text-caption">
-                Start: {{ new Date(selectedEntity.conditions[id].start * 1000).toLocaleTimeString() }}
-                <span v-if="selectedEntity.conditions[id].attackerId"> | Source: {{ selectedEntity.conditions[id].attackerId }}</span>
-                <span v-if="getConditionTimeRemaining(selectedEntity.conditions[id])" class="text-warning font-weight-bold ml-1">
-                  | {{ getConditionTimeRemaining(selectedEntity.conditions[id]) }}
-                </span>
-              </v-list-item-subtitle>
-              <div v-if="selectedEntity.conditions[id].metaData" class="mt-1">
-                 <div 
-                    v-for="(metaPart, idx) in selectedEntity.conditions[id].metaData.split(';').map(s => s.trim()).filter(s => s).sort()" 
-                    :key="idx"
-                    class="text-caption text-white" 
-                    style="white-space: normal; line-height: 1.2; opacity: 0.85;">
-                    • {{ metaPart }}
-                 </div>
-              </div>
-            </v-list-item>
-          </v-list>
-          <div v-else class="text-caption text-grey">No active conditions</div>
-        </v-card-text>
-
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="detailsOpen = false">Close</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
     </div>
   </v-navigation-drawer>
-
-
   <v-dialog v-model="renameDialog.visible" max-width="500px">
     <v-card>
       <v-card-title> Rename Session </v-card-title>
@@ -280,6 +175,21 @@ export default defineComponent({
   name: "SessionPanel",
   setup() {
     const appEvent = inject("appEvent");
+
+    const searchQuery = ref("");
+
+    const filteredSessions = computed(() => {
+      if (!searchQuery.value) return sessions.value;
+      const q = searchQuery.value.toLowerCase();
+      return sessions.value.filter(s => {
+        if (s.name.toLowerCase().includes(q)) return true;
+        if (s.summary) {
+          if (s.summary.players?.some(p => p.name.toLowerCase().includes(q) || (p.arcanaName && p.arcanaName.toLowerCase().includes(q)))) return true;
+          if (s.summary.enemies?.some(e => e.name.toLowerCase().includes(q))) return true;
+        }
+        return false;
+      });
+    });
 
     const renameDialog = reactive({
       visible: false,
@@ -374,14 +284,6 @@ export default defineComponent({
       activeSessionId.value = id;
     };
 
-    const detailsOpen = ref(false);
-    const selectedEntityId = ref<string | null>(null);
-
-    const selectEntity = (entity: EntityState) => {
-      selectedEntityId.value = entity.id;
-      detailsOpen.value = true;
-    };
-
     const openRenameDialog = (session: Session) => {
       renameDialog.session = session;
       renameDialog.newName = session.name;
@@ -429,6 +331,28 @@ export default defineComponent({
     };
 
     const formatSessionTime = (session: Session) => {
+      const startTime = session.startTime * 1000;
+      const now = Date.now();
+      const diffSeconds = Math.floor((now - startTime) / 1000);
+      const diff = Math.max(0, diffSeconds);
+      
+      const diffMinutes = Math.floor(diff / 60);
+      const diffHours = Math.floor(diffMinutes / 60);
+      const diffDays = Math.floor(diffHours / 24);
+      const diffMonths = Math.floor(diffDays / 30);
+
+      if (diffMinutes <= 60) {
+        return `${diffMinutes}min ago`;
+      } else if (diffHours <= 24) {
+        return `${diffHours}h ago`;
+      } else if (diffDays < 30) {
+        return `${diffDays}d ago`;
+      } else {
+        return `${diffMonths} month ago`;
+      }
+    };
+
+    const getExactSessionTime = (session: Session) => {
       const date = new Date(session.startTime * 1000);
       return date.toLocaleString();
     };
@@ -437,34 +361,39 @@ export default defineComponent({
 
     appEvent.value.addEventListener("refresh-sessions", fetchSessions);
 
-    const getConditionTimeRemaining = (condition: ActiveCondition) => {
-        if (!condition.disableAt || condition.disableAt === 0) return null;
-        
-        const now = Math.floor(Date.now() / 1000);
-        const diff = condition.disableAt - now;
 
-        if (diff <= 0) return null;
-
-        if (diff > 3600) {
-            return Math.floor(diff / 3600) + 'h';
-        } else if (diff > 60) {
-            return Math.floor(diff / 60) + 'm';
-        } else {
-            return diff + 's';
-        }
+    const formatDuration = (seconds: number) => {
+      if (!seconds) return "0s";
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      if (m > 0) return `${m}m ${s}s`;
+      return `${s}s`;
     };
 
-
-    const getConditionIcon = (id: number) => {
-        if (condNameMap && condNameMap.value[id]) {
-            return condNameMap.value[id].iconUrl;
-        }
-        return ""; 
+    const formatDamage = (dmg: number) => {
+      if (!dmg) return "0";
+      if (dmg >= 1000000) return (dmg / 1000000).toFixed(1) + "M";
+      if (dmg >= 1000) return (dmg / 1000).toFixed(1) + "K";
+      return dmg.toFixed(0);
     };
 
+    const getUniqueEnemies = (enemies: any[]) => {
+      if (!enemies) return [];
+      const seen = new Set<string>();
+      const unique: any[] = [];
+      for (const e of enemies) {
+        if (!seen.has(e.name)) {
+          seen.add(e.name);
+          unique.push(e);
+        }
+      }
+      return unique;
+    };
 
     return {
       sessions,
+      searchQuery,
+      filteredSessions,
       activeSessionId,
       isNavDrawerOpen,
       selectSession,
@@ -476,57 +405,10 @@ export default defineComponent({
       openDeleteDialog,
       confirmDelete,
       formatSessionTime,
-      currentEntities: computed(() => fightSummary.currentEntities || []),
-     // Helper to format duration
-      getConditionTimeRemaining,
-      getConditionIcon,
-getConditionName: (id: number) => condNameMap.value[id]?.name || `Unknown Status ${id}`,
-      // NEW: Entity Details
-      detailsOpen,
-      selectedEntity: computed(() => {
-        if (!selectedEntityId.value) return null;
-        return (fightSummary.currentEntities || []).find(e => e.id === selectedEntityId.value) || null;
-      }),
-      selectEntity,
-      // LIVE CONDITION PREFS
-      liveFavoriteConditions,
-      liveHiddenConditions,
-      toggleLiveConditionPref,
-      getPreviewConditions: (entity: EntityState) => {
-        if (!entity.conditions) return [];
-        const allIds = Object.keys(entity.conditions).map(Number);
-        // ONLY show favorites in the preview list
-        const favorites = allIds.filter(id => liveFavoriteConditions.has(id));
-        favorites.sort((a, b) => a - b);
-        return favorites.slice(0, 20); 
-      },
-      getAllSortedConditions: (entity: EntityState) => {
-        if (!entity.conditions) return [];
-        const allIds = Object.keys(entity.conditions).map(Number);
-        // Sort: Favorites first, then Normal, then Hidden
-        allIds.sort((a, b) => {
-           const aFav = liveFavoriteConditions.has(a);
-           const bFav = liveFavoriteConditions.has(b);
-           const aHide = liveHiddenConditions.has(a);
-           const bHide = liveHiddenConditions.has(b);
-           
-           // Favorites always on top
-           if (aFav && !bFav) return -1;
-           if (!aFav && bFav) return 1;
-           
-           // Hidden always at bottom
-           if (aHide && !bHide) return 1;
-           if (!aHide && bHide) return -1;
-           
-           return a - b;
-        });
-        return allIds;
-      },
-      // RESIZE
-      splitRatio,
-      startResize,
-      mainContainerRef,
-      headerRef,
+      getExactSessionTime,
+      formatDuration,
+      formatDamage,
+      getUniqueEnemies
     };
   },
 });
@@ -551,38 +433,11 @@ getConditionName: (id: number) => condNameMap.value[id]?.name || `Unknown Status
   opacity: 1;
 }
 
-.condition-icon {
-  border: 1px solid #616161; /* Thin dark gray */
-  border-radius: 2px;
-  /* Force fixed, non-stretching size */
-  width: 16px !important;
-  height: 16px !important;
-  flex: 0 0 16px;
-  display: block;
+.session-item :deep(.v-list-item__content),
+.session-item :deep(.v-list-item__prepend),
+.session-item :deep(.v-list-item__append) {
+  align-self: flex-start !important;
+  margin-top: 0 !important;
 }
 
-.resizer {
-  height: 8px;
-  background: rgba(var(--v-theme-on-surface), 0.1);
-  cursor: ns-resize;
-  transition: background 0.2s;
-  flex: 0 0 8px; /* Fixed height */
-  position: relative;
-  z-index: 10;
-}
-.resizer:hover, .resizer:active {
-  background: rgba(var(--v-theme-primary), 0.5);
-}
-.resizer::after {
-   /* Handle indicator */
-   content: "";
-   position: absolute;
-   top: 50%;
-   left: 50%;
-   transform: translate(-50%, -50%);
-   width: 40px;
-   height: 2px;
-   background: rgba(var(--v-theme-on-surface), 0.3);
-   border-radius: 2px;
-}
 </style>

@@ -110,7 +110,7 @@ func handleGetSessionSummary(sm *SessionManager) http.HandlerFunc {
 		sessionID := chi.URLParam(r, "sessionID")
 		logPath := filepath.Join(sm.logDirectory, sessionID)
 
-		file, err := os.Open(logPath)
+		summary, err := GenerateSummaryFromFile(logPath)
 		if err != nil {
 			if os.IsNotExist(err) {
 				respondWithError(w, http.StatusNotFound, "Session not found")
@@ -119,151 +119,160 @@ func handleGetSessionSummary(sm *SessionManager) http.HandlerFunc {
 			}
 			return
 		}
-		defer file.Close()
 
-		// PASS 1: Get all entity appearances for name/race lookups later.
-		entitiesInLog := make(map[string]eventEntityAppear)
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			var event eventBase
-			if err := json.Unmarshal(scanner.Bytes(), &event); err != nil {
+		respondWithJSON(w, http.StatusOK, summary)
+	}
+}
+
+func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
+	file, err := os.Open(logPath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	// PASS 1: Get all entity appearances for name/race lookups later.
+	entitiesInLog := make(map[string]eventEntityAppear)
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		var event eventBase
+		if err := json.Unmarshal(scanner.Bytes(), &event); err != nil {
+			continue
+		}
+		if event.EventId == eventIdEntityAppear {
+			var appearEvent eventEntityAppear
+			if err := json.Unmarshal(scanner.Bytes(), &appearEvent); err != nil {
 				continue
 			}
-			if event.EventId == eventIdEntityAppear {
-				var appearEvent eventEntityAppear
-				if err := json.Unmarshal(scanner.Bytes(), &appearEvent); err != nil {
-					continue
-				}
-				entitiesInLog[appearEvent.Id] = appearEvent
-				playerCache.UpdateFromAppear(appearEvent)
-			}
+			entitiesInLog[appearEvent.Id] = appearEvent
+			playerCache.UpdateFromAppear(appearEvent)
+		}
+	}
+
+	// Reset file reader to the beginning for the next pass.
+	file.Seek(0, 0)
+	scanner = bufio.NewScanner(file)
+
+	// PASS 2: Collect all damage events AND track condition history
+	var allDamageEvents []eventDamage
+
+	// Condition Tracking Data Structures
+	conditionHistory := make(map[string]map[uint32][]ConditionInterval)
+	activeConditions := make(map[string]map[uint32]ActiveCondition)
+	seenAppear := make(map[string]bool)
+
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		var baseEvent eventBase
+		if err := json.Unmarshal(line, &baseEvent); err != nil {
+			continue
 		}
 
-		// Reset file reader to the beginning for the next pass.
-		file.Seek(0, 0)
-		scanner = bufio.NewScanner(file)
-
-		// PASS 2: Collect all damage events AND track condition history
-		var allDamageEvents []eventDamage
-
-		// Condition Tracking Data Structures
-		conditionHistory := make(map[string]map[uint32][]ConditionInterval)
-		activeConditions := make(map[string]map[uint32]ActiveCondition)
-		seenAppear := make(map[string]bool)
-
-		for scanner.Scan() {
-			line := scanner.Bytes()
-			var baseEvent eventBase
-			if err := json.Unmarshal(line, &baseEvent); err != nil {
-				continue
+		switch baseEvent.EventId {
+		case eventIdDamage:
+			var damageEvent eventDamage
+			if err := json.Unmarshal(line, &damageEvent); err == nil {
+				allDamageEvents = append(allDamageEvents, damageEvent)
 			}
 
-			switch baseEvent.EventId {
-			case eventIdDamage:
-				var damageEvent eventDamage
-				if err := json.Unmarshal(line, &damageEvent); err == nil {
-					allDamageEvents = append(allDamageEvents, damageEvent)
+		case eventIdEntityAppear:
+			var appear eventEntityAppear
+			if err := json.Unmarshal(line, &appear); err == nil {
+				seenAppear[appear.Id] = true
+
+				// Initialize conditions present on appearance
+				if activeConditions[appear.Id] == nil {
+					activeConditions[appear.Id] = make(map[uint32]ActiveCondition)
 				}
-
-			case eventIdEntityAppear:
-				var appear eventEntityAppear
-				if err := json.Unmarshal(line, &appear); err == nil {
-					seenAppear[appear.Id] = true
-
-					// Initialize conditions present on appearance
-					if activeConditions[appear.Id] == nil {
-						activeConditions[appear.Id] = make(map[uint32]ActiveCondition)
-					}
-					for _, cond := range appear.Conditions {
-						if _, exists := activeConditions[appear.Id][cond.CCId]; !exists {
-							activeConditions[appear.Id][cond.CCId] = ActiveCondition{
-								Start:      baseEvent.At,
-								MetaData:   normalizeMetaData(cond.MetaData),
-								AttackerID: parseUint64(cond.AttackerId),
-							}
-						}
-					}
-				}
-
-			case eventIdCharacterConditionEnable:
-				var cond eventCharacterConditionEnable
-				if err := json.Unmarshal(line, &cond); err == nil {
-					if activeConditions[cond.Id] == nil {
-						activeConditions[cond.Id] = make(map[uint32]ActiveCondition)
-					}
-					if _, exists := activeConditions[cond.Id][cond.CCId]; !exists {
-						activeConditions[cond.Id][cond.CCId] = ActiveCondition{
+				for _, cond := range appear.Conditions {
+					if _, exists := activeConditions[appear.Id][cond.CCId]; !exists {
+						activeConditions[appear.Id][cond.CCId] = ActiveCondition{
 							Start:      baseEvent.At,
 							MetaData:   normalizeMetaData(cond.MetaData),
 							AttackerID: parseUint64(cond.AttackerId),
 						}
 					}
 				}
+			}
 
-			case eventIdCharacterConditionDisable:
-				var cond eventCharacterConditionDisable
-				if err := json.Unmarshal(line, &cond); err == nil {
-					if activeConditions[cond.Id] == nil {
-						activeConditions[cond.Id] = make(map[uint32]ActiveCondition)
-					}
-					if activeCond, exists := activeConditions[cond.Id][cond.CCId]; exists {
-						if conditionHistory[cond.Id] == nil {
-							conditionHistory[cond.Id] = make(map[uint32][]ConditionInterval)
-						}
-						conditionHistory[cond.Id][cond.CCId] = append(conditionHistory[cond.Id][cond.CCId], ConditionInterval{
-							Start:      activeCond.Start,
-							End:        baseEvent.At,
-							MetaData:   activeCond.MetaData,
-							AttackerID: activeCond.AttackerID,
-						})
-						delete(activeConditions[cond.Id], cond.CCId)
+		case eventIdCharacterConditionEnable:
+			var cond eventCharacterConditionEnable
+			if err := json.Unmarshal(line, &cond); err == nil {
+				if activeConditions[cond.Id] == nil {
+					activeConditions[cond.Id] = make(map[uint32]ActiveCondition)
+				}
+				if _, exists := activeConditions[cond.Id][cond.CCId]; !exists {
+					activeConditions[cond.Id][cond.CCId] = ActiveCondition{
+						Start:      baseEvent.At,
+						MetaData:   normalizeMetaData(cond.MetaData),
+						AttackerID: parseUint64(cond.AttackerId),
 					}
 				}
 			}
-		}
 
-		// STEP 1: Process the collected events to generate the main summary tables.
-		playerStats, damageTaken, talents, talentNames, talentColors, targets, startTime, endTime, targetTimestamps := processEventsForSummary(allDamageEvents, entitiesInLog)
-
-		// STEP 2: Generate graph data
-		graphDataByTarget := make(map[string]map[string][]GraphDataPoint)
-		if len(allDamageEvents) > 0 {
-			graphDataByTarget[""] = generateGraphDataFromEvents(allDamageEvents, startTime, endTime)
-			for targetId := range targets {
-				var targetDamageEvents []eventDamage
-				for _, de := range allDamageEvents {
-					if de.TargetId == targetId {
-						targetDamageEvents = append(targetDamageEvents, de)
-					}
+		case eventIdCharacterConditionDisable:
+			var cond eventCharacterConditionDisable
+			if err := json.Unmarshal(line, &cond); err == nil {
+				if activeConditions[cond.Id] == nil {
+					activeConditions[cond.Id] = make(map[uint32]ActiveCondition)
 				}
-				if len(targetDamageEvents) > 0 {
-					targetStartTime := targetDamageEvents[0].At
-					targetEndTime := targetDamageEvents[len(targetDamageEvents)-1].At
-					graphDataByTarget[targetId] = generateGraphDataFromEvents(targetDamageEvents, targetStartTime, targetEndTime)
+				if activeCond, exists := activeConditions[cond.Id][cond.CCId]; exists {
+					if conditionHistory[cond.Id] == nil {
+						conditionHistory[cond.Id] = make(map[uint32][]ConditionInterval)
+					}
+					conditionHistory[cond.Id][cond.CCId] = append(conditionHistory[cond.Id][cond.CCId], ConditionInterval{
+						Start:      activeCond.Start,
+						End:        baseEvent.At,
+						MetaData:   activeCond.MetaData,
+						AttackerID: activeCond.AttackerID,
+					})
+					delete(activeConditions[cond.Id], cond.CCId)
 				}
 			}
 		}
-
-		// STEP 3: Finalize the summary object, attaching conditions
-		summary := finalizeSummaryFromLog(
-			playerStats,
-			damageTaken,
-			talents,
-			talentNames,
-			talentColors,
-			targets,
-			entitiesInLog,
-			startTime,
-			endTime,
-			targetTimestamps,
-			conditionHistory,
-			activeConditions,
-			seenAppear,
-		)
-		summary.GraphData = graphDataByTarget
-
-		respondWithJSON(w, http.StatusOK, summary)
 	}
+
+	// STEP 1: Process the collected events to generate the main summary tables.
+	playerStats, damageTaken, talents, talentNames, talentColors, targets, startTime, endTime, targetTimestamps := processEventsForSummary(allDamageEvents, entitiesInLog)
+
+	// STEP 2: Generate graph data
+	graphDataByTarget := make(map[string]map[string][]GraphDataPoint)
+	if len(allDamageEvents) > 0 {
+		graphDataByTarget[""] = generateGraphDataFromEvents(allDamageEvents, startTime, endTime)
+		for targetId := range targets {
+			var targetDamageEvents []eventDamage
+			for _, de := range allDamageEvents {
+				if de.TargetId == targetId {
+					targetDamageEvents = append(targetDamageEvents, de)
+				}
+			}
+			if len(targetDamageEvents) > 0 {
+				targetStartTime := targetDamageEvents[0].At
+				targetEndTime := targetDamageEvents[len(targetDamageEvents)-1].At
+				graphDataByTarget[targetId] = generateGraphDataFromEvents(targetDamageEvents, targetStartTime, targetEndTime)
+			}
+		}
+	}
+
+	// STEP 3: Finalize the summary object, attaching conditions
+	summary := finalizeSummaryFromLog(
+		playerStats,
+		damageTaken,
+		talents,
+		talentNames,
+		talentColors,
+		targets,
+		entitiesInLog,
+		startTime,
+		endTime,
+		targetTimestamps,
+		conditionHistory,
+		activeConditions,
+		seenAppear,
+	)
+	summary.GraphData = graphDataByTarget
+
+	return &summary, nil
 }
 
 // processEventsForSummary takes the raw list of damage events and entity data from a log file
@@ -765,6 +774,9 @@ func finalizeSummaryFromLog(
 			Conditions: conditions,
 		}
 	}
+
+	computePartyBuffs(&summary)
+
 	return summary
 }
 
