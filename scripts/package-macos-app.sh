@@ -117,9 +117,17 @@ mkdir -p "$SUPPORT_DIR"
 cp "$BUILD_DIR/$BINARY_NAME" "$SUPPORT_DIR/$BINARY_NAME"
 chmod 755 "$SUPPORT_DIR" "$SUPPORT_DIR/$BINARY_NAME"
 
+# Strip local extended attributes before zipping, and disable AppleDouble
+# metadata files so release zips do not contain ._ sidecar entries.
+xattr -cr "$APP_DIR" 2>/dev/null || true
+find "$APP_DIR" -name '.DS_Store' -delete
+
 ZIP_PATH="$BUILD_DIR/${APP_NAME}-macOS-${GOARCH_VALUE}.zip"
 rm -f "$ZIP_PATH"
-/usr/bin/ditto -c -k --keepParent "$APP_DIR" "$ZIP_PATH"
+(
+  cd "$BUILD_DIR"
+  COPYFILE_DISABLE=1 /usr/bin/zip -qry "$(basename "$ZIP_PATH")" "$(basename "$APP_DIR")"
+)
 
 echo "Created app bundle: $APP_DIR"
 echo "Created zip:        $ZIP_PATH"
