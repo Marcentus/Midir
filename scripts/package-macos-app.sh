@@ -63,8 +63,21 @@ case "$(uname -m)" in
   *) BIN="$RESOURCES_DIR/Midir-darwin-arm64" ;;
 esac
 
+# Finder/Rosetta can occasionally report a different architecture than the
+# binary we bundled. Fall back to any bundled macOS Midir binary.
 if [[ ! -x "$BIN" ]]; then
-  osascript -e 'display alert "Midir" message "The bundled Midir binary is missing or not executable." as critical'
+  for candidate in "$RESOURCES_DIR"/Midir-darwin-*; do
+    if [[ -x "$candidate" ]]; then
+      BIN="$candidate"
+      break
+    fi
+  done
+fi
+
+if [[ ! -x "$BIN" ]]; then
+  /usr/bin/osascript <<ERR
+    display alert "Midir" message "The bundled Midir binary is missing or not executable. Looked in: $RESOURCES_DIR" as critical
+ERR
   exit 1
 fi
 
@@ -72,17 +85,15 @@ SUPPORT_DIR="/Users/Shared/Midir"
 mkdir -p "$SUPPORT_DIR"
 chmod 755 "$SUPPORT_DIR" 2>/dev/null || true
 
-# Midir needs packet-capture privileges. AppleScript provides the normal macOS
-# admin-password prompt. Keep data files in /Users/Shared/Midir instead of
-# writing logs/settings inside the app bundle.
+# Launch in a visible Terminal window, like the Windows .exe console.
+# Midir needs packet-capture privileges, so sudo runs in Terminal and prompts
+# there. Closing the Terminal window terminates Midir.
 /usr/bin/osascript <<OSA
-try
-  do shell script "cd '$SUPPORT_DIR' && '$BIN'" with administrator privileges
-on error errMsg number errNum
-  if errNum is not -128 then
-    display alert "Midir failed to start" message errMsg as critical
-  end if
-end try
+set midirCommand to "cd " & quoted form of "$SUPPORT_DIR" & "; clear; echo 'Midir Damage Meter for macOS'; echo; echo 'Enter your macOS admin password if sudo asks.'; echo 'Close this Terminal window to stop Midir.'; echo; sudo " & quoted form of "$BIN" & "; echo; echo 'Midir exited. You can close this window.'; read -n 1 -s -r -p 'Press any key to close...'"
+tell application "Terminal"
+  activate
+  do script midirCommand
+end tell
 OSA
 LAUNCHER
 chmod 755 "$MACOS_DIR/MidirLauncher"
