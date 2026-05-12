@@ -64,7 +64,12 @@
                       
                       <!-- Right: Datetime -->
                       <div class="text-caption text-grey text-right" style="flex: 1;">
-                        {{ formatSessionTime(item) }}
+                        <v-tooltip :text="getExactSessionTime(item)" location="top">
+                          <template v-slot:activator="{ props }">
+                            <span v-bind="props" style="cursor: help;">{{ formatSessionTime(item) }}</span>
+                          </template>
+                        </v-tooltip>
+                        <template v-if="item.summary && item.summary.duration"> &bull; {{ formatDuration(item.summary.duration) }}</template>
                       </div>
                     </div>
                     
@@ -325,6 +330,28 @@ export default defineComponent({
     };
 
     const formatSessionTime = (session: Session) => {
+      const startTime = session.startTime * 1000;
+      const now = Date.now();
+      const diffSeconds = Math.floor((now - startTime) / 1000);
+      const diff = Math.max(0, diffSeconds);
+      
+      const diffMinutes = Math.floor(diff / 60);
+      const diffHours = Math.floor(diffMinutes / 60);
+      const diffDays = Math.floor(diffHours / 24);
+      const diffMonths = Math.floor(diffDays / 30);
+
+      if (diffMinutes <= 60) {
+        return `${diffMinutes}min ago`;
+      } else if (diffHours <= 24) {
+        return `${diffHours}hr ago`;
+      } else if (diffDays < 30) {
+        return `${diffDays}d ago`;
+      } else {
+        return `${diffMonths} month ago`;
+      }
+    };
+
+    const getExactSessionTime = (session: Session) => {
       const date = new Date(session.startTime * 1000);
       return date.toLocaleString();
     };
@@ -377,6 +404,7 @@ export default defineComponent({
       openDeleteDialog,
       confirmDelete,
       formatSessionTime,
+      getExactSessionTime,
       formatDuration,
       formatDamage,
       getUniqueEnemies
