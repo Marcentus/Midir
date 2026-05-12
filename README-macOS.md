@@ -36,6 +36,22 @@ GOOS=darwin GOARCH=arm64 ./build.sh
 GOOS=darwin GOARCH=amd64 ./build.sh
 ```
 
+
+## Double-click macOS app bundle
+
+You can create a local `.app` bundle that prompts for admin permission and starts Midir without using Terminal:
+
+```bash
+./scripts/package-macos-app.sh
+```
+
+Outputs:
+
+- `build/Midir.app` — double-clickable app bundle
+- `build/Midir-macOS-arm64.zip` or `build/Midir-macOS-amd64.zip` — zip suitable for a GitHub release asset
+
+When launched, the app asks for a macOS admin password because packet capture requires elevated privileges. Runtime files such as `settings.json`, logs, and session data are written under `/Users/Shared/Midir`.
+
 ## Run on macOS
 
 Packet capture usually requires elevated permissions on macOS:
