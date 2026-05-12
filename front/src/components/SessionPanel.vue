@@ -86,14 +86,14 @@
                       
                       <!-- Enemies Column -->
                       <div v-if="item.summary.enemies && item.summary.enemies.length > 0" class="d-flex flex-column" style="gap: 2px; flex: 1; min-width: 0;">
-                        <template v-for="(e, idx) in item.summary.enemies.slice(0, 3)" :key="'e'+idx">
+                        <template v-for="(e, idx) in getUniqueEnemies(item.summary.enemies).slice(0, 3)" :key="'e'+idx">
                           <div class="d-flex align-center" style="gap: 4px;">
                             <v-icon size="14" color="red-lighten-2" style="flex: 0 0 14px;">mdi-sword-cross</v-icon>
                             <span class="text-truncate text-grey" style="font-size: 11px;">{{ e.name }}</span>
                           </div>
                         </template>
-                        <span v-if="item.summary.enemies.length > 3" class="text-grey mt-1" style="font-size: 10px;">
-                          +{{ item.summary.enemies.length - 3 }} more
+                        <span v-if="getUniqueEnemies(item.summary.enemies).length > 3" class="text-grey mt-1" style="font-size: 10px;">
+                          +{{ getUniqueEnemies(item.summary.enemies).length - 3 }} more
                         </span>
                       </div>
                     </div>
@@ -349,6 +349,19 @@ export default defineComponent({
       return dmg.toFixed(0);
     };
 
+    const getUniqueEnemies = (enemies: any[]) => {
+      if (!enemies) return [];
+      const seen = new Set<string>();
+      const unique: any[] = [];
+      for (const e of enemies) {
+        if (!seen.has(e.name)) {
+          seen.add(e.name);
+          unique.push(e);
+        }
+      }
+      return unique;
+    };
+
     return {
       sessions,
       searchQuery,
@@ -365,7 +378,8 @@ export default defineComponent({
       confirmDelete,
       formatSessionTime,
       formatDuration,
-      formatDamage
+      formatDamage,
+      getUniqueEnemies
     };
   },
 });
