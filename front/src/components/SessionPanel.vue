@@ -55,9 +55,10 @@
                   :key="item.id"
                   :active="activeSessionId === item.id"
                   @click="selectSession(item.id)"
-                  class="session-item py-2"
+                  class="session-item py-2 align-start"
+                  style="height: 115px;"
                 >
-                  <div class="d-flex flex-column w-100">
+                  <div class="d-flex flex-column w-100 justify-start">
                     <!-- Top Row: Name | Datetime -->
                     <div class="d-flex align-center justify-space-between w-100 mb-2">
                       <div class="text-subtitle-2 font-weight-bold text-truncate" style="flex: 1; min-width: 0;">{{ item.name }}</div>
@@ -343,7 +344,7 @@ export default defineComponent({
       if (diffMinutes <= 60) {
         return `${diffMinutes}min ago`;
       } else if (diffHours <= 24) {
-        return `${diffHours}hr ago`;
+        return `${diffHours}h ago`;
       } else if (diffDays < 30) {
         return `${diffDays}d ago`;
       } else {
@@ -432,5 +433,11 @@ export default defineComponent({
   opacity: 1;
 }
 
+.session-item :deep(.v-list-item__content),
+.session-item :deep(.v-list-item__prepend),
+.session-item :deep(.v-list-item__append) {
+  align-self: flex-start !important;
+  margin-top: 0 !important;
+}
 
 </style>
