@@ -201,8 +201,11 @@ func run(ctx context.Context, nicName string, fileName string, exitlagEnabled bo
 	}
 
 	startWebServer(pub, sm)
-	if runtime.GOOS == "windows" {
+	switch runtime.GOOS {
+	case "windows":
 		go exec.Command("explorer", fmt.Sprintf("http://127.0.0.1:%v", port)).Run()
+	case "darwin":
+		go exec.Command("open", fmt.Sprintf("http://127.0.0.1:%v", port)).Run()
 	}
 }
 
