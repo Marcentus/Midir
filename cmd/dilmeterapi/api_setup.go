@@ -114,7 +114,12 @@ func setupRouter() http.Handler {
 		// Save the requested settings permanently
 		saveConfig(&config)
 
-		filter := buildPcapFilter(config.IP, config.Port)
+		var ip, port string
+		if config.ExitLag {
+			ip = config.IP
+			port = config.Port
+		}
+		filter := buildPcapFilter(ip, port)
 
 		err := startPacketCapture(config.NicName, "", config.ExitLag, filter, config.Promiscuous)
 		if err != nil {

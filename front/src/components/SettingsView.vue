@@ -70,44 +70,39 @@
               </div>
 
               <v-switch
-                  v-model="captureConfig.exitlag"
-                  label="Enable ExitLag Mode"
-                  color="primary"
-                  hide-details
-                  inset
-                  class="mb-4"
-                ></v-switch>
+                v-model="captureConfig.exitlag"
+                label="Enable ExitLag Routing"
+                color="primary"
+                hide-details
+                inset
+                class="mb-2"
+              ></v-switch>
 
-                <div 
-                  class="mb-4 pa-3 border rounded" 
-                  :class="{ 'opacity-60': !captureConfig.exitlag }"
-                  style="transition: opacity 0.3s ease;"
-                >
-                  <div class="d-flex align-center justify-space-between mb-3">
-                    <div class="d-flex align-center">
-                      <span class="text-subtitle-2">Filtering</span>
-                      <v-tooltip text="Usually only required when using ExitLag. Leave blank to auto-detect fixed game channels." location="top">
-                        <template v-slot:activator="{ props }">
-                          <v-btn icon="mdi-information-outline" variant="text" size="x-small" density="comfortable" class="ml-1 text-grey" v-bind="props"></v-btn>
-                        </template>
-                      </v-tooltip>
+              <v-expand-transition>
+                <div v-show="captureConfig.exitlag">
+                  <div class="mb-4 pa-3 border border-opacity-25 rounded">
+                    <div class="d-flex align-center justify-space-between mb-3">
+                    <div>
+                       <div class="text-subtitle-2 font-weight-bold text-primary">ExitLag Configuration</div>
+                       <div class="text-caption text-grey">Auto-detect or manually enter your routed game IP/Port.</div>
                     </div>
                     
                     <v-btn 
-                      v-if="captureConfig.exitlag && !isAutodetecting"
+                      v-if="!isAutodetecting"
                       size="small" 
                       color="secondary" 
-                      variant="tonal"
+                      variant="elevated"
                       :disabled="!captureConfig.nicName"
                       @click="startAutodetect"
+                      prepend-icon="mdi-radar"
                     >
                       Auto-Detect IP/Port
                     </v-btn>
                     <v-btn 
-                      v-if="captureConfig.exitlag && isAutodetecting"
+                      v-if="isAutodetecting"
                       size="small" 
                       color="error" 
-                      variant="tonal"
+                      variant="elevated"
                       @click="stopAutodetect"
                     >
                       Cancel Detection
@@ -136,27 +131,29 @@
                     <v-col cols="12" md="6">
                       <v-text-field
                         v-model="captureConfig.ip"
-                        label="IP Filter (Optional)"
-                        placeholder="Comma-separated IPs"
+                        label="ExitLag Target IP"
+                        placeholder="e.g. 192.168.x.x"
                         variant="outlined"
                         density="compact"
                         hide-details
-                        :disabled="!captureConfig.exitlag || isAutodetecting"
+                        :disabled="isAutodetecting"
                       ></v-text-field>
                     </v-col>
                     <v-col cols="12" md="6">
                       <v-text-field
                         v-model="captureConfig.port"
-                        label="Port Filter (Optional)"
-                        placeholder="Comma-separated Ports"
+                        label="ExitLag Target Port"
+                        placeholder="e.g. 11020"
                         variant="outlined"
                         density="compact"
                         hide-details
-                        :disabled="!captureConfig.exitlag || isAutodetecting"
+                        :disabled="isAutodetecting"
                       ></v-text-field>
                     </v-col>
                   </v-row>
                 </div>
+                </div>
+              </v-expand-transition>
               <div class="d-flex ga-2 mt-4">
                 <v-btn
                   color="primary"
