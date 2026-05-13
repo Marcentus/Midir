@@ -116,6 +116,19 @@ export interface FightSummary {
   damageTaken: { [playerId: string]: PlayerDamageTakenStats };
   graphData?: { [targetId: string]: { [playerId: string]: GraphDataPoint[] } };
   currentEntities?: EntityState[]; // NEW: List of entities currently in the area
+  partyBuffs?: PartyBuff[]; // NEW: Party buff metrics
+}
+
+export interface PartyBuffMetric {
+  label: string;
+  highest: number;
+  highestUptime: number;
+  weightedAvg: number;
+}
+
+export interface PartyBuff {
+  id: number;
+  metrics: PartyBuffMetric[];
 }
 
 export interface GraphDataPoint {

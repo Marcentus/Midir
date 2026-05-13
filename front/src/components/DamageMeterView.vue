@@ -181,7 +181,6 @@
 <script lang="ts">
 import { defineComponent, ref, computed, inject } from "vue";
 import { fightSummary, selectedTargetId } from "@/store";
-import { parseMabinogiMetadata } from "@/utils/metadata";
 import SessionPanel from "@/components/SessionPanel.vue";
 import ApplyDamageBySkillComponent from "@/components/applyDamageBySkill.vue";
 import DamageTakenBySourceComponent from "@/components/DamageTakenBySource.vue";
@@ -326,218 +325,46 @@ export default defineComponent({
         return fightSummary.targets[selectedTargetId.value]?.conditions;
       }),
       partyBuffs: computed(() => {
-        const ids = [680, 192];
         const results: any[] = [];
+        if (!fightSummary.partyBuffs) return results;
 
-        if (!fightSummary.players) return results;
-
-        for (const id of ids) {
-          let bestValue = -1;
-          let bestCond: any = null;
-
-          for (const player of Object.values(fightSummary.players)) {
-            const conditions = selectedTargetId.value 
-              ? player.damageByTarget[selectedTargetId.value]?.conditions 
-              : player.overallStats.conditions;
-
-            const cond = conditions?.[id];
-            if (cond && cond.metaBreakdown && cond.metaBreakdown.length > 0) {
-              for (const meta of cond.metaBreakdown) {
-                const parsed = parseMabinogiMetadata(meta.metaData);
-                let val = 0;
-                let display: string[] = [];
-                if (id === 680) {
-                  val = parsed.MCMBAMAX || 0;
-                  display = [`Max Att: ${val.toFixed(2)}%`];
-                } else if (id === 192) {
-                  const lsma = parsed.LSMA || 0;
-                  const mfcp = parsed.MFCP || 0;
-                  val = Math.max(lsma, mfcp);
-                  const labels: string[] = [];
-                  if (lsma > 0) labels.push(`Mgk Att: ${lsma.toFixed(2)}%`);
-                  if (mfcp > 0) labels.push(`Speed: ${mfcp.toFixed(2)}%`);
-                  display = labels;
-                }
-
-                if (val > bestValue) {
-                  bestValue = val;
-                  const staticData = condNameMap.value[id];
-                  bestCond = {
-                    id,
-                    name: staticData?.name || `Buff ${id}`,
-                    iconUrl: staticData?.iconUrl || "",
-                    displayValue: display,
-                    playerName: player.name
-                  };
-                }
-              }
-            }
+        for (const buff of fightSummary.partyBuffs) {
+          const staticData = condNameMap.value[buff.id];
+          const display: string[] = [];
+          for (const metric of buff.metrics) {
+            let labelText = metric.label;
+            if (labelText === "Max Att") labelText = "Max Att";
+            else if (labelText === "Magic Att") labelText = "Mgk Att";
+            else if (labelText === "Cast Speed") labelText = "Speed";
+            
+            display.push(`${labelText}: ${metric.highest.toFixed(2)}%`);
           }
-          if (bestCond) results.push(bestCond);
+          
+          results.push({
+            id: buff.id,
+            name: staticData?.name || `Buff ${buff.id}`,
+            iconUrl: staticData?.iconUrl || "",
+            displayValue: display
+          });
         }
         return results;
       }),
       hasPartyBuffs: computed(() => {
-        if (!fightSummary.players) return false;
-        const ids = [680, 192];
-        return Object.values(fightSummary.players).some(p => {
-           const conditions = selectedTargetId.value 
-              ? p.damageByTarget[selectedTargetId.value]?.conditions 
-              : p.overallStats.conditions;
-           return conditions && ids.some(id => conditions[id]);
-        });
+        return !!(fightSummary.partyBuffs && fightSummary.partyBuffs.length > 0);
       }),
       showBuffDetails,
       partyBuffDetails: computed(() => {
-        const ids = [680, 192];
         const results: any[] = [];
+        if (!fightSummary.partyBuffs) return results;
 
-        if (!fightSummary.players) return results;
-
-        for (const id of ids) {
-          const keys = id === 680 ? ["MCMBAMAX"] : ["LSMA", "MFCP"];
-          const metrics: Record<string, { highest: number, highestUptime: number, sumVD_Global: number, sumD_Global: number, maxUptime_Party: number }> = {};
-          keys.forEach(k => metrics[k] = { highest: 0, highestUptime: 0, sumVD_Global: 0, sumD_Global: 0, maxUptime_Party: -1 });
-
-          // Pass 1: Gather global metadata trends and majority status
-          let maxDurForThisID = 0;
-          let hasMajorityPlayer = false;
-
-          for (const player of Object.values(fightSummary.players)) {
-            const stats = selectedTargetId.value ? player.damageByTarget[selectedTargetId.value] : player.overallStats;
-            if (!stats) continue;
-
-            const condBFO = stats.conditions?.[680];
-            const condVivace = stats.conditions?.[192];
-            const durBFO = condBFO?.duration || 0;
-            const durVivace = condVivace?.duration || 0;
-
-            const durThis = id === 680 ? durBFO : durVivace;
-            const durOther = id === 680 ? durVivace : durBFO;
-
-            maxDurForThisID = Math.max(maxDurForThisID, durThis);
-            if (durThis > 0 && durThis >= durOther) hasMajorityPlayer = true;
-
-            const cond = stats.conditions?.[id];
-            if (cond && cond.metaBreakdown) {
-              for (const meta of cond.metaBreakdown) {
-                const parsed = parseMabinogiMetadata(meta.metaData);
-                for (const key of keys) {
-                  const val = parsed[key] || 0;
-                  if (val > 0) {
-                    const m = metrics[key];
-                    m.highest = Math.max(m.highest, val);
-                    m.sumVD_Global += val * meta.duration;
-                    m.sumD_Global += meta.duration;
-                    if (meta.uptime > m.maxUptime_Party) {
-                      m.maxUptime_Party = meta.uptime;
-                      m.highestUptime = val;
-                    }
-                  }
-                }
-              }
-            }
-          }
-
-          // Pass 2: Calculate damage-weighted average
-          const sumVD_Weighted: Record<string, number> = {};
-          const sumD_Recipient: Record<string, number> = {};
-          keys.forEach(k => {
-            sumVD_Weighted[k] = 0;
-            sumD_Recipient[k] = 0;
+        for (const buff of fightSummary.partyBuffs) {
+          const staticData = condNameMap.value[buff.id];
+          results.push({
+            id: buff.id,
+            name: staticData?.name || `Buff ${buff.id}`,
+            iconUrl: staticData?.iconUrl || "",
+            metrics: buff.metrics
           });
-
-          for (const player of Object.values(fightSummary.players)) {
-            const stats = selectedTargetId.value ? player.damageByTarget[selectedTargetId.value] : player.overallStats;
-            const playerDamage = stats?.totalDamage || 0;
-            if (!stats || playerDamage <= 0) continue;
-
-            const condBFO = stats.conditions?.[680];
-            const condVivace = stats.conditions?.[192];
-            const durBFO = condBFO?.duration || 0;
-            const durVivace = condVivace?.duration || 0;
-
-            const durThis = id === 680 ? durBFO : durVivace;
-            const durOther = id === 680 ? durVivace : durBFO;
-
-            // Majority Eligibility:
-            // 1. If player has this buff as majority, they are eligible.
-            // 2. If NO ONE in the party has this buff as majority, the player with the highest duration contributes.
-            let isEligible = false;
-            if (durThis > 0 && durThis >= durOther) {
-              isEligible = true;
-            } else if (!hasMajorityPlayer && durThis > 0 && durThis >= maxDurForThisID) {
-              isEligible = true;
-            }
-
-            if (!isEligible) continue;
-
-            const cond = stats.conditions?.[id];
-            if (!cond) continue;
-
-            for (const key of keys) {
-              let playerAvg = 0;
-              let hasLocalData = false;
-
-              if (cond.metaBreakdown && cond.metaBreakdown.length > 0) {
-                let pSumVD = 0;
-                let pSumD = 0;
-                for (const meta of cond.metaBreakdown) {
-                  const val = parseMabinogiMetadata(meta.metaData)[key] || 0;
-                  if (val > 0) {
-                    pSumVD += val * meta.duration;
-                    pSumD += meta.duration;
-                    hasLocalData = true;
-                  }
-                }
-                if (pSumD > 0) playerAvg = pSumVD / pSumD;
-              }
-
-              // Fallback: If player has condition but no metadata, use the global party average
-              if (!hasLocalData && metrics[key].sumD_Global > 0) {
-                playerAvg = metrics[key].sumVD_Global / metrics[key].sumD_Global;
-              }
-
-              if (playerAvg > 0) {
-                // The user wants a "Quality" metric: the average strength of the buff while it was applied,
-                // weighted by the damage contribution of the players who received it.
-                // We no longer dilute this by the encounter duration or buff uptime ratio.
-                sumVD_Weighted[key] += playerAvg * playerDamage;
-                sumD_Recipient[key] += playerDamage;
-              }
-            }
-          }
-
-          // Finalize metrics
-          const formattedMetrics: any[] = [];
-          for (const key of keys) {
-            const m = metrics[key];
-            if (m.highest > 0) {
-              const weightedAvg = sumD_Recipient[key] > 0 ? sumVD_Weighted[key] / sumD_Recipient[key] : 0;
-              
-              let label = key;
-              if (key === "MCMBAMAX") label = "Max Att";
-              else if (key === "LSMA") label = "Magic Att";
-              else if (key === "MFCP") label = "Cast Speed";
-
-              formattedMetrics.push({
-                label,
-                highest: m.highest,
-                highestUptime: m.highestUptime,
-                weightedAvg: weightedAvg
-              });
-            }
-          }
-
-          if (formattedMetrics.length > 0) {
-            const staticData = condNameMap.value[id];
-            results.push({
-              id,
-              name: staticData?.name || `Buff ${id}`,
-              iconUrl: staticData?.iconUrl || "",
-              metrics: formattedMetrics
-            });
-          }
         }
         return results;
       }),

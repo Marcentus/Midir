@@ -168,7 +168,7 @@ func run(ctx context.Context, nicName string, fileName string, exitlagEnabled bo
 	playerCache.OnPlayerUpdate = pub.QueuePlayerUpdate
 
 	if nicName != "" || fileName != "" {
-		err := startPacketCapture(nicName, fileName, exitlagEnabled, filter)
+		err := startPacketCapture(nicName, fileName, exitlagEnabled, filter, true)
 		if err != nil {
 			logger.Println("Failed to start capture from CLI arguments:", err)
 		}
@@ -189,7 +189,7 @@ func run(ctx context.Context, nicName string, fileName string, exitlagEnabled bo
 				if found {
 					logger.Println("Saved NIC verified. Auto-starting capture...")
 					f := buildPcapFilter(cfg.IP, cfg.Port)
-					err := startPacketCapture(cfg.NicName, "", cfg.ExitLag, f)
+					err := startPacketCapture(cfg.NicName, "", cfg.ExitLag, f, cfg.Promiscuous)
 					if err != nil {
 						logger.Println("Failed to start saved capture:", err)
 					}

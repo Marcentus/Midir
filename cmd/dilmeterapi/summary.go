@@ -16,6 +16,18 @@ type ConditionMetaStats struct {
 	Attackers []uint64 `json:"attackers"`
 }
 
+type PartyBuffMetric struct {
+	Label         string  `json:"label"`
+	Highest       float32 `json:"highest"`
+	HighestUptime float32 `json:"highestUptime"`
+	WeightedAvg   float32 `json:"weightedAvg"`
+}
+
+type PartyBuff struct {
+	ID      uint32            `json:"id"`
+	Metrics []PartyBuffMetric `json:"metrics"`
+}
+
 // ActiveCondition represents a currently active condition on an entity.
 // This is used for real-time snapshots (e.g., "Entities in Area").
 type ActiveCondition struct {
@@ -129,6 +141,7 @@ type FightSummary struct {
 	DamageTaken       map[string]PlayerDamageTakenStats      `json:"damageTaken"`
 	GraphData         map[string]map[string][]GraphDataPoint `json:"graphData,omitempty"`
 	CurrentEntities   []EntityState                          `json:"currentEntities"` // NEW: List of entities currently in the area
+	PartyBuffs        []PartyBuff                            `json:"partyBuffs,omitempty"` // NEW: Computed party buff metrics
 }
 
 // Helper function to initialize a new breakdown

@@ -7,11 +7,30 @@ export interface PlayerCacheInfo {
   combatPower: number;
 }
 
+export interface SessionSummaryPlayer {
+  name: string;
+  dps: number;
+  arcanaName: string;
+  arcanaIcon: string;
+  totalDamage: number;
+}
+
+export interface SessionSummaryEnemy {
+  name: string;
+  totalDamage: number;
+}
+
+export interface SessionSummaryData {
+  duration: number;
+  totalDamage: number;
+  players: SessionSummaryPlayer[];
+  enemies: SessionSummaryEnemy[];
+}
+
 export interface Session {
   id: string;
   name: string;
   startTime: number; // Unix timestamp
   endTime?: number; // Unix timestamp, optional for active sessions
-  ndjsonLogPath: string;
-  pcapngLogPath: string;
+  summary?: SessionSummaryData;
 }
