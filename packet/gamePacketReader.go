@@ -33,13 +33,14 @@ type GameServerPacketReader struct {
 }
 
 type GameServerPacketReaderOpt struct {
-	Ctx            context.Context
-	FileName       string
-	NicName        string
-	ClientIp       string
-	Sm             pcapWriter
-	ExitLagEnabled bool   // New: To control ExitLag processing
-	Filter         string // New: To pass in the dynamic BPF filter
+	Ctx             context.Context
+	FileName        string
+	NicName         string
+	ClientIp        string
+	Sm              pcapWriter
+	ExitLagEnabled  bool   // New: To control ExitLag processing
+	Filter          string // New: To pass in the dynamic BPF filter
+	PromiscuousMode bool   // New: To control Promiscuous capture
 }
 
 type gamePacketPayload struct {
@@ -55,7 +56,6 @@ type pendingTcpLayer struct {
 
 const pcapQueueSize = 100
 const pcapBufferSize = 32 * 1024 * 1024
-const pcapPromisc = true
 const packetQueueSize = 100
 
 var ErrTooShortPacket = errors.New("too short packet")
@@ -245,7 +245,7 @@ func NewGameServerPacketReader(opt *GameServerPacketReaderOpt) (*GameServerPacke
 			return nil, err
 		}
 	} else {
-		rawPayloadCh, err = v.openNic(opt.NicName, filter)
+		rawPayloadCh, err = v.openNic(opt.NicName, filter, opt.PromiscuousMode)
 		if err != nil {
 			logger.Println("openNic failed", err)
 			return nil, err
@@ -412,8 +412,8 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 	}
 }
 
-func (t *GameServerPacketReader) openNic(nic string, filter string) (<-chan gamePacketPayload, error) {
-	handle, err := pcap.OpenLive(nic, pcapBufferSize, pcapPromisc, pcap.BlockForever)
+func (t *GameServerPacketReader) openNic(nic string, filter string, promiscuous bool) (<-chan gamePacketPayload, error) {
+	handle, err := pcap.OpenLive(nic, pcapBufferSize, promiscuous, pcap.BlockForever)
 	if err != nil {
 		logger.Println(err)
 		return nil, err
