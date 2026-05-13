@@ -55,86 +55,108 @@
               </v-select>
 
               <v-switch
-                v-model="captureConfig.exitlag"
-                label="Enable ExitLag Mode"
+                v-model="captureConfig.promiscuous"
+                label="Enable Npcap Promiscuous Mode"
                 color="primary"
                 hide-details
                 inset
-                class="mb-4"
+                class="mb-1"
               ></v-switch>
-
-              <div 
-                class="mb-4 pa-3 border rounded" 
-                :class="{ 'opacity-60': !captureConfig.exitlag }"
-                style="transition: opacity 0.3s ease;"
-              >
-                <div class="d-flex align-center justify-space-between mb-3">
-                  <div class="d-flex align-center">
-                    <span class="text-subtitle-2">Filtering</span>
-                    <v-tooltip text="Usually only required when using ExitLag. Leave blank to auto-detect fixed game channels." location="top">
-                      <template v-slot:activator="{ props }">
-                        <v-btn icon="mdi-information-outline" variant="text" size="x-small" density="comfortable" class="ml-1 text-grey" v-bind="props"></v-btn>
-                      </template>
-                    </v-tooltip>
-                  </div>
-                  
-                  <v-btn 
-                    v-if="captureConfig.exitlag"
-                    size="small" 
-                    color="secondary" 
-                    variant="tonal"
-                    :loading="isAutodetecting"
-                    :disabled="!captureConfig.nicName"
-                    @click="startAutodetect"
-                  >
-                    Auto-Detect IP/Port
-                  </v-btn>
+              <div class="text-caption text-grey mb-4 ml-14">
+                Turn this ON if you are capturing packets from a mirrored switch port.
+                <div class="text-error mt-1">
+                  <strong>Warning:</strong> Enabling this on the same PC you run the game will NGS you.
                 </div>
-                
-                <v-expand-transition>
-                  <div v-if="isAutodetecting" class="mb-4">
-                    <v-alert type="info" variant="tonal" density="compact" class="mb-2">
-                      Please run around in-game to generate movement packets.
-                    </v-alert>
-                    <v-progress-linear 
-                      :model-value="(autodetectProgress / 5) * 100" 
-                      color="primary" 
-                      height="20" 
-                      striped
-                    >
-                      <template v-slot:default>
-                        <strong>{{ autodetectProgress }} / 5 Packets Detected</strong>
-                      </template>
-                    </v-progress-linear>
-                  </div>
-                </v-expand-transition>
-
-                <v-row>
-                  <v-col cols="12" md="6">
-                    <v-text-field
-                      v-model="captureConfig.ip"
-                      label="IP Filter (Optional)"
-                      placeholder="Comma-separated IPs"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      :disabled="!captureConfig.exitlag || isAutodetecting"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols="12" md="6">
-                    <v-text-field
-                      v-model="captureConfig.port"
-                      label="Port Filter (Optional)"
-                      placeholder="Comma-separated Ports"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      :disabled="!captureConfig.exitlag || isAutodetecting"
-                    ></v-text-field>
-                  </v-col>
-                </v-row>
               </div>
 
+              <v-switch
+                  v-model="captureConfig.exitlag"
+                  label="Enable ExitLag Mode"
+                  color="primary"
+                  hide-details
+                  inset
+                  class="mb-4"
+                ></v-switch>
+
+                <div 
+                  class="mb-4 pa-3 border rounded" 
+                  :class="{ 'opacity-60': !captureConfig.exitlag }"
+                  style="transition: opacity 0.3s ease;"
+                >
+                  <div class="d-flex align-center justify-space-between mb-3">
+                    <div class="d-flex align-center">
+                      <span class="text-subtitle-2">Filtering</span>
+                      <v-tooltip text="Usually only required when using ExitLag. Leave blank to auto-detect fixed game channels." location="top">
+                        <template v-slot:activator="{ props }">
+                          <v-btn icon="mdi-information-outline" variant="text" size="x-small" density="comfortable" class="ml-1 text-grey" v-bind="props"></v-btn>
+                        </template>
+                      </v-tooltip>
+                    </div>
+                    
+                    <v-btn 
+                      v-if="captureConfig.exitlag && !isAutodetecting"
+                      size="small" 
+                      color="secondary" 
+                      variant="tonal"
+                      :disabled="!captureConfig.nicName"
+                      @click="startAutodetect"
+                    >
+                      Auto-Detect IP/Port
+                    </v-btn>
+                    <v-btn 
+                      v-if="captureConfig.exitlag && isAutodetecting"
+                      size="small" 
+                      color="error" 
+                      variant="tonal"
+                      @click="stopAutodetect"
+                    >
+                      Cancel Detection
+                    </v-btn>
+                  </div>
+                  
+                  <v-expand-transition>
+                    <div v-if="isAutodetecting" class="mb-4">
+                      <v-alert type="info" variant="tonal" density="compact" class="mb-2">
+                        Please run around in-game to generate movement packets.
+                      </v-alert>
+                      <v-progress-linear 
+                        :model-value="(autodetectProgress / 5) * 100" 
+                        color="primary" 
+                        height="20" 
+                        striped
+                      >
+                        <template v-slot:default>
+                          <strong>{{ autodetectProgress }} / 5 Packets Detected</strong>
+                        </template>
+                      </v-progress-linear>
+                    </div>
+                  </v-expand-transition>
+
+                  <v-row>
+                    <v-col cols="12" md="6">
+                      <v-text-field
+                        v-model="captureConfig.ip"
+                        label="IP Filter (Optional)"
+                        placeholder="Comma-separated IPs"
+                        variant="outlined"
+                        density="compact"
+                        hide-details
+                        :disabled="!captureConfig.exitlag || isAutodetecting"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="12" md="6">
+                      <v-text-field
+                        v-model="captureConfig.port"
+                        label="Port Filter (Optional)"
+                        placeholder="Comma-separated Ports"
+                        variant="outlined"
+                        density="compact"
+                        hide-details
+                        :disabled="!captureConfig.exitlag || isAutodetecting"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                </div>
               <div class="d-flex ga-2 mt-4">
                 <v-btn
                   color="primary"
@@ -210,14 +232,15 @@ export default defineComponent({
     
     // --- CAPTURE SETTINGS ---
     const nics = ref<any[]>([]);
-    const captureStatus = ref({ is_running: false, nic: '', exitlag: false });
+    const captureStatus = ref({ is_running: false, nic: '', exitlag: false, promiscuous: false });
     const isApplying = ref(false);
     const isStopping = ref(false);
     const captureConfig = ref({
       nicName: "",
       ip: "",
       port: "",
-      exitlag: false
+      exitlag: false,
+      promiscuous: false
     });
 
     const fetchNics = async () => {
@@ -243,6 +266,7 @@ export default defineComponent({
           
           if (data.nic) captureConfig.value.nicName = data.nic;
           captureConfig.value.exitlag = data.exitlag || false;
+          captureConfig.value.promiscuous = data.promiscuous || false;
           if (data.ip) captureConfig.value.ip = data.ip;
           if (data.port) captureConfig.value.port = data.port;
         }
@@ -256,6 +280,7 @@ export default defineComponent({
         alert("Please select a network interface.");
         return;
       }
+
       isApplying.value = true;
       try {
         const res = await fetch("/api/setup/start", {
@@ -305,7 +330,10 @@ export default defineComponent({
         const res = await fetch("/api/setup/autodetect", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nicName: captureConfig.value.nicName })
+          body: JSON.stringify({ 
+            nicName: captureConfig.value.nicName,
+            promiscuous: captureConfig.value.promiscuous
+          })
         });
         
         if (!res.ok) {
@@ -315,6 +343,15 @@ export default defineComponent({
       } catch (err) {
         isAutodetecting.value = false;
         console.error("Error starting autodetect:", err);
+      }
+    };
+
+    const stopAutodetect = async () => {
+      isAutodetecting.value = false;
+      try {
+        await fetch("/api/setup/autodetect/stop", { method: "POST" });
+      } catch (err) {
+        console.error("Error stopping autodetect:", err);
       }
     };
 
@@ -362,7 +399,8 @@ export default defineComponent({
       // Autodetect
       isAutodetecting,
       autodetectProgress,
-      startAutodetect
+      startAutodetect,
+      stopAutodetect
     };
   },
 });

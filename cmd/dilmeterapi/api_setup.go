@@ -18,6 +18,7 @@ import (
 )
 
 var activeExitlag bool
+var activePromiscuous bool
 var autodetectCancel context.CancelFunc
 var autodetectMu sync.Mutex
 
@@ -25,9 +26,10 @@ const configFile = "settings.json"
 
 type CaptureConfig struct {
 	NicName string `json:"nicName"`
-	IP      string `json:"ip"`
-	Port    string `json:"port"`
-	ExitLag bool   `json:"exitlag"`
+	IP          string `json:"ip"`
+	Port        string `json:"port"`
+	ExitLag     bool   `json:"exitlag"`
+	Promiscuous bool   `json:"promiscuous"`
 }
 
 func loadConfig() *CaptureConfig {
@@ -64,11 +66,12 @@ func setupRouter() http.Handler {
 		}
 		
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"is_running": isCaptureRunning,
-			"nic":        activeNicName,
-			"exitlag":    activeExitlag,
-			"ip":         ip,
-			"port":       port,
+			"is_running":  isCaptureRunning,
+			"nic":         activeNicName,
+			"exitlag":     activeExitlag,
+			"promiscuous": activePromiscuous,
+			"ip":          ip,
+			"port":        port,
 		})
 	})
 
@@ -113,7 +116,7 @@ func setupRouter() http.Handler {
 
 		filter := buildPcapFilter(config.IP, config.Port)
 
-		err := startPacketCapture(config.NicName, "", config.ExitLag, filter)
+		err := startPacketCapture(config.NicName, "", config.ExitLag, filter, config.Promiscuous)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -131,14 +134,15 @@ func setupRouter() http.Handler {
 
 	r.Post("/autodetect", func(w http.ResponseWriter, req *http.Request) {
 		var payload struct {
-			NicName string `json:"nicName"`
+			NicName     string `json:"nicName"`
+			Promiscuous bool   `json:"promiscuous"`
 		}
 		if err := json.NewDecoder(req.Body).Decode(&payload); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		err := startAutodetect(payload.NicName)
+		err := startAutodetect(payload.NicName, payload.Promiscuous)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -159,7 +163,7 @@ func setupRouter() http.Handler {
 	return r
 }
 
-func startAutodetect(nicName string) error {
+func startAutodetect(nicName string, promiscuous bool) error {
 	captureMu.Lock()
 	stopPacketCaptureSync()
 	captureMu.Unlock()
@@ -173,7 +177,7 @@ func startAutodetect(nicName string) error {
 	autodetectCancel = cancel
 	autodetectMu.Unlock()
 
-	handle, err := pcap.OpenLive(nicName, 65536, true, pcap.BlockForever)
+	handle, err := pcap.OpenLive(nicName, 65536, promiscuous, pcap.BlockForever)
 	if err != nil {
 		cancel()
 		return err
@@ -270,7 +274,7 @@ func stopPacketCaptureSync() {
 	activeNicName = ""
 }
 
-func startPacketCapture(nicName string, fileName string, exitlagEnabled bool, filter string) error {
+func startPacketCapture(nicName string, fileName string, exitlagEnabled bool, filter string, promiscuous bool) error {
 	captureMu.Lock()
 	defer captureMu.Unlock()
 
@@ -286,12 +290,13 @@ func startPacketCapture(nicName string, fileName string, exitlagEnabled bool, fi
 	captureDone = make(chan struct{})
 
 	r, err := packet.NewGameServerPacketReader(&packet.GameServerPacketReaderOpt{
-		Ctx:            ctx,
-		NicName:        nicName,
-		FileName:       fileName,
-		Sm:             globalSm,
-		ExitLagEnabled: exitlagEnabled,
-		Filter:         filter,
+		Ctx:             ctx,
+		NicName:         nicName,
+		FileName:        fileName,
+		Sm:              globalSm,
+		ExitLagEnabled:  exitlagEnabled,
+		Filter:          filter,
+		PromiscuousMode: promiscuous,
 	})
 	
 	if err != nil {
@@ -307,6 +312,7 @@ func startPacketCapture(nicName string, fileName string, exitlagEnabled bool, fi
 	isCaptureRunning = true
 	activeNicName = nicName
 	activeExitlag = exitlagEnabled
+	activePromiscuous = promiscuous
 
 	go func() {
 		defer close(captureDone) // Critical: Always signal done whenever goroutine exits!
