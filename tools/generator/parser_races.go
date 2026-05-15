@@ -51,6 +51,10 @@ func ProcessRaces(xmlPath string, translator *Translator) (map[string]RaceData, 
 	results := make(map[string]RaceData)
 
 	for _, r := range root.List.Races {
+		if _, exists := results[r.ID]; exists {
+			continue
+		}
+
 		id, _ := strconv.Atoi(r.ID)
 		if id == 0 {
 			continue

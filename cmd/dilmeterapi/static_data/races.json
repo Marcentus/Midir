@@ -10017,7 +10017,7 @@
   },
   "191805": {
     "raceId": 191805,
-    "name": "Succubus Fiend"
+    "name": "베이비 서큐버스"
   },
   "191806": {
     "raceId": 191806,
@@ -10073,7 +10073,7 @@
   },
   "191819": {
     "raceId": 191819,
-    "name": "Succubus Fiend"
+    "name": "베이비 서큐버스"
   },
   "191820": {
     "raceId": 191820,
@@ -12061,7 +12061,7 @@
   },
   "193023": {
     "raceId": 193023,
-    "name": "Cessair's Heart"
+    "name": "퀘사르의 심장"
   },
   "193024": {
     "raceId": 193024,
@@ -14430,6 +14430,10 @@
   "194024": {
     "raceId": 194024,
     "name": "Guild Stone"
+  },
+  "194025": {
+    "raceId": 194025,
+    "name": "지능형 자판기 1호"
   },
   "194026": {
     "raceId": 194026,
@@ -17927,6 +17931,10 @@
     "raceId": 271476,
     "name": "Statue of Someone"
   },
+  "271486": {
+    "raceId": 271486,
+    "name": "Eochaid"
+  },
   "271487": {
     "raceId": 271487,
     "name": "Raccoon"
@@ -20761,7 +20769,7 @@
   },
   "346": {
     "raceId": 346,
-    "name": "Bandit Ogre Heavy Stander"
+    "name": "Bandit Ogre Ogre Heavy Stander"
   },
   "3460": {
     "raceId": 3460,
@@ -24045,23 +24053,23 @@
   },
   "35785": {
     "raceId": 35785,
-    "name": "Seasoned Merchants' Guild Bandit Human"
+    "name": "Master Merchants' Guild Bandit Human"
   },
   "35786": {
     "raceId": 35786,
-    "name": "Seasoned Merchants' Guild Bandit Giant"
+    "name": "Master Merchants' Guild Bandit Giant"
   },
   "35787": {
     "raceId": 35787,
-    "name": "Seasoned Merchants' Guild Bandit Boss"
+    "name": "Master Merchants' Guild Bandit Boss"
   },
   "35788": {
     "raceId": 35788,
-    "name": "Seasoned Merchants' Guild Bandit Boss"
+    "name": "Master Merchants' Guild Bandit Boss"
   },
   "35789": {
     "raceId": 35789,
-    "name": "Seasoned Merchants' Guild Bandit Boss"
+    "name": "Master Merchants' Guild Bandit Boss"
   },
   "3579": {
     "raceId": 3579,
@@ -25729,7 +25737,7 @@
   },
   "40116": {
     "raceId": 40116,
-    "name": "Young Maned Aardvark"
+    "name": "Young Mane Aardvark"
   },
   "40117": {
     "raceId": 40117,
@@ -30739,6 +30747,26 @@
     "raceId": 490471,
     "name": "Fairy Dragon (Event)"
   },
+  "490489": {
+    "raceId": 490489,
+    "name": "Beep Beep Glanadh"
+  },
+  "490490": {
+    "raceId": 490490,
+    "name": "Beep-Beep-Beep Glanadh"
+  },
+  "490491": {
+    "raceId": 490491,
+    "name": "Beep-Boop Glanadh"
+  },
+  "490492": {
+    "raceId": 490492,
+    "name": "Freshman Corgi"
+  },
+  "490493": {
+    "raceId": 490493,
+    "name": "Freshman Corgi"
+  },
   "490498": {
     "raceId": 490498,
     "name": "Phoenix (Event)"
@@ -33653,11 +33681,11 @@
   },
   "730211": {
     "raceId": 730211,
-    "name": "Rem Partner"
+    "name": "파트너 [렘]"
   },
   "730212": {
     "raceId": 730212,
-    "name": "Ram Partner"
+    "name": "파트너 [람]"
   },
   "733200": {
     "raceId": 733200,
@@ -34110,6 +34138,34 @@
   "7614": {
     "raceId": 7614,
     "name": "Ancient Giant"
+  },
+  "7615": {
+    "raceId": 7615,
+    "name": "Midir the Lost"
+  },
+  "7616": {
+    "raceId": 7616,
+    "name": "Shard of Solace"
+  },
+  "7617": {
+    "raceId": 7617,
+    "name": "Shard of Solace"
+  },
+  "7618": {
+    "raceId": 7618,
+    "name": "Shard of Solace"
+  },
+  "7619": {
+    "raceId": 7619,
+    "name": "Shard of Solace"
+  },
+  "7620": {
+    "raceId": 7620,
+    "name": "Shard of Solace"
+  },
+  "7622": {
+    "raceId": 7622,
+    "name": "Shard of Solace"
   },
   "77": {
     "raceId": 77,
@@ -39146,6 +39202,10 @@
   "990174": {
     "raceId": 990174,
     "name": "Soul Liberator Pierrot Marionette"
+  },
+  "990175": {
+    "raceId": 990175,
+    "name": "Nightbringer Iris Marionette"
   },
   "990201": {
     "raceId": 990201,
