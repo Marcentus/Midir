@@ -128,10 +128,40 @@
                   </div>
 
                   <template v-slot:append>
-                    <div class="session-actions align-self-start pl-2 d-flex flex-column" style="gap: 2px;">
-                      <v-btn v-if="!item.summary && item.id !== 'live'" variant="text" icon="mdi-autorenew" color="blue-lighten-2" size="x-small" @click.stop="migrateSingle(item)" density="compact" title="Generate Summary"></v-btn>
-                      <v-btn variant="text" icon="mdi-pencil" size="x-small" @click.stop="openRenameDialog(item)" density="compact"></v-btn>
-                      <v-btn variant="text" icon="mdi-delete" color="red-lighten-2" size="x-small" @click.stop="openDeleteDialog(item)" density="compact"></v-btn>
+                    <div class="session-actions align-self-start">
+                      <v-menu location="bottom end">
+                        <template v-slot:activator="{ props }">
+                          <v-btn
+                            icon="mdi-dots-vertical"
+                            variant="text"
+                            size="x-small"
+                            v-bind="props"
+                            @click.stop
+                          ></v-btn>
+                        </template>
+                        <v-list density="compact" nav>
+                          <v-list-item 
+                            v-if="!item.summary && item.id !== 'live'" 
+                            prepend-icon="mdi-autorenew" 
+                            title="Generate Summary" 
+                            base-color="blue-lighten-2"
+                            @click="migrateSingle(item)"
+                          ></v-list-item>
+                          
+                          <v-list-item 
+                            prepend-icon="mdi-pencil" 
+                            title="Rename" 
+                            @click="openRenameDialog(item)"
+                          ></v-list-item>
+                          
+                          <v-list-item 
+                            prepend-icon="mdi-delete" 
+                            title="Delete" 
+                            base-color="red-lighten-2"
+                            @click="openDeleteDialog(item)"
+                          ></v-list-item>
+                        </v-list>
+                      </v-menu>
                     </div>
                   </template>
                 </v-list-item>
