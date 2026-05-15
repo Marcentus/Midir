@@ -17,6 +17,7 @@ export interface SessionSummaryPlayer {
 
 export interface SessionSummaryEnemy {
   name: string;
+  raceId: number;
   totalDamage: number;
 }
 

@@ -61,6 +61,14 @@ export async function deleteSession(sessionId: string): Promise<void> {
   });
 }
 
+export async function migrateSession(sessionId: string): Promise<void> {
+  await httpCall<void>(`/api/sessions/${sessionId}/migrate`, { method: "POST" });
+}
+
+export async function migrateAllSessions(): Promise<{ migrated: number }> {
+  return httpCall<{ migrated: number }>("/api/sessions/migrate-all", { method: "POST" });
+}
+
 export async function clearBackendState(): Promise<void> {
   await httpCall<void>("/api/state/clear", {
     method: "POST",

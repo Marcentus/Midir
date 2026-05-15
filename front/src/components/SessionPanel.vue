@@ -27,6 +27,14 @@
 
         <v-divider></v-divider>
 
+        <!-- ADDED MIGRATE ALL BUTTON -->
+        <div v-if="sessions.some(s => !s.summary && s.id !== 'live')" class="px-3 pb-2 mt-2">
+          <v-btn block color="primary" variant="tonal" size="small" @click="migrateAll" :loading="isMigratingAll">
+            <v-icon start>mdi-autorenew</v-icon>
+            Migrate All Missing
+          </v-btn>
+        </div>
+
         <v-list density="compact" nav>
           <v-list-item
             prepend-icon="mdi-access-point"
@@ -106,7 +114,8 @@
                   </div>
 
                   <template v-slot:append>
-                    <div class="session-actions align-self-start pl-2">
+                    <div class="session-actions align-self-start pl-2 d-flex flex-column" style="gap: 2px;">
+                      <v-btn variant="text" icon="mdi-autorenew" color="blue-lighten-2" size="x-small" @click.stop="migrateSingle(item)" density="compact" title="Regenerate Summary"></v-btn>
                       <v-btn variant="text" icon="mdi-pencil" size="x-small" @click.stop="openRenameDialog(item)" density="compact"></v-btn>
                       <v-btn variant="text" icon="mdi-delete" color="red-lighten-2" size="x-small" @click.stop="openDeleteDialog(item)" density="compact"></v-btn>
                     </div>
@@ -165,7 +174,7 @@
 
 <script lang="ts">
 import { defineComponent, onMounted, onUnmounted, inject, reactive, ref } from "vue";
-import { getSessions, renameSession, deleteSession } from "@/apicall";
+import { getSessions, renameSession, deleteSession, migrateSession, migrateAllSessions } from "@/apicall";
 import { sessions, activeSessionId, isNavDrawerOpen, fightSummary, condNameMap, liveFavoriteConditions, liveHiddenConditions, toggleLiveConditionPref } from "@/store";
 import { Session } from "@/types";
 import { EntityState, ActiveCondition } from "@/protocols";
@@ -177,6 +186,7 @@ export default defineComponent({
     const appEvent = inject("appEvent");
 
     const searchQuery = ref("");
+    const isMigratingAll = ref(false);
 
     const filteredSessions = computed(() => {
       if (!searchQuery.value) return sessions.value;
@@ -330,6 +340,29 @@ export default defineComponent({
       }
     };
 
+    const migrateSingle = async (session: Session) => {
+      try {
+        await migrateSession(session.id);
+        await fetchSessions();
+      } catch (e) {
+        console.error("Failed to migrate session:", e);
+        alert("Could not migrate session.");
+      }
+    };
+
+    const migrateAll = async () => {
+      isMigratingAll.value = true;
+      try {
+        await migrateAllSessions();
+        await fetchSessions();
+      } catch (e) {
+        console.error("Failed to migrate all sessions:", e);
+        alert("Could not migrate all sessions.");
+      } finally {
+        isMigratingAll.value = false;
+      }
+    };
+
     const formatSessionTime = (session: Session) => {
       const startTime = session.startTime * 1000;
       const now = Date.now();
@@ -408,7 +441,10 @@ export default defineComponent({
       getExactSessionTime,
       formatDuration,
       formatDamage,
-      getUniqueEnemies
+      getUniqueEnemies,
+      migrateSingle,
+      migrateAll,
+      isMigratingAll
     };
   },
 });

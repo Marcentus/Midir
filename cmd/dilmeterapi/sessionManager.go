@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -30,6 +31,7 @@ type SessionSummaryPlayer struct {
 
 type SessionSummaryEnemy struct {
 	Name        string  `json:"name"`
+	RaceID      uint32  `json:"raceId"`
 	TotalDamage float32 `json:"totalDamage"`
 }
 
@@ -212,11 +214,14 @@ func (sm *SessionManager) SaveLiveSession(name string) error {
 		
 		for tID, dmg := range targetDamageMap {
 			name := "Unknown"
+			var raceId uint32
 			if tStat, ok := summary.Targets[tID]; ok {
 				name = tStat.Name
+				raceId = tStat.RaceID
 			}
 			summaryData.Enemies = append(summaryData.Enemies, SessionSummaryEnemy{
 				Name:        name,
+				RaceID:      raceId,
 				TotalDamage: dmg,
 			})
 		}
@@ -288,6 +293,25 @@ func (sm *SessionManager) GetAllSessions() ([]*Session, error) {
 					summaryBytes, _ := json.Marshal(summaryEvent.Summary)
 					var sumData SessionSummaryData
 					if err := json.Unmarshal(summaryBytes, &sumData); err == nil {
+						for i, enemy := range sumData.Enemies {
+							var lookupId uint32
+							if enemy.RaceID != 0 {
+								lookupId = enemy.RaceID
+							} else if strings.HasPrefix(enemy.Name, "Unknown Race (") {
+								idStr := strings.TrimSuffix(strings.TrimPrefix(enemy.Name, "Unknown Race ("), ")")
+								if parsed, err := strconv.ParseUint(idStr, 10, 32); err == nil {
+									lookupId = uint32(parsed)
+									sumData.Enemies[i].RaceID = lookupId
+								}
+							}
+							if lookupId != 0 {
+								newName := getRaceName(lookupId)
+								if newName != enemy.Name {
+									sumData.Enemies[i].Name = newName
+								}
+							}
+						}
+
 						sess = &Session{
 							ID:        file.Name(),
 							Name:      sumData.Name,
@@ -503,4 +527,130 @@ type oldSessionDTO struct {
 }
 type eventBaseForMigration struct {
 	At int64 `json:"At"`
+}
+
+// MigrateSession rewrites the session log file with a newly generated summary header.
+func (sm *SessionManager) MigrateSession(sessionID string) error {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	if sessionID == liveSessionFilename || sessionID == livePcapFilename {
+		return fmt.Errorf("cannot migrate live session")
+	}
+
+	oldPath := filepath.Join(sm.logDirectory, sessionID)
+	summary, err := GenerateSummaryFromFile(oldPath)
+	if err != nil {
+		return fmt.Errorf("failed to generate summary for migration: %w", err)
+	}
+
+	var summaryData SessionSummaryData
+	oldF, err := os.Open(oldPath)
+	if err != nil {
+		return fmt.Errorf("failed to open session file: %w", err)
+	}
+
+	scanner := bufio.NewScanner(oldF)
+	hasOldSummary := false
+	if scanner.Scan() {
+		var firstEvent eventBase
+		if err := json.Unmarshal(scanner.Bytes(), &firstEvent); err == nil && firstEvent.EventId == eventIdSessionSummary {
+			hasOldSummary = true
+			var wrapper struct {
+				Summary SessionSummaryData `json:"summary"`
+			}
+			if err := json.Unmarshal(scanner.Bytes(), &wrapper); err == nil {
+				summaryData.Name = wrapper.Summary.Name
+				summaryData.StartTime = wrapper.Summary.StartTime
+			}
+		}
+	}
+
+	if summaryData.Name == "" {
+		parts := strings.SplitN(sessionID, "_", 3)
+		if len(parts) >= 3 {
+			summaryData.Name = strings.TrimSuffix(parts[2], ".ndjson")
+		} else {
+			summaryData.Name = "Migrated Session"
+		}
+		summaryData.StartTime = summary.StartTime
+	}
+
+	summaryData.Duration = summary.EncounterDuration
+	summaryData.TotalDamage = summary.TotalDamage
+	
+	targetDamageMap := make(map[string]float32)
+
+	for _, pstat := range summary.Players {
+		summaryData.Players = append(summaryData.Players, SessionSummaryPlayer{
+			Name:        pstat.Name,
+			DPS:         pstat.OverallStats.DPS,
+			ArcanaName:  pstat.TalentName,
+			ArcanaIcon:  pstat.TalentIcon,
+			TotalDamage: pstat.OverallStats.TotalDamage,
+		})
+		for tID, tBreakdown := range pstat.DamageByTarget {
+			targetDamageMap[tID] += tBreakdown.TotalDamage
+		}
+	}
+	
+	sort.Slice(summaryData.Players, func(i, j int) bool {
+		return summaryData.Players[i].TotalDamage > summaryData.Players[j].TotalDamage
+	})
+	
+	for tID, dmg := range targetDamageMap {
+		name := "Unknown"
+		var raceId uint32
+		if tStat, ok := summary.Targets[tID]; ok {
+			name = tStat.Name
+			raceId = tStat.RaceID
+		}
+		summaryData.Enemies = append(summaryData.Enemies, SessionSummaryEnemy{
+			Name:        name,
+			RaceID:      raceId,
+			TotalDamage: dmg,
+		})
+	}
+	sort.Slice(summaryData.Enemies, func(i, j int) bool {
+		return summaryData.Enemies[i].TotalDamage > summaryData.Enemies[j].TotalDamage
+	})
+
+	newPath := oldPath + ".tmp"
+	newF, err := os.Create(newPath)
+	if err != nil {
+		oldF.Close()
+		return fmt.Errorf("failed to create temporary migrated file: %w", err)
+	}
+
+	sumEvent := eventSessionSummary{
+		eventBase: eventBase{EventId: eventIdSessionSummary, At: time.Now().Unix(), Id: ""},
+		Type:      "SessionSummary",
+		Summary:   summaryData,
+	}
+	sumBytes, _ := json.Marshal(sumEvent)
+	newF.Write(sumBytes)
+	newF.Write([]byte("\n"))
+
+	oldF.Seek(0, 0)
+	oldScanner := bufio.NewScanner(oldF)
+	isFirstLine := true
+	for oldScanner.Scan() {
+		if isFirstLine {
+			isFirstLine = false
+			if hasOldSummary {
+				continue
+			}
+		}
+		newF.Write(oldScanner.Bytes())
+		newF.Write([]byte("\n"))
+	}
+	newF.Close()
+	oldF.Close()
+
+	if err := os.Rename(newPath, oldPath); err != nil {
+		os.Remove(newPath)
+		return fmt.Errorf("failed to replace old file with migrated one: %w", err)
+	}
+
+	return nil
 }

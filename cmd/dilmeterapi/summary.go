@@ -117,6 +117,7 @@ type GraphDataPoint struct {
 // TargetStats holds information about a specific target, including active conditions.
 type TargetStats struct {
 	Name       string                     `json:"name"`
+	RaceID     uint32                     `json:"raceId"`
 	Conditions map[uint32]*ConditionStats `json:"conditions,omitempty"`
 }
 

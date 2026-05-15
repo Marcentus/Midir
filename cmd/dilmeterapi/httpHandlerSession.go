@@ -16,11 +16,13 @@ func sessionRouter(sm *SessionManager) http.Handler {
 	r := chi.NewRouter()
 	r.Get("/", handleGetSessions(sm))
 	r.Post("/save", handleSaveSession(sm))
+	r.Post("/migrate-all", handleMigrateAllSessions(sm))
 	r.Route("/{sessionID}", func(r chi.Router) {
 		r.Put("/", handleRenameSession(sm))
 		r.Get("/log", handleGetSessionLog(sm))
 		r.Delete("/", handleDeleteSession(sm))
 		r.Get("/summary", handleGetSessionSummary(sm))
+		r.Post("/migrate", handleMigrateSession(sm))
 	})
 	return r
 }
@@ -121,6 +123,38 @@ func handleGetSessionSummary(sm *SessionManager) http.HandlerFunc {
 		}
 
 		respondWithJSON(w, http.StatusOK, summary)
+	}
+}
+
+func handleMigrateSession(sm *SessionManager) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		sessionID := chi.URLParam(r, "sessionID")
+		if err := sm.MigrateSession(sessionID); err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Failed to migrate session: "+err.Error())
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func handleMigrateAllSessions(sm *SessionManager) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		sessions, err := sm.GetAllSessions()
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Failed to get sessions: "+err.Error())
+			return
+		}
+
+		migratedCount := 0
+		for _, sess := range sessions {
+			if sess.Summary == nil {
+				if err := sm.MigrateSession(sess.ID); err == nil {
+					migratedCount++
+				}
+			}
+		}
+
+		respondWithJSON(w, http.StatusOK, map[string]int{"migrated": migratedCount})
 	}
 }
 
@@ -758,8 +792,10 @@ func finalizeSummaryFromLog(
 	}
 	for targetIdStr := range uniqueTargets {
 		var name string
+		var raceId uint32
 		if entity, ok := entitiesInLog[targetIdStr]; ok {
 			name = getRaceName(entity.RaceId)
+			raceId = entity.RaceId
 		} else {
 			name = "Unknown"
 		}
@@ -771,6 +807,7 @@ func finalizeSummaryFromLog(
 
 		summary.Targets[targetIdStr] = TargetStats{
 			Name:       name,
+			RaceID:     raceId,
 			Conditions: conditions,
 		}
 	}
