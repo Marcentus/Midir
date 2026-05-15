@@ -119,6 +119,15 @@ type TargetStats struct {
 	Name       string                     `json:"name"`
 	RaceID     uint32                     `json:"raceId"`
 	Conditions map[uint32]*ConditionStats `json:"conditions,omitempty"`
+	StartTime  int64                      `json:"startTime"` // NEW: Encounter Start Time for this target
+	EndTime    int64                      `json:"endTime"`   // NEW: Encounter End Time for this target
+}
+
+// TargetTimeRange tracks the timestamps for a specific target.
+type TargetTimeRange struct {
+	StartTime     int64
+	EndTime       int64 // Last hit time
+	DisappearTime int64 // Actual disappearance event time
 }
 
 // NEW: EntityState represents an entity currently in the area.

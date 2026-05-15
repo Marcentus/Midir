@@ -23,10 +23,7 @@ type Aggregator struct {
 	// Damage Taken Data
 	damageTaken map[uint64]*PlayerDamageTakenStats
 	// Timestamps for accurate, shared DPS calculation
-	targetTimestamps map[uint64]struct {
-		StartTime int64
-		EndTime   int64
-	}
+	targetTimestamps   map[uint64]TargetTimeRange
 	encounterStartTime int64
 	encounterEndTime   int64
 	// General Entity Info
@@ -56,10 +53,7 @@ func NewAggregator() *Aggregator {
 		damageTaken:        make(map[uint64]*PlayerDamageTakenStats),
 		entityCache:        make(map[uint64]*packet.EntityInfo),
 		targetNames:        make(map[uint64]string),
-		targetTimestamps: make(map[uint64]struct {
-			StartTime int64
-			EndTime   int64
-		}),
+		targetTimestamps: make(map[uint64]TargetTimeRange),
 		playerConditionActive:  make(map[uint64]map[uint32]ActiveCondition),
 		playerConditionHistory: make(map[uint64]map[uint32][]ConditionInterval),
 		playerSeenAppear:       make(map[uint64]bool),
@@ -131,6 +125,12 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 			// Mark that we have seen this entity appear, so condition tracking is reliable
 			a.playerSeenAppear[entity.Id] = true
 
+			// Reset disappearance timestamp if an entity reappears
+			if ts, ok := a.targetTimestamps[entity.Id]; ok {
+				ts.DisappearTime = 0
+				a.targetTimestamps[entity.Id] = ts
+			}
+
 			// Initialize existing conditions from the appear packet
 			if a.playerConditionActive[entity.Id] == nil {
 				a.playerConditionActive[entity.Id] = make(map[uint32]ActiveCondition)
@@ -158,6 +158,12 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 			for _, entity := range entities {
 				a.entityCache[entity.Id] = entity
 				a.playerSeenAppear[entity.Id] = true
+
+				// Reset disappearance timestamp if an entity reappears
+				if ts, ok := a.targetTimestamps[entity.Id]; ok {
+					ts.DisappearTime = 0
+					a.targetTimestamps[entity.Id] = ts
+				}
 
 				if a.playerConditionActive[entity.Id] == nil {
 					a.playerConditionActive[entity.Id] = make(map[uint32]ActiveCondition)
@@ -194,14 +200,14 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 	if p.Op == opcodeEntityDisappear {
 		// UPDATED: Use the new parser to get the correct ID
 		if id, err := packet.ParseEntityDisappearPacket(p); err == nil {
-			a.processEntityDisappear(id)
+			a.processEntityDisappear(id, p.At)
 		}
 	}
 	if p.Op == opcodeEntitiesDisappear {
 		// NEW: Handle batch disappear for the live aggregator
 		if ids, err := packet.ParseEntitiesDisappearPacket(p); err == nil {
 			for _, id := range ids {
-				a.processEntityDisappear(id)
+				a.processEntityDisappear(id, p.At)
 			}
 		}
 	}
@@ -559,9 +565,16 @@ func (a *Aggregator) GetSummary() FightSummary {
 		targetDuration := float64(targetTimes.EndTime - targetTimes.StartTime)
 		conditions := a.calculateConditions(targetId, targetDuration, targetTimes.StartTime, targetTimes.EndTime)
 
+		endTimestamp := targetTimes.DisappearTime
+		if endTimestamp == 0 {
+			endTimestamp = a.encounterEndTime
+		}
+
 		summary.Targets[targetIdStr] = TargetStats{
 			Name:       name,
 			Conditions: conditions,
+			StartTime:  targetTimes.StartTime,
+			EndTime:    endTimestamp,
 		}
 	}
 
@@ -761,11 +774,19 @@ func (a *Aggregator) calculateConditions(entityID uint64, duration float64, wind
 	return conditions
 }
 
-func (a *Aggregator) processEntityDisappear(entityID uint64) {
+func (a *Aggregator) processEntityDisappear(entityID uint64, at time.Time) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
 	// packet ID extraction moved to caller
+
+	// Record disappearance timestamp if we have combat timestamps for this entity
+	if ts, ok := a.targetTimestamps[entityID]; ok {
+		if ts.DisappearTime == 0 {
+			ts.DisappearTime = at.Unix()
+			a.targetTimestamps[entityID] = ts
+		}
+	}
 
 	// Remove from all tracking maps to free memory and "forget" the entity
 	delete(a.entityCache, entityID)
@@ -797,10 +818,7 @@ func (a *Aggregator) Clear() {
 
 	a.damageTaken = make(map[uint64]*PlayerDamageTakenStats)
 	a.targetNames = make(map[uint64]string)
-	a.targetTimestamps = make(map[uint64]struct {
-		StartTime int64
-		EndTime   int64
-	})
+	a.targetTimestamps = make(map[uint64]TargetTimeRange)
 	a.encounterStartTime = 0
 	a.encounterEndTime = 0
 
