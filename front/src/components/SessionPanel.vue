@@ -27,12 +27,25 @@
 
         <v-divider></v-divider>
 
-        <!-- ADDED MIGRATE ALL BUTTON -->
-        <div v-if="sessions.some(s => !s.summary && s.id !== 'live')" class="px-3 pb-2 mt-2">
-          <v-btn block color="primary" variant="tonal" size="small" @click="migrateAll" :loading="isMigratingAll">
+        <!-- ADDED MIGRATE ALL BUTTON WITH PROGRESS BAR -->
+        <div v-if="sessions.some(s => !s.summary && s.id !== 'live') || (isMigratingAll && totalToMigrate > 0)" class="px-3 pb-2 mt-2">
+          <v-btn block color="primary" variant="tonal" size="small" @click="migrateAll" :loading="isMigratingAll && totalToMigrate === 0">
             <v-icon start>mdi-autorenew</v-icon>
             Migrate All Missing
           </v-btn>
+          
+          <div v-if="isMigratingAll && totalToMigrate > 0" class="mt-2">
+            <div class="text-caption text-grey d-flex justify-space-between mb-1">
+              <span>Migrating...</span>
+              <span>{{ migrationProgress }} / {{ totalToMigrate }}</span>
+            </div>
+            <v-progress-linear
+              :model-value="(migrationProgress / totalToMigrate) * 100"
+              color="primary"
+              height="6"
+              rounded
+            ></v-progress-linear>
+          </div>
         </div>
 
         <v-list density="compact" nav>
@@ -64,6 +77,7 @@
                   :active="activeSessionId === item.id"
                   @click="selectSession(item.id)"
                   class="session-item py-2 align-start"
+                  :class="{ 'can-migrate': !item.summary && item.id !== 'live' }"
                   style="height: 115px;"
                 >
                   <div class="d-flex flex-column w-100 justify-start">
@@ -115,7 +129,7 @@
 
                   <template v-slot:append>
                     <div class="session-actions align-self-start pl-2 d-flex flex-column" style="gap: 2px;">
-                      <v-btn variant="text" icon="mdi-autorenew" color="blue-lighten-2" size="x-small" @click.stop="migrateSingle(item)" density="compact" title="Regenerate Summary"></v-btn>
+                      <v-btn v-if="!item.summary && item.id !== 'live'" variant="text" icon="mdi-autorenew" color="blue-lighten-2" size="x-small" @click.stop="migrateSingle(item)" density="compact" title="Generate Summary"></v-btn>
                       <v-btn variant="text" icon="mdi-pencil" size="x-small" @click.stop="openRenameDialog(item)" density="compact"></v-btn>
                       <v-btn variant="text" icon="mdi-delete" color="red-lighten-2" size="x-small" @click.stop="openDeleteDialog(item)" density="compact"></v-btn>
                     </div>
@@ -187,6 +201,8 @@ export default defineComponent({
 
     const searchQuery = ref("");
     const isMigratingAll = ref(false);
+    const migrationProgress = ref(0);
+    const totalToMigrate = ref(0);
 
     const filteredSessions = computed(() => {
       if (!searchQuery.value) return sessions.value;
@@ -351,15 +367,33 @@ export default defineComponent({
     };
 
     const migrateAll = async () => {
+      const toMigrate = sessions.value.filter(s => !s.summary && s.id !== 'live');
+      if (toMigrate.length === 0) return;
+
       isMigratingAll.value = true;
+      totalToMigrate.value = toMigrate.length;
+      migrationProgress.value = 0;
+
       try {
-        await migrateAllSessions();
-        await fetchSessions();
+        for (const session of toMigrate) {
+          try {
+            await migrateSession(session.id);
+            migrationProgress.value++;
+            // Refresh sessions list to show progress visually if needed, 
+            // but fetching the whole list might be heavy. 
+            // For now, we'll just update the local count.
+          } catch (err) {
+            console.error(`Failed to migrate session ${session.id}:`, err);
+          }
+        }
+        await fetchSessions(); // Final refresh
       } catch (e) {
         console.error("Failed to migrate all sessions:", e);
-        alert("Could not migrate all sessions.");
+        alert("Could not complete migration of all sessions.");
       } finally {
         isMigratingAll.value = false;
+        totalToMigrate.value = 0;
+        migrationProgress.value = 0;
       }
     };
 
@@ -444,7 +478,9 @@ export default defineComponent({
       getUniqueEnemies,
       migrateSingle,
       migrateAll,
-      isMigratingAll
+      isMigratingAll,
+      migrationProgress,
+      totalToMigrate
     };
   },
 });
@@ -474,6 +510,15 @@ export default defineComponent({
 .session-item :deep(.v-list-item__append) {
   align-self: flex-start !important;
   margin-top: 0 !important;
+}
+
+.session-item.can-migrate {
+  background: rgba(30, 58, 138, 0.15) !important;
+  border-left: 3px solid #60a5fa !important;
+}
+
+.session-item.can-migrate:hover {
+  background: rgba(30, 58, 138, 0.25) !important;
 }
 
 </style>

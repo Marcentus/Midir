@@ -133,7 +133,7 @@ func handleMigrateSession(sm *SessionManager) http.HandlerFunc {
 			respondWithError(w, http.StatusInternalServerError, "Failed to migrate session: "+err.Error())
 			return
 		}
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
