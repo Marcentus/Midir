@@ -27,6 +27,27 @@
 
         <v-divider></v-divider>
 
+        <!-- ADDED MIGRATE ALL BUTTON WITH PROGRESS BAR -->
+        <div v-if="sessions.some(s => !s.summary && s.id !== 'live') || (isMigratingAll && totalToMigrate > 0)" class="px-3 pb-2 mt-2">
+          <v-btn block color="primary" variant="tonal" size="small" @click="migrateAll" :loading="isMigratingAll && totalToMigrate === 0">
+            <v-icon start>mdi-autorenew</v-icon>
+            Migrate All Missing
+          </v-btn>
+          
+          <div v-if="isMigratingAll && totalToMigrate > 0" class="mt-2">
+            <div class="text-caption text-grey d-flex justify-space-between mb-1">
+              <span>Migrating...</span>
+              <span>{{ migrationProgress }} / {{ totalToMigrate }}</span>
+            </div>
+            <v-progress-linear
+              :model-value="(migrationProgress / totalToMigrate) * 100"
+              color="primary"
+              height="6"
+              rounded
+            ></v-progress-linear>
+          </div>
+        </div>
+
         <v-list density="compact" nav>
           <v-list-item
             prepend-icon="mdi-access-point"
@@ -56,6 +77,7 @@
                   :active="activeSessionId === item.id"
                   @click="selectSession(item.id)"
                   class="session-item py-2 align-start"
+                  :class="{ 'can-migrate': !item.summary && item.id !== 'live' }"
                   style="height: 115px;"
                 >
                   <div class="d-flex flex-column w-100 justify-start">
@@ -106,9 +128,40 @@
                   </div>
 
                   <template v-slot:append>
-                    <div class="session-actions align-self-start pl-2">
-                      <v-btn variant="text" icon="mdi-pencil" size="x-small" @click.stop="openRenameDialog(item)" density="compact"></v-btn>
-                      <v-btn variant="text" icon="mdi-delete" color="red-lighten-2" size="x-small" @click.stop="openDeleteDialog(item)" density="compact"></v-btn>
+                    <div class="session-actions align-self-start">
+                      <v-menu location="bottom end">
+                        <template v-slot:activator="{ props }">
+                          <v-btn
+                            icon="mdi-dots-vertical"
+                            variant="text"
+                            size="x-small"
+                            v-bind="props"
+                            @click.stop
+                          ></v-btn>
+                        </template>
+                        <v-list density="compact" nav>
+                          <v-list-item 
+                            v-if="!item.summary && item.id !== 'live'" 
+                            prepend-icon="mdi-autorenew" 
+                            title="Generate Summary" 
+                            base-color="blue-lighten-2"
+                            @click="migrateSingle(item)"
+                          ></v-list-item>
+                          
+                          <v-list-item 
+                            prepend-icon="mdi-pencil" 
+                            title="Rename" 
+                            @click="openRenameDialog(item)"
+                          ></v-list-item>
+                          
+                          <v-list-item 
+                            prepend-icon="mdi-delete" 
+                            title="Delete" 
+                            base-color="red-lighten-2"
+                            @click="openDeleteDialog(item)"
+                          ></v-list-item>
+                        </v-list>
+                      </v-menu>
                     </div>
                   </template>
                 </v-list-item>
@@ -165,7 +218,7 @@
 
 <script lang="ts">
 import { defineComponent, onMounted, onUnmounted, inject, reactive, ref } from "vue";
-import { getSessions, renameSession, deleteSession } from "@/apicall";
+import { getSessions, renameSession, deleteSession, migrateSession, migrateAllSessions } from "@/apicall";
 import { sessions, activeSessionId, isNavDrawerOpen, fightSummary, condNameMap, liveFavoriteConditions, liveHiddenConditions, toggleLiveConditionPref } from "@/store";
 import { Session } from "@/types";
 import { EntityState, ActiveCondition } from "@/protocols";
@@ -177,6 +230,9 @@ export default defineComponent({
     const appEvent = inject("appEvent");
 
     const searchQuery = ref("");
+    const isMigratingAll = ref(false);
+    const migrationProgress = ref(0);
+    const totalToMigrate = ref(0);
 
     const filteredSessions = computed(() => {
       if (!searchQuery.value) return sessions.value;
@@ -330,6 +386,47 @@ export default defineComponent({
       }
     };
 
+    const migrateSingle = async (session: Session) => {
+      try {
+        await migrateSession(session.id);
+        await fetchSessions();
+      } catch (e) {
+        console.error("Failed to migrate session:", e);
+        alert("Could not migrate session.");
+      }
+    };
+
+    const migrateAll = async () => {
+      const toMigrate = sessions.value.filter(s => !s.summary && s.id !== 'live');
+      if (toMigrate.length === 0) return;
+
+      isMigratingAll.value = true;
+      totalToMigrate.value = toMigrate.length;
+      migrationProgress.value = 0;
+
+      try {
+        for (const session of toMigrate) {
+          try {
+            await migrateSession(session.id);
+            migrationProgress.value++;
+            // Refresh sessions list to show progress visually if needed, 
+            // but fetching the whole list might be heavy. 
+            // For now, we'll just update the local count.
+          } catch (err) {
+            console.error(`Failed to migrate session ${session.id}:`, err);
+          }
+        }
+        await fetchSessions(); // Final refresh
+      } catch (e) {
+        console.error("Failed to migrate all sessions:", e);
+        alert("Could not complete migration of all sessions.");
+      } finally {
+        isMigratingAll.value = false;
+        totalToMigrate.value = 0;
+        migrationProgress.value = 0;
+      }
+    };
+
     const formatSessionTime = (session: Session) => {
       const startTime = session.startTime * 1000;
       const now = Date.now();
@@ -408,7 +505,12 @@ export default defineComponent({
       getExactSessionTime,
       formatDuration,
       formatDamage,
-      getUniqueEnemies
+      getUniqueEnemies,
+      migrateSingle,
+      migrateAll,
+      isMigratingAll,
+      migrationProgress,
+      totalToMigrate
     };
   },
 });
@@ -438,6 +540,15 @@ export default defineComponent({
 .session-item :deep(.v-list-item__append) {
   align-self: flex-start !important;
   margin-top: 0 !important;
+}
+
+.session-item.can-migrate {
+  background: rgba(30, 58, 138, 0.15) !important;
+  border-left: 3px solid #60a5fa !important;
+}
+
+.session-item.can-migrate:hover {
+  background: rgba(30, 58, 138, 0.25) !important;
 }
 
 </style>
