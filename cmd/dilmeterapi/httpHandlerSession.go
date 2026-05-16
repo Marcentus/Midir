@@ -194,7 +194,6 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 	conditionHistory := make(map[string]map[uint32][]ConditionInterval)
 	activeConditions := make(map[string]map[uint32]ActiveCondition)
 	seenAppear := make(map[string]bool)
-	targetTimestamps := make(map[string]TargetTimeRange)
 
 	for scanner.Scan() {
 		line := scanner.Bytes()
@@ -208,26 +207,12 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 			var damageEvent eventDamage
 			if err := json.Unmarshal(line, &damageEvent); err == nil {
 				allDamageEvents = append(allDamageEvents, damageEvent)
-
-				// Update target timestamps during the loop so disappearance events can find them
-				ts := targetTimestamps[damageEvent.TargetId]
-				if ts.StartTime == 0 {
-					ts.StartTime = damageEvent.At
-				}
-				ts.EndTime = damageEvent.At
-				targetTimestamps[damageEvent.TargetId] = ts
 			}
 
 		case eventIdEntityAppear:
 			var appear eventEntityAppear
 			if err := json.Unmarshal(line, &appear); err == nil {
 				seenAppear[appear.Id] = true
-
-				// Reset disappearance timestamp if an entity reappears in the log
-				if ts, ok := targetTimestamps[appear.Id]; ok {
-					ts.DisappearTime = 0
-					targetTimestamps[appear.Id] = ts
-				}
 
 				// Initialize conditions present on appearance
 				if activeConditions[appear.Id] == nil {
@@ -278,21 +263,11 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 					delete(activeConditions[cond.Id], cond.CCId)
 				}
 			}
-
-		case eventIdEntityDisappear:
-			// Record disappearance timestamp if we have combat timestamps for this entity
-			targetIDStr := baseEvent.Id
-			if ts, ok := targetTimestamps[targetIDStr]; ok {
-				if ts.DisappearTime == 0 {
-					ts.DisappearTime = baseEvent.At
-					targetTimestamps[targetIDStr] = ts
-				}
-			}
 		}
 	}
 
 	// STEP 1: Process the collected events to generate the main summary tables.
-	playerStats, damageTaken, talents, talentNames, talentColors, targets, startTime, endTime := processEventsForSummary(allDamageEvents, entitiesInLog, targetTimestamps)
+	playerStats, damageTaken, talents, talentNames, talentColors, targets, startTime, endTime, targetTimestamps := processEventsForSummary(allDamageEvents, entitiesInLog)
 
 	// STEP 2: Generate graph data
 	graphDataByTarget := make(map[string]map[string][]GraphDataPoint)
@@ -336,7 +311,7 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 
 // processEventsForSummary takes the raw list of damage events and entity data from a log file
 // and processes it into structured data needed for the summary view.
-func processEventsForSummary(allDamageEvents []eventDamage, entitiesInLog map[string]eventEntityAppear, targetTimestamps map[string]TargetTimeRange) (
+func processEventsForSummary(allDamageEvents []eventDamage, entitiesInLog map[string]eventEntityAppear) (
 	// RETURN VALUES:
 	playerStats map[string]*PlayerStats,
 	damageTakenInLog map[string]*PlayerDamageTakenStats,
@@ -346,6 +321,10 @@ func processEventsForSummary(allDamageEvents []eventDamage, entitiesInLog map[st
 	uniqueTargets map[string]bool,
 	encounterStartTime int64,
 	encounterEndTime int64,
+	targetTimestamps map[string]struct {
+		StartTime int64
+		EndTime   int64
+	},
 ) {
 	// Initialize all the maps and variables we're going to populate.
 	playerStats = make(map[string]*PlayerStats)
@@ -354,6 +333,10 @@ func processEventsForSummary(allDamageEvents []eventDamage, entitiesInLog map[st
 	playerTalentNamesInLog = make(map[string]string)
 	playerTalentColorsInLog = make(map[string]string)
 	uniqueTargets = make(map[string]bool)
+	targetTimestamps = make(map[string]struct {
+		StartTime int64
+		EndTime   int64
+	})
 
 	// If there are no damage events, we can return early.
 	if len(allDamageEvents) == 0 {
@@ -383,6 +366,15 @@ func processEventsForSummary(allDamageEvents []eventDamage, entitiesInLog map[st
 
 	// Iterate over every single damage event that occurred in the log.
 	for _, damageEvent := range allDamageEvents {
+
+		// Update the shared combat timer for the specific target that was hit.
+		targetIDStr := damageEvent.TargetId
+		timestamps := targetTimestamps[targetIDStr]
+		if timestamps.StartTime == 0 {
+			timestamps.StartTime = damageEvent.At
+		}
+		timestamps.EndTime = damageEvent.At
+		targetTimestamps[targetIDStr] = timestamps
 
 		// Check if we can identify the attacker's talent from the skill they used.
 		// Logic updated to ensure we capture Name/Color even if Icon is already found (though unlikely to differ)
@@ -738,7 +730,10 @@ func finalizeSummaryFromLog(
 	entitiesInLog map[string]eventEntityAppear,
 	encounterStartTime int64,
 	encounterEndTime int64,
-	targetTimestamps map[string]TargetTimeRange,
+	targetTimestamps map[string]struct {
+		StartTime int64
+		EndTime   int64
+	},
 	conditionHistory map[string]map[uint32][]ConditionInterval,
 	activeConditions map[string]map[uint32]ActiveCondition,
 	seenAppear map[string]bool,
@@ -814,18 +809,6 @@ func finalizeSummaryFromLog(
 			Name:       name,
 			RaceID:     raceId,
 			Conditions: conditions,
-			StartTime:  targetTimes.StartTime,
-			EndTime:    targetTimes.EndTime,
-		}
-
-		if targetTimes.DisappearTime > 0 {
-			t := summary.Targets[targetIdStr]
-			t.EndTime = targetTimes.DisappearTime
-			summary.Targets[targetIdStr] = t
-		} else {
-			t := summary.Targets[targetIdStr]
-			t.EndTime = encounterEndTime
-			summary.Targets[targetIdStr] = t
 		}
 	}
 

@@ -86,8 +86,6 @@ export interface PlayerDamageTakenStats {
 export interface TargetStats {
   name: string;
   conditions?: { [id: number]: ConditionStats };
-  startTime?: number;
-  endTime?: number;
 }
 
 // NEW: ActiveCondition matches the backend struct for currently active conditions

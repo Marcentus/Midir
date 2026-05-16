@@ -117,12 +117,7 @@
                         <template v-for="(e, idx) in getUniqueEnemies(item.summary.enemies).slice(0, 3)" :key="'e'+idx">
                           <div class="d-flex align-center" style="gap: 4px;">
                             <v-icon size="14" color="red-lighten-2" style="flex: 0 0 14px;">mdi-sword-cross</v-icon>
-                            <span class="text-truncate text-grey" style="font-size: 11px;">
-                              {{ e.name }}
-                              <span v-if="e.startTime && e.endTime && item.summary.startTime" class="ml-1" style="font-size: 9px; opacity: 0.7;">
-                                ({{ formatTime(e.startTime - item.summary.startTime) }}-{{ formatTime(e.endTime - item.summary.startTime) }})
-                              </span>
-                            </span>
+                            <span class="text-truncate text-grey" style="font-size: 11px;">{{ e.name }}</span>
                           </div>
                         </template>
                         <span v-if="getUniqueEnemies(item.summary.enemies).length > 3" class="text-grey mt-1" style="font-size: 10px;">
@@ -472,13 +467,6 @@ export default defineComponent({
       return `${s}s`;
     };
 
-    const formatTime = (totalSeconds: number) => {
-      if (totalSeconds < 0) totalSeconds = 0;
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = Math.floor(totalSeconds % 60);
-      return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-    };
-
     const formatDamage = (dmg: number) => {
       if (!dmg) return "0";
       if (dmg >= 1000000) return (dmg / 1000000).toFixed(1) + "M";
@@ -518,7 +506,6 @@ export default defineComponent({
       formatDuration,
       formatDamage,
       getUniqueEnemies,
-      formatTime,
       migrateSingle,
       migrateAll,
       isMigratingAll,

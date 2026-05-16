@@ -282,22 +282,10 @@ export default defineComponent({
         }
       }
       const targets = Object.entries(fightSummary.targets).map(
-        ([id, stats]) => {
-          let timeLabel = "";
-          if (stats.startTime && stats.endTime && fightSummary.startTime) {
-            const relStart = stats.startTime - fightSummary.startTime;
-            const relEnd = stats.endTime - fightSummary.startTime;
-            timeLabel = ` (${formatDuration(relStart)}-${formatDuration(
-              relEnd
-            )})`;
-          }
-          return {
-            id,
-            name: `${stats.name}${timeLabel} (${formatNumber(
-              totalDamageByTarget[id] || 0
-            )})`,
-          };
-        }
+        ([id, stats]) => ({
+          id,
+          name: `${stats.name} (${formatNumber(totalDamageByTarget[id] || 0)})`,
+        })
       );
       targets.sort((a, b) => {
         const damageA = totalDamageByTarget[a.id] || 0;

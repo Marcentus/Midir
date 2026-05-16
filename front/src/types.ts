@@ -19,12 +19,9 @@ export interface SessionSummaryEnemy {
   name: string;
   raceId: number;
   totalDamage: number;
-  startTime?: number;
-  endTime?: number;
 }
 
 export interface SessionSummaryData {
-  startTime: number;
   duration: number;
   totalDamage: number;
   players: SessionSummaryPlayer[];

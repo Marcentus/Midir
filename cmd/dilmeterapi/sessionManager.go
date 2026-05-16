@@ -33,8 +33,6 @@ type SessionSummaryEnemy struct {
 	Name        string  `json:"name"`
 	RaceID      uint32  `json:"raceId"`
 	TotalDamage float32 `json:"totalDamage"`
-	StartTime   int64   `json:"startTime"`
-	EndTime     int64   `json:"endTime"`
 }
 
 type SessionSummaryData struct {
@@ -217,19 +215,14 @@ func (sm *SessionManager) SaveLiveSession(name string) error {
 		for tID, dmg := range targetDamageMap {
 			name := "Unknown"
 			var raceId uint32
-			var startTime, endTime int64
 			if tStat, ok := summary.Targets[tID]; ok {
 				name = tStat.Name
 				raceId = tStat.RaceID
-				startTime = tStat.StartTime
-				endTime = tStat.EndTime
 			}
 			summaryData.Enemies = append(summaryData.Enemies, SessionSummaryEnemy{
 				Name:        name,
 				RaceID:      raceId,
 				TotalDamage: dmg,
-				StartTime:   startTime,
-				EndTime:     endTime,
 			})
 		}
 		sort.Slice(summaryData.Enemies, func(i, j int) bool {
@@ -608,19 +601,14 @@ func (sm *SessionManager) MigrateSession(sessionID string) error {
 	for tID, dmg := range targetDamageMap {
 		name := "Unknown"
 		var raceId uint32
-		var startTime, endTime int64
 		if tStat, ok := summary.Targets[tID]; ok {
 			name = tStat.Name
 			raceId = tStat.RaceID
-			startTime = tStat.StartTime
-			endTime = tStat.EndTime
 		}
 		summaryData.Enemies = append(summaryData.Enemies, SessionSummaryEnemy{
 			Name:        name,
 			RaceID:      raceId,
 			TotalDamage: dmg,
-			StartTime:   startTime,
-			EndTime:     endTime,
 		})
 	}
 	sort.Slice(summaryData.Enemies, func(i, j int) bool {
