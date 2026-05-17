@@ -118,18 +118,18 @@
               </v-expand-transition>
               <div class="d-flex ga-2 mt-4">
                 <v-btn
+                  v-if="!captureStatus.is_running"
                   color="primary"
                   type="submit"
                   prepend-icon="mdi-play"
                   :loading="isApplying"
                 >
-                  {{ captureStatus.is_running ? 'Apply & Restart Capture' : 'Start Capture' }}
+                  Start Capture
                 </v-btn>
                 
                 <v-btn
                   v-if="captureStatus.is_running"
-                  color="secondary"
-                  variant="outlined"
+                  color="primary"
                   prepend-icon="mdi-refresh"
                   @click="restartCaptureKeepSession"
                   :loading="isRestartingKeepSession"
@@ -149,7 +149,7 @@
                 </v-btn>
               </div>
               <div class="text-caption text-grey mt-2">
-                Apply & Restart starts a fresh capture and clears the current live session. Reconnect Capture only reopens packet capture and keeps the current session data.
+                Reconnect Capture reopens packet capture and keeps the current session data.
               </div>
             </v-form>
           </v-window-item>
