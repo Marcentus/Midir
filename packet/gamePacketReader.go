@@ -587,6 +587,15 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 				continue
 			}
 
+			// In ExitLag mode with a broad "tcp" BPF, we still only want the
+			// server/relay -> game client direction. Feeding both directions into the
+			// Mabinogi parser makes it constantly switch streams and corrupts framing.
+			// This also fits the macOS sniffing setup where this Mac watches the game
+			// PC on LAN: public relay source -> private LAN destination.
+			if ip4Layer.SrcIP.IsPrivate() || ip4Layer.SrcIP.IsLoopback() || !ip4Layer.DstIP.IsPrivate() {
+				continue
+			}
+
 			key := flowKeyFor(ip4Layer, tcpLayer)
 			for streamKey, st := range streams {
 				if !st.lastSeen.IsZero() && ci.Timestamp.Sub(st.lastSeen) > streamTTL {
@@ -603,7 +612,6 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 					lastSeen: ci.Timestamp,
 				}
 				streams[key] = st
-				logger.Printf("[TCP Stream] tracking %s", key)
 			}
 			st.lastSeen = ci.Timestamp
 
