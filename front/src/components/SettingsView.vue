@@ -34,6 +34,26 @@
               Capture is currently <strong>stopped</strong>. Waiting for configuration.
             </v-alert>
 
+            <v-alert
+              v-if="captureStatus.is_running"
+              :type="packetStatus.perSecond > 0 ? 'success' : 'info'"
+              variant="tonal"
+              class="mb-4"
+              density="compact"
+            >
+              <div class="d-flex align-center justify-space-between flex-wrap ga-2">
+                <div>
+                  <strong>Decoded packets:</strong>
+                  {{ packetStatus.total }} total,
+                  {{ packetStatus.perSecond }}/sec
+                  <span v-if="packetStatus.lastOp"> · last op: 0x{{ packetStatus.lastOp.toString(16) }}</span>
+                </div>
+                <div class="text-caption text-grey">
+                  {{ packetStatus.perSecond > 0 ? 'Midir is receiving game packets.' : 'No decoded game packets this second.' }}
+                </div>
+              </div>
+            </v-alert>
+
             <v-form @submit.prevent="applyCaptureSettings">
               <v-select
                 v-model="captureConfig.nicName"
@@ -230,6 +250,7 @@ export default defineComponent({
     // --- CAPTURE SETTINGS ---
     const nics = ref<any[]>([]);
     const captureStatus = ref({ is_running: false, nic: '', exitlag: false, promiscuous: false });
+    const packetStatus = ref({ total: 0, perSecond: 0, lastPacketAt: '', lastOp: 0 });
     const isApplying = ref(false);
     const isStopping = ref(false);
     const captureConfig = ref({
@@ -356,6 +377,10 @@ export default defineComponent({
        fetchNics();
        fetchStatus();
        
+       socket.onPacketStatus = (status) => {
+         packetStatus.value = status;
+       };
+
        socket.onAutodetectProgress = (progress) => {
          if (isAutodetecting.value) {
            autodetectProgress.value = progress.current;
@@ -373,6 +398,7 @@ export default defineComponent({
     });
     
     onUnmounted(() => {
+       socket.onPacketStatus = undefined;
        socket.onAutodetectProgress = undefined;
        socket.onAutodetectDone = undefined;
        if (isAutodetecting.value) {
@@ -387,6 +413,7 @@ export default defineComponent({
       // Capture
       nics,
       captureStatus,
+      packetStatus,
       captureConfig,
       isApplying,
       isStopping,

@@ -13,6 +13,7 @@ export class SocketClient {
   public onSystemWarning?: (msg: string) => void;
   public onPacketDebug?: (info: any) => void; // Header only
   public onPacketDetails?: (details: any) => void; // Full details
+  public onPacketStatus?: (status: {total: number, perSecond: number, lastPacketAt: string, lastOp: number}) => void;
   public onAutodetectProgress?: (progress: {current: number, target: number}) => void;
   public onAutodetectDone?: (result: {ip: string, port: string}) => void;
 
@@ -68,6 +69,9 @@ export class SocketClient {
             case "packet_details":
                 this.onPacketDetails?.(msg.data);
                 break;
+            case "packet_status":
+                this.onPacketStatus?.(msg.data as any);
+                break;
             case "autodetect_progress":
                 this.onAutodetectProgress?.(msg.data as any);
                 break;
@@ -112,6 +116,7 @@ export class SocketClient {
     this.onSystemWarning = undefined;
     this.onPacketDebug = undefined;
     this.onPacketDetails = undefined;
+    this.onPacketStatus = undefined;
     this.onAutodetectProgress = undefined;
     this.onAutodetectDone = undefined;
 
