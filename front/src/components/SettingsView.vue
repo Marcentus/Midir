@@ -34,6 +34,32 @@
               Capture is currently <strong>stopped</strong>. Waiting for configuration.
             </v-alert>
 
+            <v-alert
+              v-if="captureStatus.is_running"
+              :type="packetStatus.perSecond > 0 ? 'success' : 'info'"
+              variant="tonal"
+              class="mb-4"
+              density="compact"
+            >
+              <div class="d-flex align-center justify-space-between flex-wrap ga-2">
+                <div>
+                  <strong>Decoded packets:</strong>
+                  {{ packetStatus.total }} total,
+                  {{ packetStatus.perSecond }}/sec
+                  <span v-if="packetStatus.lastOp"> · last op: 0x{{ packetStatus.lastOp.toString(16) }}</span>
+                  <div v-if="packetStatus.topOps?.length" class="text-caption mt-1">
+                    Recent ops:
+                    <span v-for="op in packetStatus.topOps.slice(0, 8)" :key="op.op" class="mr-2">
+                      0x{{ op.op.toString(16) }}×{{ op.count }}
+                    </span>
+                  </div>
+                </div>
+                <div class="text-caption text-grey">
+                  {{ packetStatus.perSecond > 0 ? 'Midir is receiving game packets.' : 'No decoded game packets this second.' }}
+                </div>
+              </div>
+            </v-alert>
+
             <v-form @submit.prevent="applyCaptureSettings">
               <v-select
                 v-model="captureConfig.nicName"
@@ -79,91 +105,38 @@
               ></v-switch>
 
               <v-expand-transition>
-                <div v-show="captureConfig.exitlag">
-                  <div class="mb-4 pa-3 border border-opacity-25 rounded">
-                    <div class="d-flex align-center justify-space-between mb-3">
-                    <div>
-                       <div class="text-subtitle-2 font-weight-bold text-primary">ExitLag Configuration</div>
-                       <div class="text-caption text-grey">Auto-detect or manually enter your routed game IP/Port.</div>
-                    </div>
-                    
-                    <v-btn 
-                      v-if="!isAutodetecting"
-                      size="small" 
-                      color="secondary" 
-                      variant="elevated"
-                      :disabled="!captureConfig.nicName"
-                      @click="startAutodetect"
-                      prepend-icon="mdi-radar"
-                    >
-                      Auto-Detect IP/Port
-                    </v-btn>
-                    <v-btn 
-                      v-if="isAutodetecting"
-                      size="small" 
-                      color="error" 
-                      variant="elevated"
-                      @click="stopAutodetect"
-                    >
-                      Cancel Detection
-                    </v-btn>
-                  </div>
-                  
-                  <v-expand-transition>
-                    <div v-if="isAutodetecting" class="mb-4">
-                      <v-alert type="info" variant="tonal" density="compact" class="mb-2">
-                        Please run around in-game to generate movement packets.
-                      </v-alert>
-                      <v-progress-linear 
-                        :model-value="(autodetectProgress / 5) * 100" 
-                        color="primary" 
-                        height="20" 
-                        striped
-                      >
-                        <template v-slot:default>
-                          <strong>{{ autodetectProgress }} / 5 Packets Detected</strong>
-                        </template>
-                      </v-progress-linear>
-                    </div>
-                  </v-expand-transition>
-
-                  <v-row>
-                    <v-col cols="12" md="6">
-                      <v-text-field
-                        v-model="captureConfig.ip"
-                        label="ExitLag Target IP"
-                        placeholder="e.g. 192.168.x.x"
-                        variant="outlined"
-                        density="compact"
-                        hide-details
-                        :disabled="isAutodetecting"
-                      ></v-text-field>
-                    </v-col>
-                    <v-col cols="12" md="6">
-                      <v-text-field
-                        v-model="captureConfig.port"
-                        label="ExitLag Target Port"
-                        placeholder="e.g. 11020"
-                        variant="outlined"
-                        density="compact"
-                        hide-details
-                        :disabled="isAutodetecting"
-                      ></v-text-field>
-                    </v-col>
-                  </v-row>
-                </div>
-                </div>
+                <v-alert
+                  v-show="captureConfig.exitlag"
+                  type="info"
+                  variant="tonal"
+                  density="compact"
+                  class="mb-4"
+                >
+                  Dynamic ExitLag mode captures TCP on the selected interface and follows decoded game packets automatically.
+                  IP/port auto-detect is disabled for this experimental build.
+                </v-alert>
               </v-expand-transition>
               <div class="d-flex ga-2 mt-4">
                 <v-btn
+                  v-if="!captureStatus.is_running"
                   color="primary"
                   type="submit"
                   prepend-icon="mdi-play"
                   :loading="isApplying"
                 >
-                  {{ captureStatus.is_running ? 'Apply & Restart Capture' : 'Start Capture' }}
+                  Start Capture
                 </v-btn>
                 
+                <v-btn
+                  v-if="captureStatus.is_running"
+                  color="primary"
+                  prepend-icon="mdi-refresh"
+                  @click="restartCaptureKeepSession"
+                  :loading="isRestartingKeepSession"
+                >
+                  Reconnect Capture
+                </v-btn>
+
                 <v-btn
                   v-if="captureStatus.is_running"
                   color="error"
@@ -176,7 +149,7 @@
                 </v-btn>
               </div>
               <div class="text-caption text-grey mt-2">
-                Note: Restarting the capture will clear the current ongoing live session data to avoid corrupted aggregator states.
+                Reconnect Capture reopens packet capture and keeps the current session data.
               </div>
             </v-form>
           </v-window-item>
@@ -230,8 +203,10 @@ export default defineComponent({
     // --- CAPTURE SETTINGS ---
     const nics = ref<any[]>([]);
     const captureStatus = ref({ is_running: false, nic: '', exitlag: false, promiscuous: false });
+    const packetStatus = ref<{ total: number; perSecond: number; lastPacketAt: string; lastOp: number; topOps: {op: number; count: number; total: number}[] }>({ total: 0, perSecond: 0, lastPacketAt: '', lastOp: 0, topOps: [] });
     const isApplying = ref(false);
     const isStopping = ref(false);
+    const isRestartingKeepSession = ref(false);
     const captureConfig = ref({
       nicName: "",
       ip: "",
@@ -300,6 +275,33 @@ export default defineComponent({
       }
     };
 
+    const restartCaptureKeepSession = async () => {
+      if (!captureConfig.value.nicName) {
+        alert("Please select a network interface.");
+        return;
+      }
+
+      isRestartingKeepSession.value = true;
+      try {
+        const res = await fetch("/api/setup/restart-keep-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(captureConfig.value)
+        });
+        if (res.ok) {
+          await fetchStatus();
+        } else {
+          const errMsg = await res.text();
+          alert("Failed to reconnect capture: " + errMsg);
+        }
+      } catch (err) {
+        console.error("Error reconnecting capture:", err);
+        alert("Network error while trying to reconnect capture.");
+      } finally {
+        isRestartingKeepSession.value = false;
+      }
+    };
+
     const stopCapture = async () => {
       isStopping.value = true;
       try {
@@ -356,6 +358,10 @@ export default defineComponent({
        fetchNics();
        fetchStatus();
        
+       socket.onPacketStatus = (status) => {
+         packetStatus.value = { ...status, topOps: status.topOps || [] };
+       };
+
        socket.onAutodetectProgress = (progress) => {
          if (isAutodetecting.value) {
            autodetectProgress.value = progress.current;
@@ -373,6 +379,7 @@ export default defineComponent({
     });
     
     onUnmounted(() => {
+       socket.onPacketStatus = undefined;
        socket.onAutodetectProgress = undefined;
        socket.onAutodetectDone = undefined;
        if (isAutodetecting.value) {
@@ -387,10 +394,13 @@ export default defineComponent({
       // Capture
       nics,
       captureStatus,
+      packetStatus,
       captureConfig,
       isApplying,
       isStopping,
+      isRestartingKeepSession,
       applyCaptureSettings,
+      restartCaptureKeepSession,
       stopCapture,
       
       // Autodetect

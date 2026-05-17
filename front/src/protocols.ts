@@ -140,7 +140,7 @@ export interface GraphDataPoint {
 // --- NEW: WebSocket and Player Interfaces ---
 
 export interface WebSocketMessage {
-  type: "summary" | "player_update_batch" | "system_error" | "system_warning" | "packet_debug" | "packet_details" | "autodetect_progress" | "autodetect_done";
+  type: "summary" | "player_update_batch" | "system_error" | "system_warning" | "packet_debug" | "packet_details" | "packet_status" | "autodetect_progress" | "autodetect_done";
   data: any;
 }
 
