@@ -105,80 +105,16 @@
               ></v-switch>
 
               <v-expand-transition>
-                <div v-show="captureConfig.exitlag">
-                  <div class="mb-4 pa-3 border border-opacity-25 rounded">
-                    <div class="d-flex align-center justify-space-between mb-3">
-                    <div>
-                       <div class="text-subtitle-2 font-weight-bold text-primary">ExitLag Configuration</div>
-                       <div class="text-caption text-grey">Auto-detect or manually enter your routed game IP/Port.</div>
-                    </div>
-                    
-                    <v-btn 
-                      v-if="!isAutodetecting"
-                      size="small" 
-                      color="secondary" 
-                      variant="elevated"
-                      :disabled="!captureConfig.nicName"
-                      @click="startAutodetect"
-                      prepend-icon="mdi-radar"
-                    >
-                      Auto-Detect IP/Port
-                    </v-btn>
-                    <v-btn 
-                      v-if="isAutodetecting"
-                      size="small" 
-                      color="error" 
-                      variant="elevated"
-                      @click="stopAutodetect"
-                    >
-                      Cancel Detection
-                    </v-btn>
-                  </div>
-                  
-                  <v-expand-transition>
-                    <div v-if="isAutodetecting" class="mb-4">
-                      <v-alert type="info" variant="tonal" density="compact" class="mb-2">
-                        Please run around in-game to generate movement packets.
-                      </v-alert>
-                      <v-progress-linear 
-                        :model-value="(autodetectProgress / 5) * 100" 
-                        color="primary" 
-                        height="20" 
-                        striped
-                      >
-                        <template v-slot:default>
-                          <strong>{{ autodetectProgress }} / 5 Packets Detected</strong>
-                        </template>
-                      </v-progress-linear>
-                    </div>
-                  </v-expand-transition>
-
-                  <v-row>
-                    <v-col cols="12" md="6">
-                      <v-text-field
-                        v-model="captureConfig.ip"
-                        label="ExitLag Target IP"
-                        placeholder="e.g. 192.168.x.x"
-                        variant="outlined"
-                        density="compact"
-                        hide-details
-                        :disabled="isAutodetecting"
-                      ></v-text-field>
-                    </v-col>
-                    <v-col cols="12" md="6">
-                      <v-text-field
-                        v-model="captureConfig.port"
-                        label="ExitLag Target Port"
-                        placeholder="e.g. 11020"
-                        variant="outlined"
-                        density="compact"
-                        hide-details
-                        :disabled="isAutodetecting"
-                      ></v-text-field>
-                    </v-col>
-                  </v-row>
-                </div>
-                </div>
+                <v-alert
+                  v-show="captureConfig.exitlag"
+                  type="info"
+                  variant="tonal"
+                  density="compact"
+                  class="mb-4"
+                >
+                  Dynamic ExitLag mode captures TCP on the selected interface and follows decoded game packets automatically.
+                  IP/port auto-detect is disabled for this experimental build.
+                </v-alert>
               </v-expand-transition>
               <div class="d-flex ga-2 mt-4">
                 <v-btn
