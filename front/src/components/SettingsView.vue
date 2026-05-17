@@ -128,6 +128,17 @@
                 
                 <v-btn
                   v-if="captureStatus.is_running"
+                  color="secondary"
+                  variant="outlined"
+                  prepend-icon="mdi-refresh"
+                  @click="restartCaptureKeepSession"
+                  :loading="isRestartingKeepSession"
+                >
+                  Reconnect Capture
+                </v-btn>
+
+                <v-btn
+                  v-if="captureStatus.is_running"
                   color="error"
                   variant="outlined"
                   prepend-icon="mdi-stop"
@@ -138,7 +149,7 @@
                 </v-btn>
               </div>
               <div class="text-caption text-grey mt-2">
-                Note: Restarting the capture will clear the current ongoing live session data to avoid corrupted aggregator states.
+                Apply & Restart starts a fresh capture and clears the current live session. Reconnect Capture only reopens packet capture and keeps the current session data.
               </div>
             </v-form>
           </v-window-item>
@@ -195,6 +206,7 @@ export default defineComponent({
     const packetStatus = ref<{ total: number; perSecond: number; lastPacketAt: string; lastOp: number; topOps: {op: number; count: number; total: number}[] }>({ total: 0, perSecond: 0, lastPacketAt: '', lastOp: 0, topOps: [] });
     const isApplying = ref(false);
     const isStopping = ref(false);
+    const isRestartingKeepSession = ref(false);
     const captureConfig = ref({
       nicName: "",
       ip: "",
@@ -260,6 +272,33 @@ export default defineComponent({
         alert("Network error while trying to start capture.");
       } finally {
         isApplying.value = false;
+      }
+    };
+
+    const restartCaptureKeepSession = async () => {
+      if (!captureConfig.value.nicName) {
+        alert("Please select a network interface.");
+        return;
+      }
+
+      isRestartingKeepSession.value = true;
+      try {
+        const res = await fetch("/api/setup/restart-keep-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(captureConfig.value)
+        });
+        if (res.ok) {
+          await fetchStatus();
+        } else {
+          const errMsg = await res.text();
+          alert("Failed to reconnect capture: " + errMsg);
+        }
+      } catch (err) {
+        console.error("Error reconnecting capture:", err);
+        alert("Network error while trying to reconnect capture.");
+      } finally {
+        isRestartingKeepSession.value = false;
       }
     };
 
@@ -359,7 +398,9 @@ export default defineComponent({
       captureConfig,
       isApplying,
       isStopping,
+      isRestartingKeepSession,
       applyCaptureSettings,
+      restartCaptureKeepSession,
       stopCapture,
       
       // Autodetect

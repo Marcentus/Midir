@@ -175,7 +175,7 @@ func run(ctx context.Context, nicName string, fileName string, exitlagEnabled bo
 	playerCache.OnPlayerUpdate = pub.QueuePlayerUpdate
 
 	if nicName != "" || fileName != "" {
-		err := startPacketCapture(nicName, fileName, exitlagEnabled, filter, true)
+		err := startPacketCapture(nicName, fileName, exitlagEnabled, filter, true, true)
 		if err != nil {
 			logger.Println("Failed to start capture from CLI arguments:", err)
 		}
