@@ -520,6 +520,12 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 	packetLayers := []gopacket.LayerType(nil)
 	streams := make(map[tcpFlowKey]*tcpStreamState)
 	const streamTTL = 30 * time.Second
+	// ExitLag dynamic mode still needs a direction guard. We first identify the
+	// game client LAN IP from a public relay -> private client packet, then allow
+	// any TCP source inbound to that client. This keeps local/private ExitLag
+	// metadata streams while excluding client -> relay traffic that corrupts
+	// Mabinogi packet framing.
+	var exitLagClientIP string
 
 	flowKeyFor := func(ip layers.IPv4, tcp layers.TCP) tcpFlowKey {
 		return tcpFlowKey(fmt.Sprintf("%s:%d>%s:%d", ip.SrcIP, tcp.SrcPort, ip.DstIP, tcp.DstPort))
@@ -599,6 +605,16 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 
 		for _, layer := range packetLayers {
 			if layer != layers.LayerTypeTCP || len(tcpLayer.Payload) < 1 {
+				continue
+			}
+
+			if exitLagClientIP == "" {
+				if ip4Layer.SrcIP.IsPrivate() || ip4Layer.SrcIP.IsLoopback() || !ip4Layer.DstIP.IsPrivate() {
+					continue
+				}
+				exitLagClientIP = ip4Layer.DstIP.String()
+				logger.Printf("[ExitLag Dynamic] following inbound traffic to game client %s", exitLagClientIP)
+			} else if ip4Layer.DstIP.String() != exitLagClientIP {
 				continue
 			}
 
