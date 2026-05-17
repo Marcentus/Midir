@@ -10,11 +10,11 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/Marcentus/Midir/packet"
 	"github.com/go-chi/chi/v5"
 	"github.com/gopacket/gopacket"
 	"github.com/gopacket/gopacket/layers"
 	"github.com/gopacket/gopacket/pcap"
-	"github.com/Marcentus/Midir/packet"
 )
 
 var activeExitlag bool
@@ -25,7 +25,7 @@ var autodetectMu sync.Mutex
 const configFile = "settings.json"
 
 type CaptureConfig struct {
-	NicName string `json:"nicName"`
+	NicName     string `json:"nicName"`
 	IP          string `json:"ip"`
 	Port        string `json:"port"`
 	ExitLag     bool   `json:"exitlag"`
@@ -57,14 +57,14 @@ func setupRouter() http.Handler {
 	r.Get("/status", func(w http.ResponseWriter, r *http.Request) {
 		captureMu.Lock()
 		defer captureMu.Unlock()
-		
+
 		cfg := loadConfig()
 		var ip, port string
 		if cfg != nil {
 			ip = cfg.IP
 			port = cfg.Port
 		}
-		
+
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"is_running":  isCaptureRunning,
 			"nic":         activeNicName,
@@ -119,7 +119,7 @@ func setupRouter() http.Handler {
 			ip = config.IP
 			port = config.Port
 		}
-		filter := buildPcapFilter(ip, port)
+		filter := buildPcapFilter(ip, port, config.ExitLag)
 
 		err := startPacketCapture(config.NicName, "", config.ExitLag, filter, config.Promiscuous)
 		if err != nil {
@@ -303,7 +303,7 @@ func startPacketCapture(nicName string, fileName string, exitlagEnabled bool, fi
 		Filter:          filter,
 		PromiscuousMode: promiscuous,
 	})
-	
+
 	if err != nil {
 		cancel()
 		cancelCapture = nil

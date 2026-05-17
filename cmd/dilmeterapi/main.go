@@ -18,11 +18,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Marcentus/Midir/constants"
+	"github.com/Marcentus/Midir/packet"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gopacket/gopacket/pcap"
-	"github.com/Marcentus/Midir/constants"
-	"github.com/Marcentus/Midir/packet"
 	"golang.org/x/net/websocket"
 )
 
@@ -56,7 +56,14 @@ var globalSm *SessionManager
 var globalReader *packet.GameServerPacketReader
 var captureDone chan struct{}
 
-func buildPcapFilter(ips, ports string) string {
+func buildPcapFilter(ips, ports string, exitlagEnabled bool) string {
+	if exitlagEnabled {
+		// ExitLag can change both relay IP and relay port mid-session. In ExitLag
+		// mode we capture all TCP on the selected interface, then follow valid
+		// game streams in the Go parser instead of binding libpcap to one socket.
+		return "tcp"
+	}
+
 	ipList := constants.DefaultGameserverNet
 	if ips != "" {
 		ipList = strings.Split(ips, ",")
@@ -96,7 +103,7 @@ func main() {
 
 	mode := flag.Arg(0)
 	logger.Println("* Midir", mode)
-	pcapFilter := buildPcapFilter(*ip, *portFlag)
+	pcapFilter := buildPcapFilter(*ip, *portFlag, *exitlag)
 
 	switch mode {
 	// ... (the entire switch block remains unchanged)
@@ -188,7 +195,7 @@ func run(ctx context.Context, nicName string, fileName string, exitlagEnabled bo
 				}
 				if found {
 					logger.Println("Saved NIC verified. Auto-starting capture...")
-					f := buildPcapFilter(cfg.IP, cfg.Port)
+					f := buildPcapFilter(cfg.IP, cfg.Port, cfg.ExitLag)
 					err := startPacketCapture(cfg.NicName, "", cfg.ExitLag, f, cfg.Promiscuous)
 					if err != nil {
 						logger.Println("Failed to start saved capture:", err)
@@ -272,7 +279,7 @@ func startWebServer(pub *eventPublisher, sm *SessionManager) {
 	// --- END CORRECTION ---
 
 	logger.Printf("Server listening on port %d", port)
-	
+
 	// Print preferred local network IP for other PCs to connect
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err == nil {
