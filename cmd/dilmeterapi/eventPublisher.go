@@ -102,6 +102,8 @@ func (t *eventPublisher) loop() {
 	var packetsThisSecond uint64
 	var lastPacketAt time.Time
 	var lastOp uint32
+	opCounts := make(map[uint32]uint64)
+	opCountsThisSecond := make(map[uint32]uint64)
 
 	for {
 		select {
@@ -112,6 +114,8 @@ func (t *eventPublisher) loop() {
 			packetsThisSecond++
 			lastPacketAt = p.At
 			lastOp = p.Op
+			opCounts[p.Op]++
+			opCountsThisSecond[p.Op]++
 
 			// if p.Op != packet.OpCodeSystemError && p.Op != packet.OpCodeSystemWarning {
 			// 	logger.Printf("--> Processing packet with OpCode: 0x%X", p.Op)
@@ -149,6 +153,15 @@ func (t *eventPublisher) loop() {
 			// logger.Printf("<-- [END] Finished processing packet with OpCode: 0x%X", p.Op)
 
 		case <-ticker.C:
+			topOps := make([]map[string]interface{}, 0, len(opCountsThisSecond))
+			for op, count := range opCountsThisSecond {
+				topOps = append(topOps, map[string]interface{}{
+					"op":    op,
+					"count": count,
+					"total": opCounts[op],
+				})
+			}
+
 			packetStatus := WebSocketMessage{
 				Type: "packet_status",
 				Data: map[string]interface{}{
@@ -156,6 +169,7 @@ func (t *eventPublisher) loop() {
 					"perSecond":    packetsThisSecond,
 					"lastPacketAt": lastPacketAt,
 					"lastOp":       lastOp,
+					"topOps":       topOps,
 				},
 			}
 			packetStatusBytes, err := json.Marshal(packetStatus)
@@ -165,6 +179,7 @@ func (t *eventPublisher) loop() {
 				t.publish(packetStatusBytes)
 			}
 			packetsThisSecond = 0
+			opCountsThisSecond = make(map[uint32]uint64)
 
 			// 1. Send Summary
 			summary := t.aggregator.GetSummary()

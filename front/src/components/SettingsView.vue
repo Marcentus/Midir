@@ -47,6 +47,12 @@
                   {{ packetStatus.total }} total,
                   {{ packetStatus.perSecond }}/sec
                   <span v-if="packetStatus.lastOp"> · last op: 0x{{ packetStatus.lastOp.toString(16) }}</span>
+                  <div v-if="packetStatus.topOps?.length" class="text-caption mt-1">
+                    Recent ops:
+                    <span v-for="op in packetStatus.topOps.slice(0, 8)" :key="op.op" class="mr-2">
+                      0x{{ op.op.toString(16) }}×{{ op.count }}
+                    </span>
+                  </div>
                 </div>
                 <div class="text-caption text-grey">
                   {{ packetStatus.perSecond > 0 ? 'Midir is receiving game packets.' : 'No decoded game packets this second.' }}
@@ -250,7 +256,7 @@ export default defineComponent({
     // --- CAPTURE SETTINGS ---
     const nics = ref<any[]>([]);
     const captureStatus = ref({ is_running: false, nic: '', exitlag: false, promiscuous: false });
-    const packetStatus = ref({ total: 0, perSecond: 0, lastPacketAt: '', lastOp: 0 });
+    const packetStatus = ref<{ total: number; perSecond: number; lastPacketAt: string; lastOp: number; topOps: {op: number; count: number; total: number}[] }>({ total: 0, perSecond: 0, lastPacketAt: '', lastOp: 0, topOps: [] });
     const isApplying = ref(false);
     const isStopping = ref(false);
     const captureConfig = ref({
@@ -378,7 +384,7 @@ export default defineComponent({
        fetchStatus();
        
        socket.onPacketStatus = (status) => {
-         packetStatus.value = status;
+         packetStatus.value = { ...status, topOps: status.topOps || [] };
        };
 
        socket.onAutodetectProgress = (progress) => {
