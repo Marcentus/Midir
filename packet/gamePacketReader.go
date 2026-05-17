@@ -73,6 +73,13 @@ type exitLagStreamState struct {
 	lastSeen             time.Time
 }
 
+type gamePacketAssemblerState struct {
+	buffer     *bytes.Buffer
+	lastRelSeq uint32
+	lastAt     time.Time
+	payloads   []gamePacketPayload
+}
+
 const pcapQueueSize = 100
 const pcapBufferSize = 32 * 1024 * 1024
 const packetQueueSize = 100
@@ -342,67 +349,73 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 				}
 			}()
 
-			buffer := bytes.NewBuffer(nil)
-			lastRelSeq, lastAt := uint32(0), time.Now()
-			var activeFlow tcpFlowKey
-			payloads := make([]gamePacketPayload, 0, 100)
+			assemblers := make(map[tcpFlowKey]*gamePacketAssemblerState)
 
-			skipPayload := func(n int) {
+			getAssembler := func(key tcpFlowKey) *gamePacketAssemblerState {
+				if key == "" {
+					key = "default"
+				}
+				st := assemblers[key]
+				if st == nil {
+					st = &gamePacketAssemblerState{
+						buffer:   bytes.NewBuffer(nil),
+						lastAt:   time.Now(),
+						payloads: make([]gamePacketPayload, 0, 100),
+					}
+					assemblers[key] = st
+				}
+				return st
+			}
+
+			skipPayload := func(st *gamePacketAssemblerState, n int) {
 				for n > 0 {
-					if len(payloads) == 0 {
+					if len(st.payloads) == 0 {
 						return
 					}
-					if n < len(payloads[0].data) {
-						lastRelSeq, lastAt = payloads[0].relSeq, payloads[0].at
-						payloads[0].data = payloads[0].data[n:]
+					if n < len(st.payloads[0].data) {
+						st.lastRelSeq, st.lastAt = st.payloads[0].relSeq, st.payloads[0].at
+						st.payloads[0].data = st.payloads[0].data[n:]
 						return
 					}
-					n -= len(payloads[0].data)
-					if len(payloads) > 0 {
-						lastRelSeq, lastAt = payloads[0].relSeq, payloads[0].at
-						payloads = payloads[1:]
+					n -= len(st.payloads[0].data)
+					if len(st.payloads) > 0 {
+						st.lastRelSeq, st.lastAt = st.payloads[0].relSeq, st.payloads[0].at
+						st.payloads = st.payloads[1:]
 					}
 				}
 			}
 
-			nextPayload := func() {
-				buffer.Reset()
-				if len(payloads) < 1 {
+			nextPayload := func(st *gamePacketAssemblerState) {
+				st.buffer.Reset()
+				if len(st.payloads) < 1 {
 					return
 				}
-				payloads = payloads[1:]
-				if len(payloads) < 1 {
+				st.payloads = st.payloads[1:]
+				if len(st.payloads) < 1 {
 					return
 				}
-				for _, v := range payloads {
-					buffer.Write(v.data)
+				for _, v := range st.payloads {
+					st.buffer.Write(v.data)
 				}
-				if len(payloads) > 0 {
-					lastRelSeq = payloads[0].relSeq
+				if len(st.payloads) > 0 {
+					st.lastRelSeq = st.payloads[0].relSeq
 				}
 			}
 
-			pushPayload := func(payloadData gamePacketPayload) {
-				if activeFlow != "" && payloadData.flowKey != "" && payloadData.flowKey != activeFlow {
-					logger.Printf("[TCP Stream] switching decoded game stream from %s to %s", activeFlow, payloadData.flowKey)
-					buffer.Reset()
-					payloads = payloads[:0]
+			pushPayload := func(st *gamePacketAssemblerState, payloadData gamePacketPayload) {
+				if st.buffer.Len() < 1 {
+					st.buffer.Reset()
 				}
-				if payloadData.flowKey != "" {
-					activeFlow = payloadData.flowKey
+				if len(st.payloads) < 1 {
+					st.lastRelSeq, st.lastAt = payloadData.relSeq, payloadData.at
 				}
-				if buffer.Len() < 1 {
-					buffer.Reset()
-				}
-				if len(payloads) < 1 {
-					lastRelSeq, lastAt = payloadData.relSeq, payloadData.at
-				}
-				payloads = append(payloads, payloadData)
-				buffer.Write(payloadData.data)
+				st.payloads = append(st.payloads, payloadData)
+				st.buffer.Write(payloadData.data)
 			}
 
 			// Inner processing loop
 			for {
+				var st *gamePacketAssemblerState
 				select {
 				case <-t.ctx.Done():
 					return
@@ -410,26 +423,28 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 					if !ok {
 						return
 					}
-					pushPayload(payloadData)
+					st = getAssembler(payloadData.flowKey)
+					pushPayload(st, payloadData)
 				}
 
 			readerLoop:
 				for {
-					msg, err := ParseGamePacket(buffer, lastAt)
+					msg, err := ParseGamePacket(st.buffer, st.lastAt)
 					if err != nil {
 						if err == io.EOF {
 							break readerLoop
 						}
-						logger.Printf("game packet parse error %v %v", lastRelSeq, err)
-						nextPayload()
+						logger.Printf("game packet parse error %v %v", st.lastRelSeq, err)
+						nextPayload(st)
 						continue
 					}
 					if msg != nil {
 						t.packetCh <- msg
-						skipPayload(len(msg.RawPacket))
+						skipPayload(st, len(msg.RawPacket))
 					}
 				}
 			}
+
 		}()
 
 		// Check if we should exit truly
@@ -584,15 +599,6 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 
 		for _, layer := range packetLayers {
 			if layer != layers.LayerTypeTCP || len(tcpLayer.Payload) < 1 {
-				continue
-			}
-
-			// In ExitLag mode with a broad "tcp" BPF, we still only want the
-			// server/relay -> game client direction. Feeding both directions into the
-			// Mabinogi parser makes it constantly switch streams and corrupts framing.
-			// This also fits the macOS sniffing setup where this Mac watches the game
-			// PC on LAN: public relay source -> private LAN destination.
-			if ip4Layer.SrcIP.IsPrivate() || ip4Layer.SrcIP.IsLoopback() || !ip4Layer.DstIP.IsPrivate() {
 				continue
 			}
 
