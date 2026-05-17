@@ -95,10 +95,10 @@ Useful capture checks:
 
 ```bash
 # Replace with the gaming PC IP.
-sudo tcpdump -i en0 -nn -e 'host 192.168.69.44'
+sudo tcpdump -i en0 -nn -e 'host <gaming-pc-ip>'
 
 # ExitLag/game endpoint example; replace with detected values.
-sudo tcpdump -i en0 -nn -e 'host 192.95.33.49 or port 4643'
+sudo tcpdump -i en0 -nn -e 'host <exitlag-relay-ip> or port <game-port>'
 ```
 
 ## Developer build
@@ -128,7 +128,7 @@ Outputs:
 - `build/Midir.app` — double-clickable app bundle
 - `build/Midir-macOS-arm64.zip` or `build/Midir-macOS-amd64.zip` — zip suitable for a GitHub release asset
 
-Runtime files such as `settings.json`, logs, and session data are written under `/Users/Shared/Midir` when launched from the app bundle.
+Runtime files such as `settings.json`, logs, and session data are written relative to the app's launch directory.
 
 Cross-build examples:
 

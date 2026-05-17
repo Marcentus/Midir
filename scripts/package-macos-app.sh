@@ -11,7 +11,6 @@ APP_DIR="$BUILD_DIR/${APP_NAME}.app"
 CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
-SUPPORT_DIR="/Users/Shared/Midir"
 
 cd "$ROOT_DIR"
 GOOS="$GOOS_VALUE" GOARCH="$GOARCH_VALUE" OUTPUT_NAME="$BINARY_NAME" ./build.sh
@@ -81,13 +80,9 @@ ERR
   exit 1
 fi
 
-SUPPORT_DIR="/Users/Shared/Midir"
-mkdir -p "$SUPPORT_DIR"
-chmod 755 "$SUPPORT_DIR" 2>/dev/null || true
-
 # Launch in a visible Terminal window, like the Windows .exe console.
-# This Mac's daily user may be non-admin. Ask which admin account to use, then
-# run through su + sudo in Terminal. Closing the Terminal window terminates Midir.
+# Ask which admin account to use, then run through su + sudo in Terminal.
+# Closing the Terminal window terminates Midir.
 /usr/bin/osascript <<OSA
 try
   set dialogResult to display dialog "Enter the macOS admin username to run Midir packet capture:" default answer "" buttons {"Cancel", "Run"} default button "Run"
@@ -99,9 +94,9 @@ end try
 if adminUser is "" then return
 
 set quotedAdminUser to quoted form of adminUser
-set quotedSupportDir to quoted form of "$SUPPORT_DIR"
+set quotedResourcesDir to quoted form of "$RESOURCES_DIR"
 set quotedBin to quoted form of "$BIN"
-set innerCommand to "cd " & quotedSupportDir & " && sudo " & quotedBin
+set innerCommand to "cd " & quotedResourcesDir & " && sudo " & quotedBin
 set midirCommand to "clear; echo 'Midir Damage Meter for macOS'; echo; echo 'Admin user: " & adminUser & "'; echo 'Enter that admin account password when prompted.'; echo 'Close this Terminal window to stop Midir.'; echo; su -l " & quotedAdminUser & " -c " & quoted form of innerCommand & "; echo; echo 'Midir exited. You can close this window.'; read -n 1 -s -r -p 'Press any key to close...'"
 
 tell application "Terminal"
@@ -111,11 +106,6 @@ end tell
 OSA
 LAUNCHER
 chmod 755 "$MACOS_DIR/MidirLauncher"
-
-# Keep a copy of the CLI binary in /Users/Shared for manual fallback/testing.
-mkdir -p "$SUPPORT_DIR"
-cp "$BUILD_DIR/$BINARY_NAME" "$SUPPORT_DIR/$BINARY_NAME"
-chmod 755 "$SUPPORT_DIR" "$SUPPORT_DIR/$BINARY_NAME"
 
 # Strip local extended attributes before zipping, and disable AppleDouble
 # metadata files so release zips do not contain ._ sidecar entries.
