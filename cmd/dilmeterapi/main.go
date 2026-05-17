@@ -180,30 +180,13 @@ func run(ctx context.Context, nicName string, fileName string, exitlagEnabled bo
 			logger.Println("Failed to start capture from CLI arguments:", err)
 		}
 	} else {
-		// Try to automatically start using saved config if available
-		cfg := loadConfig()
-		if cfg != nil && cfg.NicName != "" {
-			logger.Printf("Found saved configuration for NIC: %s", cfg.NicName)
-			nics, err := pcap.FindAllDevs()
-			if err == nil {
-				found := false
-				for _, n := range nics {
-					if n.Name == cfg.NicName {
-						found = true
-						break
-					}
-				}
-				if found {
-					logger.Println("Saved NIC verified. Auto-starting capture...")
-					f := buildPcapFilter(cfg.IP, cfg.Port, cfg.ExitLag)
-					err := startPacketCapture(cfg.NicName, "", cfg.ExitLag, f, cfg.Promiscuous)
-					if err != nil {
-						logger.Println("Failed to start saved capture:", err)
-					}
-				} else {
-					logger.Println("Saved NIC is no longer available. Web UI setup required.")
-				}
-			}
+		// Do not auto-start capture from saved settings. Starting capture can clear
+		// live data, request elevated packet capture, and in ExitLag mode may need
+		// fresh routing state. Let the Web UI start capture explicitly.
+		if cfg := loadConfig(); cfg != nil && cfg.NicName != "" {
+			logger.Printf("Found saved capture configuration for NIC %s; waiting for manual Start Capture.", cfg.NicName)
+		} else {
+			logger.Println("No saved capture configuration. Web UI setup required.")
 		}
 	}
 

@@ -65,11 +65,18 @@ func setupRouter() http.Handler {
 			port = cfg.Port
 		}
 
+		exitlag := false
+		promiscuous := false
+		if isCaptureRunning {
+			exitlag = activeExitlag
+			promiscuous = activePromiscuous
+		}
+
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"is_running":  isCaptureRunning,
 			"nic":         activeNicName,
-			"exitlag":     activeExitlag,
-			"promiscuous": activePromiscuous,
+			"exitlag":     exitlag,
+			"promiscuous": promiscuous,
 			"ip":          ip,
 			"port":        port,
 		})
@@ -277,6 +284,8 @@ func stopPacketCaptureSync() {
 	}
 	isCaptureRunning = false
 	activeNicName = ""
+	activeExitlag = false
+	activePromiscuous = false
 }
 
 func startPacketCapture(nicName string, fileName string, exitlagEnabled bool, filter string, promiscuous bool) error {
