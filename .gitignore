@@ -11,8 +11,6 @@ sessions.json.migrated
 item_history.json
 commerce_history.json
 build/
-package.json
-package-lock.json
 cmd/dilmeterapi/assets/
 cmd/dilmeterapi/index.html
 tools/generator/out/

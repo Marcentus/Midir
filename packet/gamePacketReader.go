@@ -10,10 +10,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/Marcentus/Midir/util"
 	"github.com/gopacket/gopacket"
 	"github.com/gopacket/gopacket/layers"
 	"github.com/gopacket/gopacket/pcap"
-	"github.com/Marcentus/Midir/util"
 )
 
 // pcapWriter defines an interface that our SessionManager will satisfy.
@@ -43,15 +43,41 @@ type GameServerPacketReaderOpt struct {
 	PromiscuousMode bool   // New: To control Promiscuous capture
 }
 
+type tcpFlowKey string
+
 type gamePacketPayload struct {
-	relSeq uint32
-	data   []byte
-	at     time.Time
+	relSeq  uint32
+	data    []byte
+	at      time.Time
+	flowKey tcpFlowKey
 }
 
 type pendingTcpLayer struct {
 	tcpLayer layers.TCP
 	ci       gopacket.CaptureInfo
+}
+
+type tcpStreamState struct {
+	baseSeq  uint32
+	nextSeq  uint32
+	pending  []pendingTcpLayer
+	lastSeen time.Time
+}
+
+type exitLagStreamState struct {
+	buffer               bytes.Buffer
+	isReadingMabiPayload bool
+	mabiBytesToRead      uint32
+	packetStartTime      time.Time
+	packetRelSeq         uint32
+	lastSeen             time.Time
+}
+
+type gamePacketAssemblerState struct {
+	buffer     *bytes.Buffer
+	lastRelSeq uint32
+	lastAt     time.Time
+	payloads   []gamePacketPayload
 }
 
 const pcapQueueSize = 100
@@ -62,11 +88,10 @@ var ErrTooShortPacket = errors.New("too short packet")
 
 // This function is provided for completeness and is unchanged from the original file.
 func (t *GameServerPacketReader) exitLagPacketLoop(rawPayloadCh <-chan gamePacketPayload, mabiPayloadCh chan<- gamePacketPayload) {
-	buffer := bytes.NewBuffer(nil)
-	var isReadingMabiPayload bool
-	var mabiBytesToRead uint32
-	var packetStartTime time.Time
-	var packetRelSeq uint32
+	defer close(mabiPayloadCh)
+
+	streams := make(map[tcpFlowKey]*exitLagStreamState)
+	const streamTTL = 30 * time.Second
 
 	for {
 		select {
@@ -74,63 +99,76 @@ func (t *GameServerPacketReader) exitLagPacketLoop(rawPayloadCh <-chan gamePacke
 			return
 		case payloadData, ok := <-rawPayloadCh:
 			if !ok {
-				return // Channel is closed
+				return
 			}
-			buffer.Write(payloadData.data)
-			if !isReadingMabiPayload {
-				packetStartTime = payloadData.at
-				packetRelSeq = payloadData.relSeq
-			}
-		}
 
-	parseLoop:
-		for {
-			if !isReadingMabiPayload {
-				const headerSignatureLen = 5
-				foundHeader := false
-				for buffer.Len() >= headerSignatureLen {
-					if buffer.Bytes()[0] == 0x01 && buffer.Bytes()[4] == 0x05 {
-						foundHeader = true
-						break
+			now := payloadData.at
+			for key, st := range streams {
+				if !st.lastSeen.IsZero() && now.Sub(st.lastSeen) > streamTTL {
+					delete(streams, key)
+				}
+			}
+
+			st := streams[payloadData.flowKey]
+			if st == nil {
+				st = &exitLagStreamState{}
+				streams[payloadData.flowKey] = st
+			}
+			st.lastSeen = now
+			st.buffer.Write(payloadData.data)
+			if !st.isReadingMabiPayload {
+				st.packetStartTime = payloadData.at
+				st.packetRelSeq = payloadData.relSeq
+			}
+
+		parseLoop:
+			for {
+				if !st.isReadingMabiPayload {
+					const headerSignatureLen = 5
+					foundHeader := false
+					for st.buffer.Len() >= headerSignatureLen {
+						if st.buffer.Bytes()[0] == 0x01 && st.buffer.Bytes()[4] == 0x05 {
+							foundHeader = true
+							break
+						}
+						st.buffer.Next(1)
 					}
-					buffer.Next(1)
+
+					if !foundHeader {
+						break parseLoop
+					}
 				}
 
-				if !foundHeader {
-					break parseLoop
-				}
-			}
+				if st.isReadingMabiPayload {
+					if uint32(st.buffer.Len()) < st.mabiBytesToRead {
+						break parseLoop
+					}
 
-			if isReadingMabiPayload {
-				if uint32(buffer.Len()) < mabiBytesToRead {
-					break parseLoop
-				}
+					mabiPayload := make([]byte, st.mabiBytesToRead)
+					_, err := st.buffer.Read(mabiPayload)
+					if err != nil {
+						st.isReadingMabiPayload = false
+						continue parseLoop
+					}
 
-				mabiPayload := make([]byte, mabiBytesToRead)
-				_, err := buffer.Read(mabiPayload)
-				if err != nil {
-					logger.Println("ExitLag Buffer Read Error:", err)
-					isReadingMabiPayload = false
+					mabiPayloadCh <- gamePacketPayload{
+						relSeq:  st.packetRelSeq,
+						at:      st.packetStartTime,
+						data:    mabiPayload,
+						flowKey: payloadData.flowKey,
+					}
+
+					if st.buffer.Len() >= 4 {
+						if bytes.Equal(st.buffer.Bytes()[:4], []byte{0x05, 0x25, 0x01, 0x01}) {
+							st.buffer.Next(4)
+						}
+					}
+
+					st.isReadingMabiPayload = false
 					continue parseLoop
 				}
 
-				mabiPayloadCh <- gamePacketPayload{
-					relSeq: packetRelSeq,
-					at:     packetStartTime,
-					data:   mabiPayload,
-				}
-
-				if buffer.Len() >= 4 {
-					if bytes.Equal(buffer.Bytes()[:4], []byte{0x05, 0x25, 0x01, 0x01}) {
-						buffer.Next(4)
-					}
-				}
-
-				isReadingMabiPayload = false
-				continue parseLoop
-
-			} else {
-				b := buffer.Bytes()
+				b := st.buffer.Bytes()
 				const minHeaderSize = 38
 				if len(b) < minHeaderSize {
 					break parseLoop
@@ -143,29 +181,26 @@ func (t *GameServerPacketReader) exitLagPacketLoop(rawPayloadCh <-chan gamePacke
 					bodyLen := le.Uint16(b[1:3])
 					totalSize := 1 + 2 + int(bodyLen)
 
-					if buffer.Len() < totalSize {
+					if st.buffer.Len() < totalSize {
 						break parseLoop
 					}
 
-					if buffer.Len() >= totalSize+4 && bytes.Equal(b[totalSize:totalSize+4], []byte{0x05, 0x25, 0x01, 0x01}) {
-						buffer.Next(totalSize + 4)
+					if st.buffer.Len() >= totalSize+4 && bytes.Equal(b[totalSize:totalSize+4], []byte{0x05, 0x25, 0x01, 0x01}) {
+						st.buffer.Next(totalSize + 4)
 					} else {
-						buffer.Next(totalSize)
+						st.buffer.Next(totalSize)
 					}
-
-					// logger.Println("ExitLag Info: Skipped control packet.")
 					continue parseLoop
 				}
 
 				seqLen := int(seqLenInd)
 				if seqLen <= 0 || seqLen > 8 {
-					logger.Printf("ExitLag Parse Error: Unreasonable sequence length: %d", seqLen)
-					buffer.Next(1)
+					st.buffer.Next(1)
 					continue parseLoop
 				}
 
 				payloadLenIndOffset := seqLenIndOffset + 1 + seqLen
-				if buffer.Len() < payloadLenIndOffset+1 {
+				if st.buffer.Len() < payloadLenIndOffset+1 {
 					break parseLoop
 				}
 				payloadLenInd := b[payloadLenIndOffset]
@@ -176,27 +211,23 @@ func (t *GameServerPacketReader) exitLagPacketLoop(rawPayloadCh <-chan gamePacke
 				} else if payloadLenInd == 0x09 {
 					mabiPayloadLenBytes = 2
 				} else {
-					logger.Printf("ExitLag Parse Error: Invalid Mabinogi payload length indicator: 0x%x", payloadLenInd)
-					buffer.Next(1)
+					st.buffer.Next(1)
 					continue parseLoop
 				}
 
 				flagOffset := payloadLenIndOffset + 1
-				if buffer.Len() < flagOffset+1 {
+				if st.buffer.Len() < flagOffset+1 {
 					break parseLoop
 				}
 				flag := b[flagOffset]
 
 				if flag != 0x23 {
-					if flag != 0x2b {
-						logger.Printf("ExitLag Info: Skipping non-game packet ( Unknown flag: 0x%x)", flag)
-					}
-					buffer.Next(1)
+					st.buffer.Next(1)
 					continue parseLoop
 				}
 
 				mabiLenOffset := flagOffset + 1
-				if buffer.Len() < mabiLenOffset+mabiPayloadLenBytes {
+				if st.buffer.Len() < mabiLenOffset+mabiPayloadLenBytes {
 					break parseLoop
 				}
 				mabiLen := uint32(0)
@@ -207,9 +238,9 @@ func (t *GameServerPacketReader) exitLagPacketLoop(rawPayloadCh <-chan gamePacke
 				}
 
 				headerTotalLen := mabiLenOffset + mabiPayloadLenBytes
-				buffer.Next(headerTotalLen)
-				isReadingMabiPayload = true
-				mabiBytesToRead = mabiLen
+				st.buffer.Next(headerTotalLen)
+				st.isReadingMabiPayload = true
+				st.mabiBytesToRead = mabiLen
 				continue parseLoop
 			}
 		}
@@ -318,58 +349,73 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 				}
 			}()
 
-			buffer := bytes.NewBuffer(nil)
-			lastRelSeq, lastAt := uint32(0), time.Now()
-			payloads := make([]gamePacketPayload, 0, 100)
+			assemblers := make(map[tcpFlowKey]*gamePacketAssemblerState)
 
-			skipPayload := func(n int) {
+			getAssembler := func(key tcpFlowKey) *gamePacketAssemblerState {
+				if key == "" {
+					key = "default"
+				}
+				st := assemblers[key]
+				if st == nil {
+					st = &gamePacketAssemblerState{
+						buffer:   bytes.NewBuffer(nil),
+						lastAt:   time.Now(),
+						payloads: make([]gamePacketPayload, 0, 100),
+					}
+					assemblers[key] = st
+				}
+				return st
+			}
+
+			skipPayload := func(st *gamePacketAssemblerState, n int) {
 				for n > 0 {
-					if len(payloads) == 0 {
+					if len(st.payloads) == 0 {
 						return
 					}
-					if n < len(payloads[0].data) {
-						lastRelSeq, lastAt = payloads[0].relSeq, payloads[0].at
-						payloads[0].data = payloads[0].data[n:]
+					if n < len(st.payloads[0].data) {
+						st.lastRelSeq, st.lastAt = st.payloads[0].relSeq, st.payloads[0].at
+						st.payloads[0].data = st.payloads[0].data[n:]
 						return
 					}
-					n -= len(payloads[0].data)
-					if len(payloads) > 0 {
-						lastRelSeq, lastAt = payloads[0].relSeq, payloads[0].at
-						payloads = payloads[1:]
+					n -= len(st.payloads[0].data)
+					if len(st.payloads) > 0 {
+						st.lastRelSeq, st.lastAt = st.payloads[0].relSeq, st.payloads[0].at
+						st.payloads = st.payloads[1:]
 					}
 				}
 			}
 
-			nextPayload := func() {
-				buffer.Reset()
-				if len(payloads) < 1 {
+			nextPayload := func(st *gamePacketAssemblerState) {
+				st.buffer.Reset()
+				if len(st.payloads) < 1 {
 					return
 				}
-				payloads = payloads[1:]
-				if len(payloads) < 1 {
+				st.payloads = st.payloads[1:]
+				if len(st.payloads) < 1 {
 					return
 				}
-				for _, v := range payloads {
-					buffer.Write(v.data)
+				for _, v := range st.payloads {
+					st.buffer.Write(v.data)
 				}
-				if len(payloads) > 0 {
-					lastRelSeq = payloads[0].relSeq
+				if len(st.payloads) > 0 {
+					st.lastRelSeq = st.payloads[0].relSeq
 				}
 			}
 
-			pushPayload := func(payloadData gamePacketPayload) {
-				if buffer.Len() < 1 {
-					buffer.Reset()
+			pushPayload := func(st *gamePacketAssemblerState, payloadData gamePacketPayload) {
+				if st.buffer.Len() < 1 {
+					st.buffer.Reset()
 				}
-				if len(payloads) < 1 {
-					lastRelSeq, lastAt = payloadData.relSeq, payloadData.at
+				if len(st.payloads) < 1 {
+					st.lastRelSeq, st.lastAt = payloadData.relSeq, payloadData.at
 				}
-				payloads = append(payloads, payloadData)
-				buffer.Write(payloadData.data)
+				st.payloads = append(st.payloads, payloadData)
+				st.buffer.Write(payloadData.data)
 			}
 
 			// Inner processing loop
 			for {
+				var st *gamePacketAssemblerState
 				select {
 				case <-t.ctx.Done():
 					return
@@ -377,26 +423,28 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 					if !ok {
 						return
 					}
-					pushPayload(payloadData)
+					st = getAssembler(payloadData.flowKey)
+					pushPayload(st, payloadData)
 				}
 
 			readerLoop:
 				for {
-					msg, err := ParseGamePacket(buffer, lastAt)
+					msg, err := ParseGamePacket(st.buffer, st.lastAt)
 					if err != nil {
 						if err == io.EOF {
 							break readerLoop
 						}
-						logger.Printf("game packet parse error %v %v", lastRelSeq, err)
-						nextPayload()
+						logger.Printf("game packet parse error %v %v", st.lastRelSeq, err)
+						nextPayload(st)
 						continue
 					}
 					if msg != nil {
 						t.packetCh <- msg
-						skipPayload(len(msg.RawPacket))
+						skipPayload(st, len(msg.RawPacket))
 					}
 				}
 			}
+
 		}()
 
 		// Check if we should exit truly
@@ -470,12 +518,19 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 
 	layerParser := gopacket.NewDecodingLayerParser(layers.LayerTypeEthernet, &ethLayer, &ip4Layer, &tcpLayer, &payload)
 	packetLayers := []gopacket.LayerType(nil)
+	streams := make(map[tcpFlowKey]*tcpStreamState)
+	const streamTTL = 30 * time.Second
+	// ExitLag dynamic mode still needs a direction guard. We first identify the
+	// game client LAN IP from a public relay -> private client packet, then allow
+	// any TCP source inbound to that client. This keeps local/private ExitLag
+	// metadata streams while excluding client -> relay traffic that corrupts
+	// Mabinogi packet framing.
+	var exitLagClientIP string
 
-	baseSeq := uint32(0)
-	nextSeq, prevDstPort := uint32(0), layers.TCPPort(0)
-	pendingTcpLayers := make([]pendingTcpLayer, 0, packetQueueSize)
+	flowKeyFor := func(ip layers.IPv4, tcp layers.TCP) tcpFlowKey {
+		return tcpFlowKey(fmt.Sprintf("%s:%d>%s:%d", ip.SrcIP, tcp.SrcPort, ip.DstIP, tcp.DstPort))
+	}
 
-	// Helper to find the index of the pending layer with the smallest sequence number
 	findMinSeqIdx := func(layers []pendingTcpLayer) int {
 		if len(layers) == 0 {
 			return -1
@@ -489,6 +544,33 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 			}
 		}
 		return minIdx
+	}
+
+	drainReadyPending := func(st *tcpStreamState, key tcpFlowKey) {
+		for {
+			foundIdx := -1
+			for idx, p := range st.pending {
+				if p.tcpLayer.Seq == st.nextSeq {
+					foundIdx = idx
+					break
+				}
+			}
+
+			if foundIdx == -1 {
+				return
+			}
+
+			v := st.pending[foundIdx]
+			ch <- gamePacketPayload{
+				relSeq:  v.tcpLayer.Seq - st.baseSeq,
+				data:    v.tcpLayer.Payload,
+				at:      v.ci.Timestamp,
+				flowKey: key,
+			}
+			st.nextSeq = v.tcpLayer.Seq + uint32(len(v.tcpLayer.Payload))
+			st.pending[foundIdx] = st.pending[len(st.pending)-1]
+			st.pending = st.pending[:len(st.pending)-1]
+		}
 	}
 
 	for i := 0; t.ctx.Err() == nil; i++ {
@@ -510,8 +592,15 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 			continue
 		}
 
-		if i == 0 {
-			baseSeq = tcpLayer.Seq
+		hasIPv4 := false
+		for _, layer := range packetLayers {
+			if layer == layers.LayerTypeIPv4 {
+				hasIPv4 = true
+				break
+			}
+		}
+		if !hasIPv4 {
+			continue
 		}
 
 		for _, layer := range packetLayers {
@@ -519,68 +608,66 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 				continue
 			}
 
-			if nextSeq != 0 && tcpLayer.Seq != nextSeq {
-				if prevDstPort != tcpLayer.DstPort {
-					// Port change logic (unchanged)
-					for _, v := range pendingTcpLayers {
-						ch <- gamePacketPayload{
-							relSeq: v.tcpLayer.Seq - baseSeq,
-							data:   v.tcpLayer.Payload,
-							at:     v.ci.Timestamp,
-						}
-					}
-					pendingTcpLayers = pendingTcpLayers[:0]
-					prevDstPort = tcpLayer.DstPort
-					baseSeq = tcpLayer.Seq
-					nextSeq = tcpLayer.Seq + uint32(len(tcpLayer.Payload))
-					if len(tcpLayer.Payload) == 4 {
-						continue
-					}
-					ch <- gamePacketPayload{
-						relSeq: tcpLayer.Seq - baseSeq,
-						data:   tcpLayer.Payload,
-						at:     ci.Timestamp,
-					}
+			if exitLagClientIP == "" {
+				if ip4Layer.SrcIP.IsPrivate() || ip4Layer.SrcIP.IsLoopback() || !ip4Layer.DstIP.IsPrivate() {
 					continue
 				}
+				exitLagClientIP = ip4Layer.DstIP.String()
+				logger.Printf("[ExitLag Dynamic] following inbound traffic to game client %s", exitLagClientIP)
+			} else if ip4Layer.DstIP.String() != exitLagClientIP {
+				continue
+			}
 
-				// Check for already processed (duplicate/retransmit)
-				if tcpLayer.Seq < nextSeq {
-					if tcpLayer.Seq+uint32(len(tcpLayer.Payload)) >= nextSeq {
-						payload := tcpLayer.Payload[nextSeq-tcpLayer.Seq:]
+			key := flowKeyFor(ip4Layer, tcpLayer)
+			for streamKey, st := range streams {
+				if !st.lastSeen.IsZero() && ci.Timestamp.Sub(st.lastSeen) > streamTTL {
+					delete(streams, streamKey)
+				}
+			}
+
+			st := streams[key]
+			if st == nil {
+				st = &tcpStreamState{
+					baseSeq:  tcpLayer.Seq,
+					nextSeq:  tcpLayer.Seq,
+					pending:  make([]pendingTcpLayer, 0, packetQueueSize),
+					lastSeen: ci.Timestamp,
+				}
+				streams[key] = st
+			}
+			st.lastSeen = ci.Timestamp
+
+			if st.nextSeq != 0 && tcpLayer.Seq != st.nextSeq {
+				if tcpLayer.Seq < st.nextSeq {
+					if tcpLayer.Seq+uint32(len(tcpLayer.Payload)) >= st.nextSeq {
+						payload := tcpLayer.Payload[st.nextSeq-tcpLayer.Seq:]
 						if len(payload) > 0 {
 							ch <- gamePacketPayload{
-								relSeq: nextSeq - baseSeq,
-								data:   payload,
-								at:     ci.Timestamp,
+								relSeq:  st.nextSeq - st.baseSeq,
+								data:    payload,
+								at:      ci.Timestamp,
+								flowKey: key,
 							}
 						}
-						nextSeq = tcpLayer.Seq + uint32(len(tcpLayer.Payload))
+						st.nextSeq = tcpLayer.Seq + uint32(len(tcpLayer.Payload))
 					}
 					continue
 				}
 
-				// GAP DETECTED: Buffer check
-				pendingTcpLayers = append(pendingTcpLayers, pendingTcpLayer{
+				st.pending = append(st.pending, pendingTcpLayer{
 					tcpLayer: tcpLayer,
 					ci:       ci,
 				})
 
-				// If buffer is too large, force skip
-				if len(pendingTcpLayers) > 10 {
-					minIdx := findMinSeqIdx(pendingTcpLayers)
+				if len(st.pending) > 10 {
+					minIdx := findMinSeqIdx(st.pending)
 					if minIdx != -1 {
-						targetLayer := pendingTcpLayers[minIdx]
+						targetLayer := st.pending[minIdx]
+						skippedBytes := targetLayer.tcpLayer.Seq - st.nextSeq
+						warningMsg := fmt.Sprintf("Network packet loss detected on %s (Gap: %d bytes). Skipping to resume.", key, skippedBytes)
+						logger.Printf("[TCP Recovery] %s OldNext: %d, NewNext: %d", warningMsg, st.nextSeq, targetLayer.tcpLayer.Seq)
+						st.nextSeq = targetLayer.tcpLayer.Seq
 
-						// Calculate skipped amount
-						skippedBytes := targetLayer.tcpLayer.Seq - nextSeq
-						warningMsg := fmt.Sprintf("Network packet loss detected (Gap: %d bytes). Skipping to resume.", skippedBytes)
-						logger.Printf("[TCP Recovery] %s OldNext: %d, NewNext: %d", warningMsg, nextSeq, targetLayer.tcpLayer.Seq)
-
-						// Update Expected Sequence
-						nextSeq = targetLayer.tcpLayer.Seq
-
-						// Inject System Warning
 						select {
 						case t.packetCh <- &GamePacket{
 							At:        time.Now(),
@@ -593,74 +680,18 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 					}
 				}
 
-				// Check if the newly updated nextSeq matches any pending layers (including the one we just added or picked)
-				// We need to loop because popping one might reveal the next one is also ready.
-				// Note: The original code only checked pendingTcpLayers[0], which assumed order.
-				// Since we are now potentially skipping, we should scan or sort.
-				// For simplicity/performance, we'll iterate and find if ANY match nextSeq.
-				// Ideally, pendingTcpLayers should be a priority queue, but for small N (10) a linear scan is fine.
-
-				for {
-					foundIdx := -1
-					for idx, p := range pendingTcpLayers {
-						if p.tcpLayer.Seq == nextSeq {
-							foundIdx = idx
-							break
-						}
-					}
-
-					if foundIdx != -1 {
-						v := pendingTcpLayers[foundIdx]
-						ch <- gamePacketPayload{
-							relSeq: v.tcpLayer.Seq - baseSeq,
-							data:   v.tcpLayer.Payload,
-							at:     v.ci.Timestamp,
-						}
-						nextSeq = v.tcpLayer.Seq + uint32(len(v.tcpLayer.Payload))
-
-						// Remove from slice (order doesn't strictly matter for the rest, but let's keep it clean)
-						pendingTcpLayers[foundIdx] = pendingTcpLayers[len(pendingTcpLayers)-1] // swap with last
-						pendingTcpLayers = pendingTcpLayers[:len(pendingTcpLayers)-1]
-						// Continue loop to see if nextSeq is also present
-					} else {
-						break
-					}
-				}
+				drainReadyPending(st, key)
 				continue
 			}
 
 			ch <- gamePacketPayload{
-				relSeq: tcpLayer.Seq - baseSeq,
-				data:   tcpLayer.Payload,
-				at:     ci.Timestamp,
+				relSeq:  tcpLayer.Seq - st.baseSeq,
+				data:    tcpLayer.Payload,
+				at:      ci.Timestamp,
+				flowKey: key,
 			}
-			nextSeq = tcpLayer.Seq + uint32(len(tcpLayer.Payload))
-			prevDstPort = tcpLayer.DstPort
-
-			// Check pending logic again (copy-paste of the loop abovish, refactored)
-			for {
-				foundIdx := -1
-				for idx, p := range pendingTcpLayers {
-					if p.tcpLayer.Seq == nextSeq {
-						foundIdx = idx
-						break
-					}
-				}
-
-				if foundIdx != -1 {
-					v := pendingTcpLayers[foundIdx]
-					ch <- gamePacketPayload{
-						relSeq: v.tcpLayer.Seq - baseSeq,
-						data:   v.tcpLayer.Payload,
-						at:     v.ci.Timestamp,
-					}
-					nextSeq = v.tcpLayer.Seq + uint32(len(v.tcpLayer.Payload))
-					pendingTcpLayers[foundIdx] = pendingTcpLayers[len(pendingTcpLayers)-1]
-					pendingTcpLayers = pendingTcpLayers[:len(pendingTcpLayers)-1]
-				} else {
-					break
-				}
-			}
+			st.nextSeq = tcpLayer.Seq + uint32(len(tcpLayer.Payload))
+			drainReadyPending(st, key)
 		}
 	}
 }

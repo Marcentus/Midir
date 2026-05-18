@@ -98,15 +98,28 @@ func (t *eventPublisher) loop() {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
+	var totalPackets uint64
+	var packetsThisSecond uint64
+	var lastPacketAt time.Time
+	var lastOp uint32
+	opCounts := make(map[uint32]uint64)
+	opCountsThisSecond := make(map[uint32]uint64)
+
 	for {
 		select {
 		case <-t.ctx.Done():
 			return
 		case p := <-t.packetCh:
+			totalPackets++
+			packetsThisSecond++
+			lastPacketAt = p.At
+			lastOp = p.Op
+			opCounts[p.Op]++
+			opCountsThisSecond[p.Op]++
+
 			// if p.Op != packet.OpCodeSystemError && p.Op != packet.OpCodeSystemWarning {
 			// 	logger.Printf("--> Processing packet with OpCode: 0x%X", p.Op)
 			// }
-
 
 			// --- PATH 0: System Error Handling ---
 			if p.Op == packet.OpCodeSystemError {
@@ -131,7 +144,6 @@ func (t *eventPublisher) loop() {
 				continue
 			}
 
-
 			// --- PATH 1: Update the live aggregator (for the UI) ---
 			t.aggregator.ProcessPacket(p)
 
@@ -141,6 +153,34 @@ func (t *eventPublisher) loop() {
 			// logger.Printf("<-- [END] Finished processing packet with OpCode: 0x%X", p.Op)
 
 		case <-ticker.C:
+			topOps := make([]map[string]interface{}, 0, len(opCountsThisSecond))
+			for op, count := range opCountsThisSecond {
+				topOps = append(topOps, map[string]interface{}{
+					"op":    op,
+					"count": count,
+					"total": opCounts[op],
+				})
+			}
+
+			packetStatus := WebSocketMessage{
+				Type: "packet_status",
+				Data: map[string]interface{}{
+					"total":        totalPackets,
+					"perSecond":    packetsThisSecond,
+					"lastPacketAt": lastPacketAt,
+					"lastOp":       lastOp,
+					"topOps":       topOps,
+				},
+			}
+			packetStatusBytes, err := json.Marshal(packetStatus)
+			if err != nil {
+				logger.Println("Failed to marshal packet status:", err)
+			} else {
+				t.publish(packetStatusBytes)
+			}
+			packetsThisSecond = 0
+			opCountsThisSecond = make(map[uint32]uint64)
+
 			// 1. Send Summary
 			summary := t.aggregator.GetSummary()
 			summaryMsg := WebSocketMessage{
@@ -174,7 +214,6 @@ func (t *eventPublisher) loop() {
 		}
 	}
 }
-
 
 // Worker to handle logging events to disk
 func (t *eventPublisher) startLogger() {
@@ -391,12 +430,12 @@ func newEventFromEntity(entity *packet.EntityInfo, at time.Time) iEvent {
 			At:      at.Unix(),
 			Id:      strconv.FormatUint(entity.Id, 10),
 		},
-		Name:         entity.Name,
-		RaceId:       entity.RaceId,
-		OwnerId:      strconv.FormatUint(entity.OwnerId, 10),
-		CurrentHP:    entity.CurrentHP,
-		MaxHP:        entity.MaxHP,
-		Conditions:   cond,
+		Name:       entity.Name,
+		RaceId:     entity.RaceId,
+		OwnerId:    strconv.FormatUint(entity.OwnerId, 10),
+		CurrentHP:  entity.CurrentHP,
+		MaxHP:      entity.MaxHP,
+		Conditions: cond,
 	}
 }
 
@@ -447,4 +486,3 @@ func (t *eventPublisher) addClient(ctx context.Context, ch chan<- []byte) uint32
 	logger.Println("Client connected:", clientId)
 	return clientId
 }
-

@@ -10,11 +10,11 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/Marcentus/Midir/packet"
 	"github.com/go-chi/chi/v5"
 	"github.com/gopacket/gopacket"
 	"github.com/gopacket/gopacket/layers"
 	"github.com/gopacket/gopacket/pcap"
-	"github.com/Marcentus/Midir/packet"
 )
 
 var activeExitlag bool
@@ -25,7 +25,7 @@ var autodetectMu sync.Mutex
 const configFile = "settings.json"
 
 type CaptureConfig struct {
-	NicName string `json:"nicName"`
+	NicName     string `json:"nicName"`
 	IP          string `json:"ip"`
 	Port        string `json:"port"`
 	ExitLag     bool   `json:"exitlag"`
@@ -57,19 +57,26 @@ func setupRouter() http.Handler {
 	r.Get("/status", func(w http.ResponseWriter, r *http.Request) {
 		captureMu.Lock()
 		defer captureMu.Unlock()
-		
+
 		cfg := loadConfig()
 		var ip, port string
 		if cfg != nil {
 			ip = cfg.IP
 			port = cfg.Port
 		}
-		
+
+		exitlag := false
+		promiscuous := false
+		if isCaptureRunning {
+			exitlag = activeExitlag
+			promiscuous = activePromiscuous
+		}
+
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"is_running":  isCaptureRunning,
 			"nic":         activeNicName,
-			"exitlag":     activeExitlag,
-			"promiscuous": activePromiscuous,
+			"exitlag":     exitlag,
+			"promiscuous": promiscuous,
 			"ip":          ip,
 			"port":        port,
 		})
@@ -119,9 +126,35 @@ func setupRouter() http.Handler {
 			ip = config.IP
 			port = config.Port
 		}
-		filter := buildPcapFilter(ip, port)
+		filter := buildPcapFilter(ip, port, config.ExitLag)
 
-		err := startPacketCapture(config.NicName, "", config.ExitLag, filter, config.Promiscuous)
+		err := startPacketCapture(config.NicName, "", config.ExitLag, filter, config.Promiscuous, true)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	})
+
+	r.Post("/restart-keep-session", func(w http.ResponseWriter, req *http.Request) {
+		var config CaptureConfig
+		if err := json.NewDecoder(req.Body).Decode(&config); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		// Save settings, but preserve current aggregator/session data.
+		saveConfig(&config)
+
+		var ip, port string
+		if config.ExitLag {
+			ip = config.IP
+			port = config.Port
+		}
+		filter := buildPcapFilter(ip, port, config.ExitLag)
+
+		err := startPacketCapture(config.NicName, "", config.ExitLag, filter, config.Promiscuous, false)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -277,15 +310,17 @@ func stopPacketCaptureSync() {
 	}
 	isCaptureRunning = false
 	activeNicName = ""
+	activeExitlag = false
+	activePromiscuous = false
 }
 
-func startPacketCapture(nicName string, fileName string, exitlagEnabled bool, filter string, promiscuous bool) error {
+func startPacketCapture(nicName string, fileName string, exitlagEnabled bool, filter string, promiscuous bool, clearSession bool) error {
 	captureMu.Lock()
 	defer captureMu.Unlock()
 
 	stopPacketCaptureSync()
 
-	if globalPub != nil {
+	if clearSession && globalPub != nil {
 		globalPub.ClearCache()
 		// Ensure old session cache drops out so users start fresh locally
 	}
@@ -303,7 +338,7 @@ func startPacketCapture(nicName string, fileName string, exitlagEnabled bool, fi
 		Filter:          filter,
 		PromiscuousMode: promiscuous,
 	})
-	
+
 	if err != nil {
 		cancel()
 		cancelCapture = nil
