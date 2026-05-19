@@ -18,6 +18,10 @@ var skillToArcanaIcon = make(map[uint16]string)
 var skillToArcanaName = make(map[uint16]string)
 var skillToArcanaColor = make(map[uint16]string)
 
+// Global maps for quick lookups: arcana name -> icon/color path
+var arcanaNameToIcon = make(map[string]string)
+var arcanaNameToColor = make(map[string]string)
+
 // loadTalentData reads the embedded talents.json and populates our lookup map.
 func loadTalentData() {
 	// 1. Read the embedded talents.json file
@@ -39,7 +43,13 @@ func loadTalentData() {
 	}
 
 	// 3. Populate our cache for fast lookups
-	for _, arcana := range talentFile.Arcanas {
+	for name, arcana := range talentFile.Arcanas {
+		arcanaNameToIcon[name] = arcana.Icon
+		arcanaNameToColor[name] = arcana.Color
+		if arcana.Name != "" {
+			arcanaNameToIcon[arcana.Name] = arcana.Icon
+			arcanaNameToColor[arcana.Name] = arcana.Color
+		}
 		for _, skillId := range arcana.RelatedSkills {
 			skillToArcanaIcon[skillId] = arcana.Icon
 			skillToArcanaName[skillId] = arcana.Name

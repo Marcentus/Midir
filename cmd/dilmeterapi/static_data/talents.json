@@ -279,7 +279,7 @@
       "related_skill_ids": [59100, 59101, 59102, 59103, 59104, 59105, 59106],
       "talents": ["Knight", "Gunslinger"],
       "talent_icon": "/images/talents/gui_icon_name_multi_class_1_1.png",
-      "icon": "/images/skills/gui_icon_skill_ar_bl_6_0.png",
+      "icon": "/images/skills/gui_icon_skill_AR_BL_6_0.png",
       "color": "#007270"
     },
     "Forbidden Alchemist": {

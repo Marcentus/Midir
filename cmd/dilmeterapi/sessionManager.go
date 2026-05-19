@@ -25,7 +25,7 @@ type SessionSummaryPlayer struct {
 	Name        string  `json:"name"`
 	DPS         float32 `json:"dps"`
 	ArcanaName  string  `json:"arcanaName"`
-	ArcanaIcon  string  `json:"arcanaIcon"`
+	ArcanaIcon  string  `json:"arcanaIcon,omitempty"`
 	TotalDamage float32 `json:"totalDamage"`
 }
 
@@ -200,7 +200,7 @@ func (sm *SessionManager) SaveLiveSession(name string) error {
 				Name:        pstat.Name,
 				DPS:         pstat.OverallStats.DPS,
 				ArcanaName:  pstat.TalentName,
-				ArcanaIcon:  pstat.TalentIcon,
+				ArcanaIcon:  "", // Omit from disk serialization (omitempty)
 				TotalDamage: pstat.OverallStats.TotalDamage,
 			})
 			for tID, tBreakdown := range pstat.DamageByTarget {
@@ -309,6 +309,12 @@ func (sm *SessionManager) GetAllSessions() ([]*Session, error) {
 								if newName != enemy.Name {
 									sumData.Enemies[i].Name = newName
 								}
+							}
+						}
+
+						for i, p := range sumData.Players {
+							if icon, ok := arcanaNameToIcon[p.ArcanaName]; ok {
+								sumData.Players[i].ArcanaIcon = icon
 							}
 						}
 
@@ -586,7 +592,7 @@ func (sm *SessionManager) MigrateSession(sessionID string) error {
 			Name:        pstat.Name,
 			DPS:         pstat.OverallStats.DPS,
 			ArcanaName:  pstat.TalentName,
-			ArcanaIcon:  pstat.TalentIcon,
+			ArcanaIcon:  "", // Omit from disk serialization (omitempty)
 			TotalDamage: pstat.OverallStats.TotalDamage,
 		})
 		for tID, tBreakdown := range pstat.DamageByTarget {
