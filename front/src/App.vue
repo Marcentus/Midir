@@ -31,6 +31,7 @@
             size="small"
             prepend-icon="mdi-content-save"
             class="action-btn"
+            :loading="isSaving"
             @click="promptAndSaveSession"
           >
             Save Session
@@ -191,6 +192,8 @@ export default defineComponent({
       }
     };
 
+    const isSaving = ref(false);
+
     const promptAndSaveSession = async () => {
       const sessionName = prompt(
         "Enter a name for this session:",
@@ -198,6 +201,7 @@ export default defineComponent({
       );
 
       if (sessionName) {
+        isSaving.value = true;
         try {
           await saveSession(sessionName);
           await clearSession();
@@ -206,6 +210,8 @@ export default defineComponent({
         } catch (e) {
           console.error("Failed to save session:", e);
           alert(`Error saving session: ${e}`);
+        } finally {
+          isSaving.value = false;
         }
       }
     };
@@ -324,6 +330,7 @@ export default defineComponent({
 
     return {
       isLoading,
+      isSaving,
       socketConnected,
       clearSession,
       promptAndSaveSession,
