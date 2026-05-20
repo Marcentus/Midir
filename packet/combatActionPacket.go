@@ -76,9 +76,9 @@ const (
 func ParseCombatActionPackPacket(p *GamePacket) (*CombatActionPackPacket, error) {
 	msg := p.Msg
 
-	// if msg.Len() == 0 {
-	// 	return nil, fmt.Errorf("ParseCombatActionPacket: msg is empty")
-	// }
+	if len(msg) < 6 {
+		return nil, fmt.Errorf("ParseCombatActionPacket: packet too short: %d", len(msg))
+	}
 
 	if msg[0].Type() != MessageElemTypeInt {
 		return nil, fmt.Errorf("ParseCombatActionPacket: id has unexpected type %v", msg[0].Type())
@@ -110,6 +110,9 @@ func ParseCombatActionPackPacket(p *GamePacket) (*CombatActionPackPacket, error)
 
 	// 공격이 막혔을 때?
 	if (flag & 0x1) != 0 {
+		if len(msg) < 3 {
+			return nil, fmt.Errorf("ParseCombatActionPacket: shield block data too short: %d", len(msg))
+		}
 		if msg[0].Type() != MessageElemTypeInt {
 			return nil, fmt.Errorf("ParseCombatActionPacket: blockedByShieldPosX has unexpected type %v", msg[0].Type())
 		}
@@ -123,8 +126,11 @@ func ParseCombatActionPackPacket(p *GamePacket) (*CombatActionPackPacket, error)
 		msg = msg[3:]
 	}
 
+	if len(msg) < 1 {
+		return nil, fmt.Errorf("ParseCombatActionPacket: missing subPacketCount")
+	}
 	if msg[0].Type() != MessageElemTypeInt {
-		return nil, fmt.Errorf("ParseCombatActionPacket: subPacketCount has unexpected type %v", msg[6].Type())
+		return nil, fmt.Errorf("ParseCombatActionPacket: subPacketCount has unexpected type %v", msg[0].Type())
 	}
 
 	subPacketCount := msg[0].Data().(uint32)
@@ -144,6 +150,9 @@ func ParseCombatActionPackPacket(p *GamePacket) (*CombatActionPackPacket, error)
 	}
 
 	for i := 0; i < int(subPacketCount); i++ {
+		if len(msg) < 2 {
+			return nil, fmt.Errorf("ParseCombatActionPacket: subPacket %d/%d data too short: %d", i+1, subPacketCount, len(msg))
+		}
 		if msg[1].Type() != MessageElemTypeBin {
 			err := fmt.Errorf("ParseCombatActionPacket: subPacket has unexpected type %v", msg[1].Type())
 			return nil, err
@@ -184,6 +193,10 @@ func ParseCombatActionPackPacket(p *GamePacket) (*CombatActionPackPacket, error)
 
 func parseCombatActionPacket(id uint64, msg Message) (*CombatActionPacket, error) {
 	origMsg := msg
+
+	if len(msg) < 7 {
+		return nil, fmt.Errorf("parseCombatActionPacket: packet too short: %d", len(msg))
+	}
 
 	if msg[0].Type() != MessageElemTypeInt {
 		return nil, fmt.Errorf("parseCombatActionPacket: combatActionId has unexpected type %v", msg[1].Type())

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"sort"
 	"strconv"
 	"sync"
@@ -44,6 +45,24 @@ type Aggregator struct {
 	// Live Session Handling
 	isLive              bool
 	ignorePacketsBefore time.Time
+
+	recentDamage      map[damageDedupeKey]time.Time
+	recentDamageSweep time.Time
+}
+
+type damageDedupeKey struct {
+	Op         uint32
+	PacketID   uint64
+	ActionID   uint32
+	SubIndex   int
+	At         int64
+	AttackerID uint64
+	TargetID   uint64
+	SkillID    uint16
+	Damage     uint32
+	ManaDamage uint32
+	Critical   bool
+	Delayed    bool
 }
 
 // NewAggregator creates and initializes a new Aggregator.
@@ -64,6 +83,7 @@ func NewAggregator() *Aggregator {
 		playerConditionHistory: make(map[uint64]map[uint32][]ConditionInterval),
 		playerSeenAppear:       make(map[uint64]bool),
 		isLive:                 false, // Default to false, explicitly enabled by caller if needed
+		recentDamage:           make(map[damageDedupeKey]time.Time),
 	}
 }
 
@@ -94,6 +114,26 @@ func (a *Aggregator) updateTimestamps(targetId uint64, eventTime time.Time) {
 
 	// Ensure the name is cached before the entity potentially disappears
 	a.resolveAndCacheName(targetId)
+}
+
+func (a *Aggregator) shouldAcceptDamageLocked(key damageDedupeKey, at time.Time) bool {
+	if at.IsZero() {
+		at = time.Now()
+	}
+	const ttl = 3 * time.Second
+	if at.Sub(a.recentDamageSweep) > ttl {
+		for k, seenAt := range a.recentDamage {
+			if at.Sub(seenAt) > ttl {
+				delete(a.recentDamage, k)
+			}
+		}
+		a.recentDamageSweep = at
+	}
+	if _, exists := a.recentDamage[key]; exists {
+		return false
+	}
+	a.recentDamage[key] = at
+	return true
 }
 
 // resolveAndCacheName attempts to find and store the name of an entity.
@@ -305,8 +345,24 @@ func (a *Aggregator) processCombatAction(p *packet.GamePacket) {
 		return
 	}
 
-	for _, sub := range pack.SubPackets {
+	for subIndex, sub := range pack.SubPackets {
 		if sub.Hit == nil || (sub.Hit.Damage <= 0 && sub.Hit.ManaDamage <= 0) {
+			continue
+		}
+		isCrit := (sub.Hit.Options & packet.CombatActionHitOptionsCritical) != 0
+		if !a.shouldAcceptDamageLocked(damageDedupeKey{
+			Op:         p.Op,
+			PacketID:   p.Id,
+			ActionID:   pack.CombatActionId,
+			SubIndex:   subIndex,
+			At:         p.At.Unix(),
+			AttackerID: attackerId,
+			TargetID:   sub.EntityId,
+			SkillID:    attackSkillId,
+			Damage:     math.Float32bits(sub.Hit.Damage),
+			ManaDamage: sub.Hit.ManaDamage,
+			Critical:   isCrit,
+		}, p.At) {
 			continue
 		}
 		// Update the shared timers for this target, regardless of who hit it
@@ -356,6 +412,18 @@ func (a *Aggregator) processEffectDelayed(p *packet.GamePacket) {
 	a.updateTimestamps(targetId, p.At)
 
 	if attackerInfo, isPlayer := playerCache.Get(attackerId); isPlayer {
+		if !a.shouldAcceptDamageLocked(damageDedupeKey{
+			Op:         p.Op,
+			PacketID:   p.Id,
+			At:         p.At.Unix(),
+			AttackerID: attackerId,
+			TargetID:   targetId,
+			SkillID:    skillId,
+			Damage:     math.Float32bits(damage),
+			Delayed:    true,
+		}, p.At) {
+			return
+		}
 		// Check if we have identified the talent color yet.
 		if _, known := a.playerTalentColors[attackerId]; !known {
 			if iconPath, found := skillToArcanaIcon[skillId]; found {
@@ -792,6 +860,8 @@ func (a *Aggregator) Clear() {
 	//           playerConditionActive, playerSeenAppear.
 
 	a.playerStats = make(map[uint64]*PlayerStats)
+	a.recentDamage = make(map[damageDedupeKey]time.Time)
+	a.recentDamageSweep = time.Time{}
 	// We keep entityCache to know who people are if they are still here
 	// We keep playerTalents/Names/Colors to know who people are if they are still here
 
@@ -819,4 +889,3 @@ func (a *Aggregator) Clear() {
 		a.ignorePacketsBefore = time.Time{}
 	}
 }
-

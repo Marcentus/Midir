@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"math"
 	"strconv"
 	"sync"
 	"time"
@@ -32,7 +33,10 @@ type eventPublisher struct {
 	batchMu           sync.Mutex
 
 	// Async logging
-	logCh chan iEvent
+	logCh             chan iEvent
+	damageLogMu       sync.Mutex
+	recentDamageLog   map[damageDedupeKey]time.Time
+	recentDamageSweep time.Time
 }
 
 type eventClient struct {
@@ -72,6 +76,7 @@ func newEventPublisher(ctx context.Context, packetCh <-chan *packet.GamePacket, 
 		currentClientId:   1,
 		playerUpdateBatch: make([]*PlayerInfo, 0),
 		logCh:             make(chan iEvent, 1000), // Buffered channel for events
+		recentDamageLog:   make(map[damageDedupeKey]time.Time),
 	}
 
 	v.aggregator.SetLive(isLive)
@@ -84,6 +89,10 @@ func newEventPublisher(ctx context.Context, packetCh <-chan *packet.GamePacket, 
 
 func (t *eventPublisher) ClearCache() {
 	t.aggregator.Clear()
+	t.damageLogMu.Lock()
+	t.recentDamageLog = make(map[damageDedupeKey]time.Time)
+	t.recentDamageSweep = time.Time{}
+	t.damageLogMu.Unlock()
 	logger.Println("Clear command received, aggregator state has been reset.")
 }
 
@@ -276,10 +285,10 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		}
 
 		// Now, create damage events for each hit using the correct skill ID.
-		for _, sub := range pack.SubPackets {
+		for subIndex, sub := range pack.SubPackets {
 			if sub.Hit != nil && (sub.Hit.Damage > 0 || sub.Hit.ManaDamage > 0) {
 				isCrit := (sub.Hit.Options & packet.CombatActionHitOptionsCritical) != 0
-				events = append(events, &eventDamage{
+				e := &eventDamage{
 					eventBase: eventBase{
 						EventId: eventIdDamage,
 						At:      p.At.Unix(),
@@ -291,7 +300,22 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 					ManaDamage: float32(sub.Hit.ManaDamage),
 					IsCritical: isCrit,
 					IsDelayed:  false,
-				})
+				}
+				if t.shouldLogDamage(damageDedupeKey{
+					Op:         p.Op,
+					PacketID:   p.Id,
+					ActionID:   pack.CombatActionId,
+					SubIndex:   subIndex,
+					At:         p.At.Unix(),
+					AttackerID: attackerId,
+					TargetID:   sub.EntityId,
+					SkillID:    attackSkillId,
+					Damage:     math.Float32bits(sub.Hit.Damage),
+					ManaDamage: sub.Hit.ManaDamage,
+					Critical:   isCrit,
+				}, p.At) {
+					events = append(events, e)
+				}
 			}
 		}
 
@@ -312,7 +336,7 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		attackerId := p.Msg[5].Data().(uint64)
 		skillId := p.Msg[6].Data().(uint16)
 		targetId := p.Id
-		events = append(events, &eventDamage{
+		e := &eventDamage{
 			eventBase: eventBase{
 				EventId: eventIdDamage,
 				At:      p.At.Unix(),
@@ -323,7 +347,19 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 			Damage:     damage,
 			IsCritical: false,
 			IsDelayed:  true,
-		})
+		}
+		if t.shouldLogDamage(damageDedupeKey{
+			Op:         p.Op,
+			PacketID:   p.Id,
+			At:         p.At.Unix(),
+			AttackerID: attackerId,
+			TargetID:   targetId,
+			SkillID:    skillId,
+			Damage:     math.Float32bits(damage),
+			Delayed:    true,
+		}, p.At) {
+			events = append(events, e)
+		}
 
 	case opcodeEntityAppear:
 		var entity *packet.EntityInfo
@@ -410,6 +446,29 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 			logger.Println("Log channel full, dropping event!")
 		}
 	}
+}
+
+func (t *eventPublisher) shouldLogDamage(key damageDedupeKey, at time.Time) bool {
+	t.damageLogMu.Lock()
+	defer t.damageLogMu.Unlock()
+
+	if at.IsZero() {
+		at = time.Now()
+	}
+	const ttl = 3 * time.Second
+	if at.Sub(t.recentDamageSweep) > ttl {
+		for k, seenAt := range t.recentDamageLog {
+			if at.Sub(seenAt) > ttl {
+				delete(t.recentDamageLog, k)
+			}
+		}
+		t.recentDamageSweep = at
+	}
+	if _, exists := t.recentDamageLog[key]; exists {
+		return false
+	}
+	t.recentDamageLog[key] = at
+	return true
 }
 
 // NEW HELPER: Converts an EntityInfo packet to an eventEntityAppear struct.
