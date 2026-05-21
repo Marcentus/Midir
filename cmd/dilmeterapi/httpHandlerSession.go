@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -190,7 +189,6 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 
 	// PASS 2: Collect all damage events AND track condition history
 	var allDamageEvents []eventDamage
-	seenDamageEvents := make(map[damageDedupeKey]struct{})
 
 	// Condition Tracking Data Structures
 	conditionHistory := make(map[string]map[uint32][]ConditionInterval)
@@ -208,11 +206,6 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 		case eventIdDamage:
 			var damageEvent eventDamage
 			if err := json.Unmarshal(line, &damageEvent); err == nil {
-				key := damageEventDedupeKey(damageEvent)
-				if _, exists := seenDamageEvents[key]; exists {
-					continue
-				}
-				seenDamageEvents[key] = struct{}{}
 				allDamageEvents = append(allDamageEvents, damageEvent)
 			}
 
@@ -314,19 +307,6 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 	summary.GraphData = graphDataByTarget
 
 	return &summary, nil
-}
-
-func damageEventDedupeKey(e eventDamage) damageDedupeKey {
-	return damageDedupeKey{
-		At:         e.At,
-		AttackerID: parseUint64(e.Id),
-		TargetID:   parseUint64(e.TargetId),
-		SkillID:    e.SkillId,
-		Damage:     math.Float32bits(e.Damage),
-		ManaDamage: math.Float32bits(e.ManaDamage),
-		Critical:   e.IsCritical,
-		Delayed:    e.IsDelayed,
-	}
 }
 
 // processEventsForSummary takes the raw list of damage events and entity data from a log file

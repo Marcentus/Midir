@@ -300,8 +300,12 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 					ManaDamage: float32(sub.Hit.ManaDamage),
 					IsCritical: isCrit,
 					IsDelayed:  false,
+					PacketKey:  p.PacketDedupeKey,
+					HitIndex:   subIndex,
+					AtMs:       p.At.UnixMilli(),
 				}
 				if t.shouldLogDamage(damageDedupeKey{
+					PacketKey:  p.PacketDedupeKey,
 					Op:         p.Op,
 					PacketID:   p.Id,
 					ActionID:   pack.CombatActionId,
@@ -347,8 +351,12 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 			Damage:     damage,
 			IsCritical: false,
 			IsDelayed:  true,
+			PacketKey:  p.PacketDedupeKey,
+			HitIndex:   0,
+			AtMs:       p.At.UnixMilli(),
 		}
 		if t.shouldLogDamage(damageDedupeKey{
+			PacketKey:  p.PacketDedupeKey,
 			Op:         p.Op,
 			PacketID:   p.Id,
 			At:         p.At.Unix(),
@@ -449,6 +457,11 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 }
 
 func (t *eventPublisher) shouldLogDamage(key damageDedupeKey, at time.Time) bool {
+	if key.PacketKey != "" {
+		// Packet-keyed events have already passed packet-level multiroute
+		// dedupe. Let them through so same-looking real hits are preserved.
+		return true
+	}
 	t.damageLogMu.Lock()
 	defer t.damageLogMu.Unlock()
 
@@ -465,6 +478,8 @@ func (t *eventPublisher) shouldLogDamage(key damageDedupeKey, at time.Time) bool
 		t.recentDamageSweep = at
 	}
 	if _, exists := t.recentDamageLog[key]; exists {
+		logger.Printf("[DamageDedupe log fallback] dropped duplicate damage op=%08x packetID=%d actionID=%d subIndex=%d at=%d attacker=%d target=%d skill=%d damageBits=%08x mana=%d crit=%t delayed=%t",
+			key.Op, key.PacketID, key.ActionID, key.SubIndex, key.At, key.AttackerID, key.TargetID, key.SkillID, key.Damage, key.ManaDamage, key.Critical, key.Delayed)
 		return false
 	}
 	t.recentDamageLog[key] = at

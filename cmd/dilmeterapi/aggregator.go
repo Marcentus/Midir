@@ -51,6 +51,7 @@ type Aggregator struct {
 }
 
 type damageDedupeKey struct {
+	PacketKey  string
 	Op         uint32
 	PacketID   uint64
 	ActionID   uint32
@@ -117,6 +118,11 @@ func (a *Aggregator) updateTimestamps(targetId uint64, eventTime time.Time) {
 }
 
 func (a *Aggregator) shouldAcceptDamageLocked(key damageDedupeKey, at time.Time) bool {
+	if key.PacketKey != "" {
+		// Parsed packets already passed the packet-level multiroute dedupe. Do
+		// not collapse legitimate same-looking hits again by semantic fields.
+		return true
+	}
 	if at.IsZero() {
 		at = time.Now()
 	}
@@ -130,6 +136,8 @@ func (a *Aggregator) shouldAcceptDamageLocked(key damageDedupeKey, at time.Time)
 		a.recentDamageSweep = at
 	}
 	if _, exists := a.recentDamage[key]; exists {
+		logger.Printf("[DamageDedupe live fallback] dropped duplicate damage op=%08x packetID=%d actionID=%d subIndex=%d at=%d attacker=%d target=%d skill=%d damageBits=%08x mana=%d crit=%t delayed=%t",
+			key.Op, key.PacketID, key.ActionID, key.SubIndex, key.At, key.AttackerID, key.TargetID, key.SkillID, key.Damage, key.ManaDamage, key.Critical, key.Delayed)
 		return false
 	}
 	a.recentDamage[key] = at
@@ -351,6 +359,7 @@ func (a *Aggregator) processCombatAction(p *packet.GamePacket) {
 		}
 		isCrit := (sub.Hit.Options & packet.CombatActionHitOptionsCritical) != 0
 		if !a.shouldAcceptDamageLocked(damageDedupeKey{
+			PacketKey:  p.PacketDedupeKey,
 			Op:         p.Op,
 			PacketID:   p.Id,
 			ActionID:   pack.CombatActionId,
@@ -413,6 +422,7 @@ func (a *Aggregator) processEffectDelayed(p *packet.GamePacket) {
 
 	if attackerInfo, isPlayer := playerCache.Get(attackerId); isPlayer {
 		if !a.shouldAcceptDamageLocked(damageDedupeKey{
+			PacketKey:  p.PacketDedupeKey,
 			Op:         p.Op,
 			PacketID:   p.Id,
 			At:         p.At.Unix(),

@@ -105,6 +105,13 @@ func gamePacketDedupeKey(msg *GamePacket) string {
 	return fmt.Sprintf("%02x:%d:%d:%d:%d:%x", msg.Sign, msg.Length, msg.Flag, msg.Op, msg.Id, sum)
 }
 
+func shortPacketDedupeKey(key string) string {
+	if len(key) <= 24 {
+		return key
+	}
+	return key[:24]
+}
+
 func newParsedPacketDeduper() *parsedPacketDeduper {
 	return &parsedPacketDeduper{
 		seen:      make(map[string]parsedPacketDedupeEntry),
@@ -131,9 +138,13 @@ func (d *parsedPacketDeduper) IsDuplicate(msg *GamePacket, flowKey tcpFlowKey) b
 		d.lastSweep = now
 	}
 
-	key := gamePacketDedupeKey(msg)
+	key := msg.PacketDedupeKey
+	if key == "" {
+		key = gamePacketDedupeKey(msg)
+		msg.PacketDedupeKey = key
+	}
 	if entry, ok := d.seen[key]; ok && now.Sub(entry.at) <= parsedPacketDedupeTTL && entry.flowKey != flowKey {
-		logger.Printf("[ExitLag MultiRoute] dropped duplicate parsed packet op=%08x id=%d flow=%s originalFlow=%s", msg.Op, msg.Id, flowKey, entry.flowKey)
+		logger.Printf("[ExitLag MultiRoute] dropped duplicate parsed packet key=%s op=%08x id=%d flow=%s originalFlow=%s", shortPacketDedupeKey(key), msg.Op, msg.Id, flowKey, entry.flowKey)
 		return true
 	}
 
@@ -500,6 +511,8 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 						continue
 					}
 					if msg != nil {
+						msg.PacketDedupeKey = gamePacketDedupeKey(msg)
+						msg.PacketFlowKey = string(st.flowKey)
 						if t.exitlag && parsedPacketDedupe.IsDuplicate(msg, st.flowKey) {
 							skipPayload(st, len(msg.RawPacket))
 							continue
