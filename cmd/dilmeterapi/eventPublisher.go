@@ -4,7 +4,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"math"
 	"strconv"
 	"sync"
 	"time"
@@ -35,8 +34,6 @@ type eventPublisher struct {
 	// Async logging
 	logCh             chan iEvent
 	damageLogMu       sync.Mutex
-	recentDamageLog   map[damageDedupeKey]time.Time
-	recentDamageSweep time.Time
 }
 
 type eventClient struct {
@@ -76,7 +73,6 @@ func newEventPublisher(ctx context.Context, packetCh <-chan *packet.GamePacket, 
 		currentClientId:   1,
 		playerUpdateBatch: make([]*PlayerInfo, 0),
 		logCh:             make(chan iEvent, 1000), // Buffered channel for events
-		recentDamageLog:   make(map[damageDedupeKey]time.Time),
 	}
 
 	v.aggregator.SetLive(isLive)
@@ -89,10 +85,6 @@ func newEventPublisher(ctx context.Context, packetCh <-chan *packet.GamePacket, 
 
 func (t *eventPublisher) ClearCache() {
 	t.aggregator.Clear()
-	t.damageLogMu.Lock()
-	t.recentDamageLog = make(map[damageDedupeKey]time.Time)
-	t.recentDamageSweep = time.Time{}
-	t.damageLogMu.Unlock()
 	logger.Println("Clear command received, aggregator state has been reset.")
 }
 
@@ -304,22 +296,7 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 					HitIndex:   subIndex,
 					AtMs:       p.At.UnixMilli(),
 				}
-				if t.shouldLogDamage(damageDedupeKey{
-					PacketKey:  p.PacketDedupeKey,
-					Op:         p.Op,
-					PacketID:   p.Id,
-					ActionID:   pack.CombatActionId,
-					SubIndex:   subIndex,
-					At:         p.At.Unix(),
-					AttackerID: attackerId,
-					TargetID:   sub.EntityId,
-					SkillID:    attackSkillId,
-					Damage:     math.Float32bits(sub.Hit.Damage),
-					ManaDamage: sub.Hit.ManaDamage,
-					Critical:   isCrit,
-				}, p.At) {
-					events = append(events, e)
-				}
+				events = append(events, e)
 			}
 		}
 
@@ -355,19 +332,7 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 			HitIndex:   0,
 			AtMs:       p.At.UnixMilli(),
 		}
-		if t.shouldLogDamage(damageDedupeKey{
-			PacketKey:  p.PacketDedupeKey,
-			Op:         p.Op,
-			PacketID:   p.Id,
-			At:         p.At.Unix(),
-			AttackerID: attackerId,
-			TargetID:   targetId,
-			SkillID:    skillId,
-			Damage:     math.Float32bits(damage),
-			Delayed:    true,
-		}, p.At) {
-			events = append(events, e)
-		}
+		events = append(events, e)
 
 	case opcodeEntityAppear:
 		var entity *packet.EntityInfo
@@ -454,36 +419,6 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 			logger.Println("Log channel full, dropping event!")
 		}
 	}
-}
-
-func (t *eventPublisher) shouldLogDamage(key damageDedupeKey, at time.Time) bool {
-	if key.PacketKey != "" {
-		// Packet-keyed events have already passed packet-level multiroute
-		// dedupe. Let them through so same-looking real hits are preserved.
-		return true
-	}
-	t.damageLogMu.Lock()
-	defer t.damageLogMu.Unlock()
-
-	if at.IsZero() {
-		at = time.Now()
-	}
-	const ttl = 3 * time.Second
-	if at.Sub(t.recentDamageSweep) > ttl {
-		for k, seenAt := range t.recentDamageLog {
-			if at.Sub(seenAt) > ttl {
-				delete(t.recentDamageLog, k)
-			}
-		}
-		t.recentDamageSweep = at
-	}
-	if _, exists := t.recentDamageLog[key]; exists {
-		logger.Printf("[DamageDedupe log fallback] dropped duplicate damage op=%08x packetID=%d actionID=%d subIndex=%d at=%d attacker=%d target=%d skill=%d damageBits=%08x mana=%d crit=%t delayed=%t",
-			key.Op, key.PacketID, key.ActionID, key.SubIndex, key.At, key.AttackerID, key.TargetID, key.SkillID, key.Damage, key.ManaDamage, key.Critical, key.Delayed)
-		return false
-	}
-	t.recentDamageLog[key] = at
-	return true
 }
 
 // NEW HELPER: Converts an EntityInfo packet to an eventEntityAppear struct.

@@ -106,9 +106,12 @@ func main() {
 	ip := flag.String("ip", "", "Comma-separated list of game server IPs to capture from.")
 	portFlag := flag.String("port", "", "Comma-separated list of game server ports to capture from.")
 	recordPcap := flag.Bool("record-pcap", false, "Enable to record raw packet capture (.pcapng) files for sessions.")
+	debugLog := flag.Bool("debug-log", false, "Enable verbose logging to debug.log file.")
 	flag.Parse()
 
-	setupDebugLogging()
+	if *debugLog {
+		setupDebugLogging()
+	}
 	defer func() {
 		if debugLogFile != nil {
 			debugLogFile.Close()

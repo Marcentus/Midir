@@ -78,6 +78,9 @@ func TestAggregator_EntityDisappear(t *testing.T) {
 		Op: opcodeEntityDisappear,
 		Id: playerID,
 		At: time.Now(),
+		Msg: []packet.IMessageElem{
+			packet.NewMessageElemLong(playerID),
+		},
 	}
 
 	// Process Disappear
