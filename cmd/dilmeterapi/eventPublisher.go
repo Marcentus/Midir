@@ -32,7 +32,8 @@ type eventPublisher struct {
 	batchMu           sync.Mutex
 
 	// Async logging
-	logCh chan iEvent
+	logCh             chan iEvent
+	damageLogMu       sync.Mutex
 }
 
 type eventClient struct {
@@ -276,10 +277,10 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		}
 
 		// Now, create damage events for each hit using the correct skill ID.
-		for _, sub := range pack.SubPackets {
+		for subIndex, sub := range pack.SubPackets {
 			if sub.Hit != nil && (sub.Hit.Damage > 0 || sub.Hit.ManaDamage > 0) {
 				isCrit := (sub.Hit.Options & packet.CombatActionHitOptionsCritical) != 0
-				events = append(events, &eventDamage{
+				e := &eventDamage{
 					eventBase: eventBase{
 						EventId: eventIdDamage,
 						At:      p.At.Unix(),
@@ -291,7 +292,11 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 					ManaDamage: float32(sub.Hit.ManaDamage),
 					IsCritical: isCrit,
 					IsDelayed:  false,
-				})
+					PacketKey:  p.PacketDedupeKey,
+					HitIndex:   subIndex,
+					AtMs:       p.At.UnixMilli(),
+				}
+				events = append(events, e)
 			}
 		}
 
@@ -312,7 +317,7 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		attackerId := p.Msg[5].Data().(uint64)
 		skillId := p.Msg[6].Data().(uint16)
 		targetId := p.Id
-		events = append(events, &eventDamage{
+		e := &eventDamage{
 			eventBase: eventBase{
 				EventId: eventIdDamage,
 				At:      p.At.Unix(),
@@ -323,7 +328,11 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 			Damage:     damage,
 			IsCritical: false,
 			IsDelayed:  true,
-		})
+			PacketKey:  p.PacketDedupeKey,
+			HitIndex:   0,
+			AtMs:       p.At.UnixMilli(),
+		}
+		events = append(events, e)
 
 	case opcodeEntityAppear:
 		var entity *packet.EntityInfo

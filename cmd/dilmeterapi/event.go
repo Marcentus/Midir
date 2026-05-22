@@ -39,9 +39,9 @@ type EventConditionData struct {
 
 type eventEntityAppear struct {
 	eventBase
-	Name      string
-	RaceId    uint32
-	OwnerId   string
+	Name    string
+	RaceId  uint32
+	OwnerId string
 
 	CurrentHP float32 `json:"currentHp"`
 	MaxHP     float32 `json:"maxHp"`
@@ -61,6 +61,9 @@ type eventDamage struct {
 	ManaDamage float32
 	IsCritical bool
 	IsDelayed  bool
+	PacketKey  string `json:"PacketKey,omitempty"`
+	HitIndex   int    `json:"HitIndex,omitempty"`
+	AtMs       int64  `json:"AtMs,omitempty"`
 }
 
 type eventCharacterConditionEnable struct {

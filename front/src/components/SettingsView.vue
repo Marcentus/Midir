@@ -189,7 +189,7 @@
 
 <script lang="ts">
 import { defineComponent, computed, ref, onMounted, onUnmounted } from "vue";
-import { showClassColorsForVisiblePlayers, activeTool, socket } from "@/store";
+import { showClassColorsForVisiblePlayers, socket } from "@/store";
 import ColorSettings from "./ColorSettings.vue";
 
 export default defineComponent({
@@ -262,7 +262,6 @@ export default defineComponent({
         });
         if (res.ok) {
           await fetchStatus();
-          activeTool.value = "dps"; 
         } else {
           const errMsg = await res.text();
           alert("Failed to start capture: " + errMsg);

@@ -3,6 +3,7 @@ package packet
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -26,6 +27,7 @@ type GameServerPacketReader struct {
 	ctx      context.Context
 	packetCh chan *GamePacket
 	sm       pcapWriter
+	exitlag  bool
 
 	// mutable
 	handle *pcap.Handle
@@ -78,13 +80,81 @@ type gamePacketAssemblerState struct {
 	lastRelSeq uint32
 	lastAt     time.Time
 	payloads   []gamePacketPayload
+	flowKey    tcpFlowKey
+}
+
+type parsedPacketDedupeEntry struct {
+	at      time.Time
+	flowKey tcpFlowKey
+}
+
+type parsedPacketDeduper struct {
+	seen      map[string]parsedPacketDedupeEntry
+	lastSweep time.Time
 }
 
 const pcapQueueSize = 100
+const pcapSnapLen = 65536
 const pcapBufferSize = 32 * 1024 * 1024
 const packetQueueSize = 100
+const parsedPacketDedupeTTL = 3 * time.Second
 
 var ErrTooShortPacket = errors.New("too short packet")
+
+func gamePacketDedupeKey(msg *GamePacket) string {
+	sum := sha256.Sum256(msg.RawPacket)
+	return fmt.Sprintf("%02x:%d:%d:%d:%d:%x", msg.Sign, msg.Length, msg.Flag, msg.Op, msg.Id, sum)
+}
+
+func shortPacketDedupeKey(key string) string {
+	if len(key) <= 24 {
+		return key
+	}
+	return key[:24]
+}
+
+func newParsedPacketDeduper() *parsedPacketDeduper {
+	return &parsedPacketDeduper{
+		seen:      make(map[string]parsedPacketDedupeEntry),
+		lastSweep: time.Now(),
+	}
+}
+
+func (d *parsedPacketDeduper) IsDuplicate(msg *GamePacket, flowKey tcpFlowKey) bool {
+	if d == nil || msg == nil || len(msg.RawPacket) == 0 || flowKey == "" {
+		return false
+	}
+
+	now := msg.At
+	if now.IsZero() {
+		now = time.Now()
+	}
+
+	if now.Sub(d.lastSweep) > parsedPacketDedupeTTL {
+		for key, entry := range d.seen {
+			if now.Sub(entry.at) > parsedPacketDedupeTTL {
+				delete(d.seen, key)
+			}
+		}
+		d.lastSweep = now
+	}
+
+	key := msg.PacketDedupeKey
+	if key == "" {
+		key = gamePacketDedupeKey(msg)
+		msg.PacketDedupeKey = key
+	}
+	if entry, ok := d.seen[key]; ok && now.Sub(entry.at) <= parsedPacketDedupeTTL && entry.flowKey != flowKey {
+		// logger.Printf("[ExitLag MultiRoute] dropped duplicate parsed packet key=%s op=%08x id=%d flow=%s originalFlow=%s", shortPacketDedupeKey(key), msg.Op, msg.Id, flowKey, entry.flowKey)
+		return true
+	}
+
+	d.seen[key] = parsedPacketDedupeEntry{
+		at:      now,
+		flowKey: flowKey,
+	}
+	return false
+}
 
 // This function is provided for completeness and is unchanged from the original file.
 func (t *GameServerPacketReader) exitLagPacketLoop(rawPayloadCh <-chan gamePacketPayload, mabiPayloadCh chan<- gamePacketPayload) {
@@ -277,6 +347,7 @@ func NewGameServerPacketReader(opt *GameServerPacketReaderOpt) (*GameServerPacke
 		ctx:      opt.Ctx,
 		packetCh: make(chan *GamePacket, packetQueueSize),
 		sm:       opt.Sm,
+		exitlag:  opt.ExitLagEnabled,
 	}
 
 	rawPayloadCh, err := (<-chan gamePacketPayload)(nil), (error)(nil)
@@ -361,6 +432,7 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 			}()
 
 			assemblers := make(map[tcpFlowKey]*gamePacketAssemblerState)
+			parsedPacketDedupe := newParsedPacketDeduper()
 
 			getAssembler := func(key tcpFlowKey) *gamePacketAssemblerState {
 				if key == "" {
@@ -372,6 +444,7 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 						buffer:   bytes.NewBuffer(nil),
 						lastAt:   time.Now(),
 						payloads: make([]gamePacketPayload, 0, 100),
+						flowKey:  key,
 					}
 					assemblers[key] = st
 				}
@@ -450,6 +523,12 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 						continue
 					}
 					if msg != nil {
+						msg.PacketDedupeKey = gamePacketDedupeKey(msg)
+						msg.PacketFlowKey = string(st.flowKey)
+						if t.exitlag && parsedPacketDedupe.IsDuplicate(msg, st.flowKey) {
+							skipPayload(st, len(msg.RawPacket))
+							continue
+						}
 						t.packetCh <- msg
 						skipPayload(st, len(msg.RawPacket))
 					}
@@ -472,14 +551,43 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 }
 
 func (t *GameServerPacketReader) openNic(nic string, filter string, promiscuous bool) (<-chan gamePacketPayload, error) {
-	handle, err := pcap.OpenLive(nic, pcapBufferSize, promiscuous, pcap.BlockForever)
+	inactive, err := pcap.NewInactiveHandle(nic)
 	if err != nil {
-		logger.Println(err)
+		logger.Println("NewInactiveHandle failed:", err)
+		return nil, err
+	}
+	defer inactive.CleanUp()
+
+	if err := inactive.SetSnapLen(pcapSnapLen); err != nil {
+		logger.Println("SetSnapLen failed:", err)
+		return nil, err
+	}
+
+	if err := inactive.SetPromisc(promiscuous); err != nil {
+		logger.Println("SetPromisc failed:", err)
+		return nil, err
+	}
+
+	if err := inactive.SetTimeout(pcap.BlockForever); err != nil {
+		logger.Println("SetTimeout failed:", err)
+		return nil, err
+	}
+
+	if err := inactive.SetBufferSize(pcapBufferSize); err != nil {
+		logger.Println("SetBufferSize failed:", err)
+		return nil, err
+	}
+
+	handle, err := inactive.Activate()
+	if err != nil {
+		logger.Println("Activate failed:", err)
 		return nil, err
 	}
 	t.handle = handle
 
 	if err := handle.SetBPFFilter(filter); err != nil {
+		handle.Close()
+		t.handle = nil
 		return nil, err
 	}
 
