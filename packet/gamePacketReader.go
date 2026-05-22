@@ -94,6 +94,7 @@ type parsedPacketDeduper struct {
 }
 
 const pcapQueueSize = 100
+const pcapSnapLen = 65536
 const pcapBufferSize = 32 * 1024 * 1024
 const packetQueueSize = 100
 const parsedPacketDedupeTTL = 3 * time.Second
@@ -144,7 +145,7 @@ func (d *parsedPacketDeduper) IsDuplicate(msg *GamePacket, flowKey tcpFlowKey) b
 		msg.PacketDedupeKey = key
 	}
 	if entry, ok := d.seen[key]; ok && now.Sub(entry.at) <= parsedPacketDedupeTTL && entry.flowKey != flowKey {
-		logger.Printf("[ExitLag MultiRoute] dropped duplicate parsed packet key=%s op=%08x id=%d flow=%s originalFlow=%s", shortPacketDedupeKey(key), msg.Op, msg.Id, flowKey, entry.flowKey)
+		// logger.Printf("[ExitLag MultiRoute] dropped duplicate parsed packet key=%s op=%08x id=%d flow=%s originalFlow=%s", shortPacketDedupeKey(key), msg.Op, msg.Id, flowKey, entry.flowKey)
 		return true
 	}
 
@@ -539,14 +540,43 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 }
 
 func (t *GameServerPacketReader) openNic(nic string, filter string, promiscuous bool) (<-chan gamePacketPayload, error) {
-	handle, err := pcap.OpenLive(nic, pcapBufferSize, promiscuous, pcap.BlockForever)
+	inactive, err := pcap.NewInactiveHandle(nic)
 	if err != nil {
-		logger.Println(err)
+		logger.Println("NewInactiveHandle failed:", err)
+		return nil, err
+	}
+	defer inactive.CleanUp()
+
+	if err := inactive.SetSnapLen(pcapSnapLen); err != nil {
+		logger.Println("SetSnapLen failed:", err)
+		return nil, err
+	}
+
+	if err := inactive.SetPromisc(promiscuous); err != nil {
+		logger.Println("SetPromisc failed:", err)
+		return nil, err
+	}
+
+	if err := inactive.SetTimeout(pcap.BlockForever); err != nil {
+		logger.Println("SetTimeout failed:", err)
+		return nil, err
+	}
+
+	if err := inactive.SetBufferSize(pcapBufferSize); err != nil {
+		logger.Println("SetBufferSize failed:", err)
+		return nil, err
+	}
+
+	handle, err := inactive.Activate()
+	if err != nil {
+		logger.Println("Activate failed:", err)
 		return nil, err
 	}
 	t.handle = handle
 
 	if err := handle.SetBPFFilter(filter); err != nil {
+		handle.Close()
+		t.handle = nil
 		return nil, err
 	}
 
