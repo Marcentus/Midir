@@ -3,10 +3,11 @@ package packet
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"hash/fnv"
 	"io"
 	"os"
 	"time"
@@ -83,27 +84,50 @@ type gamePacketAssemblerState struct {
 	flowKey    tcpFlowKey
 }
 
+type dedupeKey struct {
+	sign   uint8
+	length uint32
+	flag   uint8
+	op     uint32
+	id     uint64
+	hash   uint64
+}
+
 type parsedPacketDedupeEntry struct {
 	at      time.Time
 	flowKey tcpFlowKey
 }
 
 type parsedPacketDeduper struct {
-	seen      map[string]parsedPacketDedupeEntry
+	seen      map[dedupeKey]parsedPacketDedupeEntry
 	lastSweep time.Time
 }
 
-const pcapQueueSize = 100
+const pcapQueueSize = 4096
 const pcapSnapLen = 65536
 const pcapBufferSize = 32 * 1024 * 1024
-const packetQueueSize = 100
+const packetQueueSize = 4096
 const parsedPacketDedupeTTL = 3 * time.Second
 
 var ErrTooShortPacket = errors.New("too short packet")
 
+func gamePacketDedupeKeyStruct(msg *GamePacket) dedupeKey {
+	h := fnv.New64a()
+	h.Write(msg.RawPacket)
+	return dedupeKey{
+		sign:   msg.Sign,
+		length: msg.Length,
+		flag:   msg.Flag,
+		op:     msg.Op,
+		id:     msg.Id,
+		hash:   h.Sum64(),
+	}
+}
+
 func gamePacketDedupeKey(msg *GamePacket) string {
-	sum := sha256.Sum256(msg.RawPacket)
-	return fmt.Sprintf("%02x:%d:%d:%d:%d:%x", msg.Sign, msg.Length, msg.Flag, msg.Op, msg.Id, sum)
+	h := fnv.New64a()
+	h.Write(msg.RawPacket)
+	return fmt.Sprintf("%02x:%d:%d:%d:%d:%x", msg.Sign, msg.Length, msg.Flag, msg.Op, msg.Id, h.Sum64())
 }
 
 func shortPacketDedupeKey(key string) string {
@@ -115,7 +139,7 @@ func shortPacketDedupeKey(key string) string {
 
 func newParsedPacketDeduper() *parsedPacketDeduper {
 	return &parsedPacketDeduper{
-		seen:      make(map[string]parsedPacketDedupeEntry),
+		seen:      make(map[dedupeKey]parsedPacketDedupeEntry),
 		lastSweep: time.Now(),
 	}
 }
@@ -139,17 +163,12 @@ func (d *parsedPacketDeduper) IsDuplicate(msg *GamePacket, flowKey tcpFlowKey) b
 		d.lastSweep = now
 	}
 
-	key := msg.PacketDedupeKey
-	if key == "" {
-		key = gamePacketDedupeKey(msg)
-		msg.PacketDedupeKey = key
-	}
-	if entry, ok := d.seen[key]; ok && now.Sub(entry.at) <= parsedPacketDedupeTTL && entry.flowKey != flowKey {
-		// logger.Printf("[ExitLag MultiRoute] dropped duplicate parsed packet key=%s op=%08x id=%d flow=%s originalFlow=%s", shortPacketDedupeKey(key), msg.Op, msg.Id, flowKey, entry.flowKey)
+	keyStruct := gamePacketDedupeKeyStruct(msg)
+	if entry, ok := d.seen[keyStruct]; ok && now.Sub(entry.at) <= parsedPacketDedupeTTL && entry.flowKey != flowKey {
 		return true
 	}
 
-	d.seen[key] = parsedPacketDedupeEntry{
+	d.seen[keyStruct] = parsedPacketDedupeEntry{
 		at:      now,
 		flowKey: flowKey,
 	}
@@ -383,6 +402,65 @@ func NewGameServerPacketReader(opt *GameServerPacketReaderOpt) (*GameServerPacke
 	// The final packet loop reads from the configured channel (either direct or post-ExitLag).
 	go v.packetLoop(finalPayloadCh)
 
+	// Start background pipeline metrics monitor
+	go func() {
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+
+		var lastDropped, lastIfDropped int
+		var firstRun = true
+		staticTicks := 0
+
+		for {
+			select {
+			case <-opt.Ctx.Done():
+				return
+			case <-ticker.C:
+				if v.handle == nil {
+					continue
+				}
+				stats, err := v.handle.Stats()
+				if err != nil {
+					continue
+				}
+
+				droppedDiff := stats.PacketsDropped - lastDropped
+				ifDroppedDiff := stats.PacketsIfDropped - lastIfDropped
+
+				shouldLog := droppedDiff > 0 || ifDroppedDiff > 0
+
+				if !shouldLog {
+					staticTicks++
+					if staticTicks >= 6 {
+						shouldLog = true
+						staticTicks = 0
+					}
+				} else {
+					staticTicks = 0
+				}
+
+				if shouldLog {
+					if firstRun {
+						droppedDiff = 0
+						ifDroppedDiff = 0
+						firstRun = false
+					}
+					logger.Printf("[Pipeline Metrics] Recv: %d, Drops: %d (+%d), IfDrops: %d (+%d) | Queue Sizes -> Raw: %d, Final: %d, OutPacketCh: %d",
+						stats.PacketsReceived,
+						stats.PacketsDropped, droppedDiff,
+						stats.PacketsIfDropped, ifDroppedDiff,
+						len(rawPayloadCh),
+						len(finalPayloadCh),
+						len(v.packetCh),
+					)
+				}
+
+				lastDropped = stats.PacketsDropped
+				lastIfDropped = stats.PacketsIfDropped
+			}
+		}
+	}()
+
 	return v, nil
 }
 
@@ -518,17 +596,26 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 						if err == io.EOF {
 							break readerLoop
 						}
-						logger.Printf("game packet parse error %v %v", st.lastRelSeq, err)
+						b := st.buffer.Bytes()
+						dumpLen := 256
+						if len(b) < dumpLen {
+							dumpLen = len(b)
+						}
+						note := ""
+						if len(b) >= 5 && b[0] == 0x01 && (b[4] == 0x05 || b[4] == 0x03) {
+							note = fmt.Sprintf(" [NOTE: MATCHES EXITLAG SIGNATURE! Byte 0: 0x%02x, Byte 4: 0x%02x]", b[0], b[4])
+						}
+						logger.Printf("[Parse Error Dump] game packet parse error %v %v%s. Buffer hex:\n%s", st.lastRelSeq, err, note, hex.Dump(b[:dumpLen]))
 						nextPayload(st)
 						continue
 					}
 					if msg != nil {
-						msg.PacketDedupeKey = gamePacketDedupeKey(msg)
 						msg.PacketFlowKey = string(st.flowKey)
 						if t.exitlag && parsedPacketDedupe.IsDuplicate(msg, st.flowKey) {
 							skipPayload(st, len(msg.RawPacket))
 							continue
 						}
+						msg.PacketDedupeKey = gamePacketDedupeKey(msg)
 						t.packetCh <- msg
 						skipPayload(st, len(msg.RawPacket))
 					}
@@ -778,13 +865,13 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 					ci:       ci,
 				})
 
-				if len(st.pending) > 10 {
+				if len(st.pending) > 300 {
 					minIdx := findMinSeqIdx(st.pending)
 					if minIdx != -1 {
 						targetLayer := st.pending[minIdx]
 						skippedBytes := targetLayer.tcpLayer.Seq - st.nextSeq
 						warningMsg := fmt.Sprintf("Network packet loss detected on %s (Gap: %d bytes). Skipping to resume.", key, skippedBytes)
-						logger.Printf("[TCP Recovery] %s OldNext: %d, NewNext: %d", warningMsg, st.nextSeq, targetLayer.tcpLayer.Seq)
+						logger.Printf("[TCP Recovery] %s OldNext: %d, NewNext: %d (Active Streams: %d, Pending Count: %d)", warningMsg, st.nextSeq, targetLayer.tcpLayer.Seq, len(streams), len(st.pending))
 						st.nextSeq = targetLayer.tcpLayer.Seq
 
 						select {
