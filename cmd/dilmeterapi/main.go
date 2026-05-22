@@ -81,16 +81,16 @@ func buildPcapFilter(ips, ports string, exitlagEnabled bool) string {
 }
 
 func setupDebugLogging() {
-	exePath, err := os.Executable()
-	logDir := "."
-	if err == nil {
-		logDir = filepath.Dir(exePath)
+	logDir := "logs"
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		logger.Printf("Failed to create logs directory: %v\n", err)
+		return
 	}
 
 	logPath := filepath.Join(logDir, "debug.log")
-	f, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	f, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
-		logger.Printf("Failed to open debug log %s: %v", logPath, err)
+		logger.Printf("Failed to open debug log %s: %v\n", logPath, err)
 		return
 	}
 
@@ -98,7 +98,7 @@ func setupDebugLogging() {
 	output := io.MultiWriter(os.Stdout, f)
 	logger.SetOutput(output)
 	packet.ConfigureLoggerOutput(output)
-	logger.Printf("Debug log initialized: %s", logPath)
+	logger.Printf("Always-on debug log initialized: %s\n", logPath)
 }
 
 func main() {
@@ -106,12 +106,9 @@ func main() {
 	ip := flag.String("ip", "", "Comma-separated list of game server IPs to capture from.")
 	portFlag := flag.String("port", "", "Comma-separated list of game server ports to capture from.")
 	recordPcap := flag.Bool("record-pcap", false, "Enable to record raw packet capture (.pcapng) files for sessions.")
-	debugLog := flag.Bool("debug-log", false, "Enable verbose logging to debug.log file.")
 	flag.Parse()
 
-	if *debugLog {
-		setupDebugLogging()
-	}
+	setupDebugLogging()
 	defer func() {
 		if debugLogFile != nil {
 			debugLogFile.Close()
