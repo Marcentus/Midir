@@ -151,6 +151,17 @@ func (t *GameServerPacketReader) exitLagPacketLoop(rawPayloadCh <-chan gamePacke
 						continue parseLoop
 					}
 
+					// Silently discard ExitLag keep-alive/heartbeat packets (under 6 bytes)
+					if len(mabiPayload) < 6 {
+						if st.buffer.Len() >= 4 {
+							if bytes.Equal(st.buffer.Bytes()[:4], []byte{0x05, 0x25, 0x01, 0x01}) {
+								st.buffer.Next(4)
+							}
+						}
+						st.isReadingMabiPayload = false
+						continue parseLoop
+					}
+
 					mabiPayloadCh <- gamePacketPayload{
 						relSeq:  st.packetRelSeq,
 						at:      st.packetStartTime,
