@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"hash/fnv"
@@ -402,64 +401,7 @@ func NewGameServerPacketReader(opt *GameServerPacketReaderOpt) (*GameServerPacke
 	// The final packet loop reads from the configured channel (either direct or post-ExitLag).
 	go v.packetLoop(finalPayloadCh)
 
-	// Start background pipeline metrics monitor
-	go func() {
-		ticker := time.NewTicker(5 * time.Second)
-		defer ticker.Stop()
 
-		var lastDropped, lastIfDropped int
-		var firstRun = true
-		staticTicks := 0
-
-		for {
-			select {
-			case <-opt.Ctx.Done():
-				return
-			case <-ticker.C:
-				if v.handle == nil {
-					continue
-				}
-				stats, err := v.handle.Stats()
-				if err != nil {
-					continue
-				}
-
-				droppedDiff := stats.PacketsDropped - lastDropped
-				ifDroppedDiff := stats.PacketsIfDropped - lastIfDropped
-
-				shouldLog := droppedDiff > 0 || ifDroppedDiff > 0
-
-				if !shouldLog {
-					staticTicks++
-					if staticTicks >= 6 {
-						shouldLog = true
-						staticTicks = 0
-					}
-				} else {
-					staticTicks = 0
-				}
-
-				if shouldLog {
-					if firstRun {
-						droppedDiff = 0
-						ifDroppedDiff = 0
-						firstRun = false
-					}
-					logger.Printf("[Pipeline Metrics] Recv: %d, Drops: %d (+%d), IfDrops: %d (+%d) | Queue Sizes -> Raw: %d, Final: %d, OutPacketCh: %d",
-						stats.PacketsReceived,
-						stats.PacketsDropped, droppedDiff,
-						stats.PacketsIfDropped, ifDroppedDiff,
-						len(rawPayloadCh),
-						len(finalPayloadCh),
-						len(v.packetCh),
-					)
-				}
-
-				lastDropped = stats.PacketsDropped
-				lastIfDropped = stats.PacketsIfDropped
-			}
-		}
-	}()
 
 	return v, nil
 }
@@ -597,15 +539,11 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 							break readerLoop
 						}
 						b := st.buffer.Bytes()
-						dumpLen := 256
-						if len(b) < dumpLen {
-							dumpLen = len(b)
-						}
 						note := ""
 						if len(b) >= 5 && b[0] == 0x01 && (b[4] == 0x05 || b[4] == 0x03) {
 							note = fmt.Sprintf(" [NOTE: MATCHES EXITLAG SIGNATURE! Byte 0: 0x%02x, Byte 4: 0x%02x]", b[0], b[4])
 						}
-						logger.Printf("[Parse Error Dump] game packet parse error %v %v%s. Buffer hex:\n%s", st.lastRelSeq, err, note, hex.Dump(b[:dumpLen]))
+						logger.Printf("[Parse Error] game packet parse error %v %v%s", st.lastRelSeq, err, note)
 						nextPayload(st)
 						continue
 					}
