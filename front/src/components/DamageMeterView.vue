@@ -19,7 +19,8 @@
                 hide-details
                 class="target-select-refined"
                 placeholder="All Targets"
-                :menu-props="{ minWidth: '480px' }"
+                :menu-props="{ minWidth: '480px', maxHeight: menuMaxHeight, location: 'bottom', offset: 4 }"
+                @update:menu="handleMenuUpdate"
               >
                 <!-- Selection Display (when closed) -->
                 <template v-slot:selection="{ item }">
@@ -216,7 +217,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, inject } from "vue";
+import { defineComponent, ref, computed, inject, nextTick, onMounted, onBeforeUnmount } from "vue";
 import { fightSummary, selectedTargetId } from "@/store";
 import SessionPanel from "@/components/SessionPanel.vue";
 import ApplyDamageBySkillComponent from "@/components/applyDamageBySkill.vue";
@@ -387,6 +388,34 @@ export default defineComponent({
       return formatDuration(relativeSeconds);
     };
 
+    const menuMaxHeight = ref(400);
+
+    const calculateMaxHeight = () => {
+      nextTick(() => {
+        const el = document.querySelector(".target-select-refined");
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          // Calculate available vertical space below select activator to viewport bottom
+          const spaceBelow = window.innerHeight - rect.bottom - 24; // 24px safe padding
+          menuMaxHeight.value = Math.max(200, spaceBelow);
+        }
+      });
+    };
+
+    const handleMenuUpdate = (isOpen: boolean) => {
+      if (isOpen) {
+        calculateMaxHeight();
+      }
+    };
+
+    onMounted(() => {
+      window.addEventListener("resize", calculateMaxHeight);
+    });
+
+    onBeforeUnmount(() => {
+      window.removeEventListener("resize", calculateMaxHeight);
+    });
+
     return {
       tab,
       selectedTargetId,
@@ -398,6 +427,8 @@ export default defineComponent({
       formatDuration,
       formatTime,
       formatRelativeTime,
+      menuMaxHeight,
+      handleMenuUpdate,
       selectedTargetConditions: computed(() => {
         if (!selectedTargetId.value) return undefined;
         return fightSummary.targets[selectedTargetId.value]?.conditions;
