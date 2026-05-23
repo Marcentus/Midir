@@ -61,9 +61,6 @@ type eventDamage struct {
 	ManaDamage float32
 	IsCritical bool
 	IsDelayed  bool
-	PacketKey  string `json:"PacketKey,omitempty"`
-	HitIndex   int    `json:"HitIndex,omitempty"`
-	AtMs       int64  `json:"AtMs,omitempty"`
 }
 
 type eventCharacterConditionEnable struct {

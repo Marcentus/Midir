@@ -277,7 +277,7 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		}
 
 		// Now, create damage events for each hit using the correct skill ID.
-		for subIndex, sub := range pack.SubPackets {
+		for _, sub := range pack.SubPackets {
 			if sub.Hit != nil && (sub.Hit.Damage > 0 || sub.Hit.ManaDamage > 0) {
 				isCrit := (sub.Hit.Options & packet.CombatActionHitOptionsCritical) != 0
 				e := &eventDamage{
@@ -292,9 +292,6 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 					ManaDamage: float32(sub.Hit.ManaDamage),
 					IsCritical: isCrit,
 					IsDelayed:  false,
-					PacketKey:  p.PacketDedupeKey,
-					HitIndex:   subIndex,
-					AtMs:       p.At.UnixMilli(),
 				}
 				events = append(events, e)
 			}
@@ -328,9 +325,6 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 			Damage:     damage,
 			IsCritical: false,
 			IsDelayed:  true,
-			PacketKey:  p.PacketDedupeKey,
-			HitIndex:   0,
-			AtMs:       p.At.UnixMilli(),
 		}
 		events = append(events, e)
 
