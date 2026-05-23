@@ -73,6 +73,7 @@ type exitLagStreamState struct {
 	packetStartTime      time.Time
 	packetRelSeq         uint32
 	lastSeen             time.Time
+	lastHeader           []byte
 }
 
 type gamePacketAssemblerState struct {
@@ -239,8 +240,12 @@ func (t *GameServerPacketReader) exitLagPacketLoop(rawPayloadCh <-chan gamePacke
 						continue parseLoop
 					}
 
-					// Silently discard ExitLag keep-alive/heartbeat packets (under 6 bytes)
-					if len(mabiPayload) < 6 {
+					// Discard ExitLag keep-alive/heartbeat packets if payload is exactly 5 bytes and equals "pong\n"
+					// Theres gotta be a better way of determining exitlag only packets
+					if len(mabiPayload) == 5 && bytes.Equal(mabiPayload, []byte("pong\n")) {
+						// wholePacket := append([]byte(nil), st.lastHeader...)
+						// wholePacket = append(wholePacket, mabiPayload...)
+						// logger.Printf("[ExitLag] Skipped pong keep-alive packet. Payload len: %d, Payload hex: %x\nWhole packet (header+payload) hex: %02x", len(mabiPayload), mabiPayload, wholePacket)
 						if st.buffer.Len() >= 4 {
 							if bytes.Equal(st.buffer.Bytes()[:4], []byte{0x05, 0x25, 0x01, 0x01}) {
 								st.buffer.Next(4)
@@ -337,6 +342,9 @@ func (t *GameServerPacketReader) exitLagPacketLoop(rawPayloadCh <-chan gamePacke
 				}
 
 				headerTotalLen := mabiLenOffset + mabiPayloadLenBytes
+				st.lastHeader = make([]byte, headerTotalLen)
+				copy(st.lastHeader, b[:headerTotalLen])
+
 				st.buffer.Next(headerTotalLen)
 				st.isReadingMabiPayload = true
 				st.mabiBytesToRead = mabiLen
@@ -400,8 +408,6 @@ func NewGameServerPacketReader(opt *GameServerPacketReaderOpt) (*GameServerPacke
 
 	// The final packet loop reads from the configured channel (either direct or post-ExitLag).
 	go v.packetLoop(finalPayloadCh)
-
-
 
 	return v, nil
 }
