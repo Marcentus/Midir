@@ -819,4 +819,3 @@ func (a *Aggregator) Clear() {
 		a.ignorePacketsBefore = time.Time{}
 	}
 }
-

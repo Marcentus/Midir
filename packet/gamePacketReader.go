@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"hash/fnv"
 	"io"
 	"os"
 	"time"
@@ -26,6 +27,7 @@ type GameServerPacketReader struct {
 	ctx      context.Context
 	packetCh chan *GamePacket
 	sm       pcapWriter
+	exitlag  bool
 
 	// mutable
 	handle *pcap.Handle
@@ -71,6 +73,7 @@ type exitLagStreamState struct {
 	packetStartTime      time.Time
 	packetRelSeq         uint32
 	lastSeen             time.Time
+	lastHeader           []byte
 }
 
 type gamePacketAssemblerState struct {
@@ -78,13 +81,99 @@ type gamePacketAssemblerState struct {
 	lastRelSeq uint32
 	lastAt     time.Time
 	payloads   []gamePacketPayload
+	flowKey    tcpFlowKey
 }
 
-const pcapQueueSize = 100
+type dedupeKey struct {
+	sign   uint8
+	length uint32
+	flag   uint8
+	op     uint32
+	id     uint64
+	hash   uint64
+}
+
+type parsedPacketDedupeEntry struct {
+	at      time.Time
+	flowKey tcpFlowKey
+}
+
+type parsedPacketDeduper struct {
+	seen      map[dedupeKey]parsedPacketDedupeEntry
+	lastSweep time.Time
+}
+
+const pcapQueueSize = 4096
+const pcapSnapLen = 65536
 const pcapBufferSize = 32 * 1024 * 1024
-const packetQueueSize = 100
+const packetQueueSize = 4096
+const parsedPacketDedupeTTL = 3 * time.Second
 
 var ErrTooShortPacket = errors.New("too short packet")
+
+func gamePacketDedupeKeyStruct(msg *GamePacket) dedupeKey {
+	h := fnv.New64a()
+	h.Write(msg.RawPacket)
+	return dedupeKey{
+		sign:   msg.Sign,
+		length: msg.Length,
+		flag:   msg.Flag,
+		op:     msg.Op,
+		id:     msg.Id,
+		hash:   h.Sum64(),
+	}
+}
+
+func gamePacketDedupeKey(msg *GamePacket) string {
+	h := fnv.New64a()
+	h.Write(msg.RawPacket)
+	return fmt.Sprintf("%02x:%d:%d:%d:%d:%x", msg.Sign, msg.Length, msg.Flag, msg.Op, msg.Id, h.Sum64())
+}
+
+func shortPacketDedupeKey(key string) string {
+	if len(key) <= 24 {
+		return key
+	}
+	return key[:24]
+}
+
+func newParsedPacketDeduper() *parsedPacketDeduper {
+	return &parsedPacketDeduper{
+		seen:      make(map[dedupeKey]parsedPacketDedupeEntry),
+		lastSweep: time.Now(),
+	}
+}
+
+func (d *parsedPacketDeduper) IsDuplicate(msg *GamePacket, flowKey tcpFlowKey) bool {
+	if d == nil || msg == nil || len(msg.RawPacket) == 0 || flowKey == "" {
+		return false
+	}
+
+	now := msg.At
+	if now.IsZero() {
+		now = time.Now()
+	}
+
+	if now.Sub(d.lastSweep) > parsedPacketDedupeTTL {
+		for key, entry := range d.seen {
+			if now.Sub(entry.at) > parsedPacketDedupeTTL {
+				delete(d.seen, key)
+			}
+		}
+		d.lastSweep = now
+	}
+
+	keyStruct := gamePacketDedupeKeyStruct(msg)
+	if entry, ok := d.seen[keyStruct]; ok && now.Sub(entry.at) <= parsedPacketDedupeTTL && entry.flowKey != flowKey {
+		return true
+	}
+
+	d.seen[keyStruct] = parsedPacketDedupeEntry{
+		at:      now,
+		flowKey: flowKey,
+	}
+	return false
+}
 
 // This function is provided for completeness and is unchanged from the original file.
 func (t *GameServerPacketReader) exitLagPacketLoop(rawPayloadCh <-chan gamePacketPayload, mabiPayloadCh chan<- gamePacketPayload) {
@@ -147,6 +236,21 @@ func (t *GameServerPacketReader) exitLagPacketLoop(rawPayloadCh <-chan gamePacke
 					mabiPayload := make([]byte, st.mabiBytesToRead)
 					_, err := st.buffer.Read(mabiPayload)
 					if err != nil {
+						st.isReadingMabiPayload = false
+						continue parseLoop
+					}
+
+					// Discard ExitLag keep-alive/heartbeat packets if payload is exactly 5 bytes and equals "pong\n"
+					// Theres gotta be a better way of determining exitlag only packets
+					if len(mabiPayload) == 5 && bytes.Equal(mabiPayload, []byte("pong\n")) {
+						// wholePacket := append([]byte(nil), st.lastHeader...)
+						// wholePacket = append(wholePacket, mabiPayload...)
+						// logger.Printf("[ExitLag] Skipped pong keep-alive packet. Payload len: %d, Payload hex: %x\nWhole packet (header+payload) hex: %02x", len(mabiPayload), mabiPayload, wholePacket)
+						if st.buffer.Len() >= 4 {
+							if bytes.Equal(st.buffer.Bytes()[:4], []byte{0x05, 0x25, 0x01, 0x01}) {
+								st.buffer.Next(4)
+							}
+						}
 						st.isReadingMabiPayload = false
 						continue parseLoop
 					}
@@ -238,6 +342,9 @@ func (t *GameServerPacketReader) exitLagPacketLoop(rawPayloadCh <-chan gamePacke
 				}
 
 				headerTotalLen := mabiLenOffset + mabiPayloadLenBytes
+				st.lastHeader = make([]byte, headerTotalLen)
+				copy(st.lastHeader, b[:headerTotalLen])
+
 				st.buffer.Next(headerTotalLen)
 				st.isReadingMabiPayload = true
 				st.mabiBytesToRead = mabiLen
@@ -266,6 +373,7 @@ func NewGameServerPacketReader(opt *GameServerPacketReaderOpt) (*GameServerPacke
 		ctx:      opt.Ctx,
 		packetCh: make(chan *GamePacket, packetQueueSize),
 		sm:       opt.Sm,
+		exitlag:  opt.ExitLagEnabled,
 	}
 
 	rawPayloadCh, err := (<-chan gamePacketPayload)(nil), (error)(nil)
@@ -350,6 +458,7 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 			}()
 
 			assemblers := make(map[tcpFlowKey]*gamePacketAssemblerState)
+			parsedPacketDedupe := newParsedPacketDeduper()
 
 			getAssembler := func(key tcpFlowKey) *gamePacketAssemblerState {
 				if key == "" {
@@ -361,6 +470,7 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 						buffer:   bytes.NewBuffer(nil),
 						lastAt:   time.Now(),
 						payloads: make([]gamePacketPayload, 0, 100),
+						flowKey:  key,
 					}
 					assemblers[key] = st
 				}
@@ -434,11 +544,22 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 						if err == io.EOF {
 							break readerLoop
 						}
-						logger.Printf("game packet parse error %v %v", st.lastRelSeq, err)
+						b := st.buffer.Bytes()
+						note := ""
+						if len(b) >= 5 && b[0] == 0x01 && (b[4] == 0x05 || b[4] == 0x03) {
+							note = fmt.Sprintf(" [NOTE: MATCHES EXITLAG SIGNATURE! Byte 0: 0x%02x, Byte 4: 0x%02x]", b[0], b[4])
+						}
+						logger.Printf("[Parse Error] game packet parse error %v %v%s", st.lastRelSeq, err, note)
 						nextPayload(st)
 						continue
 					}
 					if msg != nil {
+						msg.PacketFlowKey = string(st.flowKey)
+						if t.exitlag && parsedPacketDedupe.IsDuplicate(msg, st.flowKey) {
+							skipPayload(st, len(msg.RawPacket))
+							continue
+						}
+						msg.PacketDedupeKey = gamePacketDedupeKey(msg)
 						t.packetCh <- msg
 						skipPayload(st, len(msg.RawPacket))
 					}
@@ -461,14 +582,43 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 }
 
 func (t *GameServerPacketReader) openNic(nic string, filter string, promiscuous bool) (<-chan gamePacketPayload, error) {
-	handle, err := pcap.OpenLive(nic, pcapBufferSize, promiscuous, pcap.BlockForever)
+	inactive, err := pcap.NewInactiveHandle(nic)
 	if err != nil {
-		logger.Println(err)
+		logger.Println("NewInactiveHandle failed:", err)
+		return nil, err
+	}
+	defer inactive.CleanUp()
+
+	if err := inactive.SetSnapLen(pcapSnapLen); err != nil {
+		logger.Println("SetSnapLen failed:", err)
+		return nil, err
+	}
+
+	if err := inactive.SetPromisc(promiscuous); err != nil {
+		logger.Println("SetPromisc failed:", err)
+		return nil, err
+	}
+
+	if err := inactive.SetTimeout(pcap.BlockForever); err != nil {
+		logger.Println("SetTimeout failed:", err)
+		return nil, err
+	}
+
+	if err := inactive.SetBufferSize(pcapBufferSize); err != nil {
+		logger.Println("SetBufferSize failed:", err)
+		return nil, err
+	}
+
+	handle, err := inactive.Activate()
+	if err != nil {
+		logger.Println("Activate failed:", err)
 		return nil, err
 	}
 	t.handle = handle
 
 	if err := handle.SetBPFFilter(filter); err != nil {
+		handle.Close()
+		t.handle = nil
 		return nil, err
 	}
 
@@ -659,13 +809,13 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 					ci:       ci,
 				})
 
-				if len(st.pending) > 10 {
+				if len(st.pending) > 300 {
 					minIdx := findMinSeqIdx(st.pending)
 					if minIdx != -1 {
 						targetLayer := st.pending[minIdx]
 						skippedBytes := targetLayer.tcpLayer.Seq - st.nextSeq
 						warningMsg := fmt.Sprintf("Network packet loss detected on %s (Gap: %d bytes). Skipping to resume.", key, skippedBytes)
-						logger.Printf("[TCP Recovery] %s OldNext: %d, NewNext: %d", warningMsg, st.nextSeq, targetLayer.tcpLayer.Seq)
+						logger.Printf("[TCP Recovery] %s OldNext: %d, NewNext: %d (Active Streams: %d, Pending Count: %d)", warningMsg, st.nextSeq, targetLayer.tcpLayer.Seq, len(streams), len(st.pending))
 						st.nextSeq = targetLayer.tcpLayer.Seq
 
 						select {

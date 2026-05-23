@@ -381,8 +381,13 @@ func newMessageElemFloat(r io.Reader) (IMessageElem, error) {
 		return nil, err
 	}
 
+	val := math.Float32frombits(le.Uint32(b))
+	if math.IsNaN(float64(val)) || math.IsInf(float64(val), 0) {
+		val = 0
+	}
+
 	return &MessageElemFloat{
-		value: math.Float32frombits(le.Uint32(b)),
+		value: val,
 	}, nil
 }
 

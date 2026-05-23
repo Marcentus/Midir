@@ -20,6 +20,113 @@ mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 cp "$BUILD_DIR/$BINARY_NAME" "$RESOURCES_DIR/$BINARY_NAME"
 chmod 755 "$RESOURCES_DIR/$BINARY_NAME"
 
+cat > "$RESOURCES_DIR/install-bpf-permissions.sh" <<'BPFINSTALL'
+#!/usr/bin/env bash
+set -euo pipefail
+
+GROUP="access_bpf"
+USER_NAME="${SUDO_USER:-$(stat -f %Su /dev/console)}"
+LAUNCH_DAEMON="/Library/LaunchDaemons/com.midir.chmodbpf.plist"
+HELPER="/Library/Application Support/Midir/chmodbpf.sh"
+
+if ! /usr/bin/dscl . -read "/Groups/${GROUP}" >/dev/null 2>&1; then
+  /usr/sbin/dseditgroup -q -o create "$GROUP"
+fi
+
+/usr/sbin/dseditgroup -q -o edit -a "$USER_NAME" -t user "$GROUP"
+
+/bin/mkdir -p "/Library/Application Support/Midir"
+/bin/cat > "$HELPER" <<HELPER_SCRIPT
+#!/usr/bin/env bash
+set -euo pipefail
+
+GROUP="access_bpf"
+USER_NAME="$USER_NAME"
+for dev in /dev/bpf*; do
+  [ -e "\$dev" ] || continue
+  /usr/sbin/chown root:"\$GROUP" "\$dev" || true
+  /bin/chmod 660 "\$dev" || true
+  /bin/chmod +a "\$USER_NAME allow read,write" "\$dev" 2>/dev/null || true
+done
+HELPER_SCRIPT
+/usr/sbin/chown root:wheel "$HELPER"
+/bin/chmod 755 "$HELPER"
+
+/bin/cat > "$LAUNCH_DAEMON" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.midir.chmodbpf</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>$HELPER</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StartInterval</key>
+  <integer>60</integer>
+</dict>
+</plist>
+PLIST
+/usr/sbin/chown root:wheel "$LAUNCH_DAEMON"
+/bin/chmod 644 "$LAUNCH_DAEMON"
+
+/bin/launchctl bootout system "$LAUNCH_DAEMON" >/dev/null 2>&1 || true
+/bin/launchctl bootstrap system "$LAUNCH_DAEMON" >/dev/null 2>&1 || true
+/bin/launchctl kickstart -k system/com.midir.chmodbpf >/dev/null 2>&1 || "$HELPER"
+"$HELPER"
+
+echo "Installed Midir packet capture permissions for ${USER_NAME}."
+echo "If capture still fails, log out and back in once so macOS refreshes group membership."
+BPFINSTALL
+chmod 755 "$RESOURCES_DIR/install-bpf-permissions.sh"
+
+cat > "$RESOURCES_DIR/uninstall-macos.sh" <<'UNINSTALL'
+#!/usr/bin/env bash
+set -euo pipefail
+
+GROUP="access_bpf"
+LAUNCH_DAEMON="/Library/LaunchDaemons/com.midir.chmodbpf.plist"
+HELPER_DIR="/Library/Application Support/Midir"
+USER_DATA_DIR="${HOME}/Library/Application Support/Midir"
+
+cat <<INFO
+Midir clean uninstall helper
+
+This removes the system-level packet capture helper installed by Midir:
+  ${LAUNCH_DAEMON}
+  ${HELPER_DIR}/chmodbpf.sh
+
+It can also remove this user's Midir data:
+  ${USER_DATA_DIR}
+
+The Midir.app bundle itself is not removed by this script.
+INFO
+
+read -r -p "Remove system packet capture helper? [y/N] " remove_helper
+if [[ "$remove_helper" =~ ^[Yy]$ ]]; then
+  /usr/bin/osascript <<OSA
+try
+  do shell script "/bin/launchctl bootout system '$LAUNCH_DAEMON' >/dev/null 2>&1 || true; /bin/rm -f '$LAUNCH_DAEMON'; /bin/rm -f '$HELPER_DIR/chmodbpf.sh'; /bin/rmdir '$HELPER_DIR' >/dev/null 2>&1 || true; /usr/sbin/dseditgroup -q -o delete '$GROUP' >/dev/null 2>&1 || true" with administrator privileges
+  display dialog "Midir packet capture helper removed." buttons {"OK"} default button "OK"
+on error errMsg
+  display alert "Midir uninstall" message ("Could not remove packet capture helper:\n\n" & errMsg) as critical
+end try
+OSA
+fi
+
+read -r -p "Remove this user's Midir settings, database, and logs? [y/N] " remove_data
+if [[ "$remove_data" =~ ^[Yy]$ ]]; then
+  /bin/rm -rf "$USER_DATA_DIR"
+  echo "Removed: $USER_DATA_DIR"
+fi
+
+echo "Done. You can delete Midir.app manually if you have not already."
+UNINSTALL
+chmod 755 "$RESOURCES_DIR/uninstall-macos.sh"
+
 cat > "$CONTENTS_DIR/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -80,24 +187,59 @@ ERR
   exit 1
 fi
 
-# Launch in a visible Terminal window, like the Windows .exe console.
-# Ask which admin account to use, then run through su + sudo in Terminal.
-# Closing the Terminal window terminates Midir.
-/usr/bin/osascript <<OSA
+RUNTIME_DIR="${MIDIR_RUNTIME_DIR:-$HOME/Library/Application Support/Midir}"
+mkdir -p "$RUNTIME_DIR"
+LOG_DIR="$RUNTIME_DIR/logs"
+mkdir -p "$LOG_DIR"
+
+can_capture_packets() {
+  for dev in /dev/bpf*; do
+    [[ -r "$dev" && -w "$dev" ]] && return 0
+  done
+  return 1
+}
+
+install_capture_permissions() {
+  /usr/bin/osascript <<OSA
 try
-  set dialogResult to display dialog "Enter the macOS admin username to run Midir packet capture:" default answer "" buttons {"Cancel", "Run"} default button "Run"
-  set adminUser to text returned of dialogResult
+  display dialog "Midir needs one-time packet capture permissions. This installs a small LaunchDaemon that grants the current user access to /dev/bpf*, similar to Wireshark." buttons {"Cancel", "Install"} default button "Install" with icon caution
 on error number -128
-  return
+  return "cancelled"
 end try
 
-if adminUser is "" then return
+try
+  do shell script quoted form of "$RESOURCES_DIR/install-bpf-permissions.sh" with administrator privileges
+  display dialog "Packet capture permissions were installed. If Start Capture still fails, log out and back in once, then reopen Midir." buttons {"Open Midir"} default button "Open Midir"
+  return "installed"
+on error errMsg
+  display alert "Midir" message ("Could not install packet capture permissions:\n\n" & errMsg) as critical
+  return "failed"
+end try
+OSA
+}
 
-set quotedAdminUser to quoted form of adminUser
-set quotedResourcesDir to quoted form of "$RESOURCES_DIR"
+if ! can_capture_packets; then
+  result="$(install_capture_permissions)"
+  if [[ "$result" != *installed* ]]; then
+    exit 1
+  fi
+  if ! can_capture_packets; then
+    /usr/bin/osascript <<'ERR'
+display alert "Midir" message "Packet capture permissions were installed, but macOS has not applied them to this login session yet. Log out and back in once, then reopen Midir." as critical
+ERR
+    exit 1
+  fi
+fi
+
+# Launch in a visible Terminal window, like the Windows .exe console.
+# Closing the Terminal window terminates Midir.
+/usr/bin/osascript <<OSA
+set quotedRuntimeDir to quoted form of "$RUNTIME_DIR"
 set quotedBin to quoted form of "$BIN"
-set innerCommand to "cd " & quotedResourcesDir & " && sudo " & quotedBin
-set midirCommand to "clear; echo 'Midir Damage Meter for macOS'; echo; echo 'Admin user: " & adminUser & "'; echo 'Enter that admin account password when prompted.'; echo 'Close this Terminal window to stop Midir.'; echo; su -l " & quotedAdminUser & " -c " & quoted form of innerCommand & "; echo; echo 'Midir exited. You can close this window.'; read -n 1 -s -r -p 'Press any key to close...'"
+set quotedLogDir to quoted form of "$LOG_DIR"
+set quotedLogFile to quoted form of "$LOG_DIR/midir.log"
+set innerCommand to "mkdir -p " & quotedRuntimeDir & " " & quotedLogDir & " && cd " & quotedRuntimeDir & " && " & quotedBin & " 2>&1 | tee -a " & quotedLogFile
+set midirCommand to "clear; echo 'Midir Damage Meter for macOS'; echo; echo 'Runtime dir: $RUNTIME_DIR'; echo 'Log dir: $LOG_DIR'; echo 'Close this Terminal window to stop Midir.'; echo; " & innerCommand & "; echo; echo 'Midir exited. You can close this window.'; read -n 1 -s -r -p 'Press any key to close...'"
 
 tell application "Terminal"
   activate
@@ -122,4 +264,4 @@ rm -f "$ZIP_PATH"
 echo "Created app bundle: $APP_DIR"
 echo "Created zip:        $ZIP_PATH"
 echo
-echo "Double-click $APP_DIR to run Midir with a macOS admin prompt."
+echo "Double-click $APP_DIR to run Midir. First launch may ask for admin approval to install packet capture permissions."

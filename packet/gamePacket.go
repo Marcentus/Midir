@@ -1,12 +1,19 @@
 package packet
 
 import (
+	"io"
 	"log"
 	"os"
 	"time"
 )
 
 var logger = log.New(os.Stdout, "packet ", log.LstdFlags|log.Lshortfile)
+
+func ConfigureLoggerOutput(w io.Writer) {
+	if w != nil {
+		logger.SetOutput(w)
+	}
+}
 
 type GamePacket struct {
 	At     time.Time
@@ -25,7 +32,9 @@ type GamePacket struct {
 
 	// checksum uint32
 
-	RawPacket []byte
+	RawPacket       []byte
+	PacketDedupeKey string
+	PacketFlowKey   string
 }
 
 const (
