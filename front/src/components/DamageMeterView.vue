@@ -46,10 +46,13 @@
                         </span>
 
                         <!-- Column 3: Status Icons -->
-                        <span class="target-col-icons d-flex align-center justify-center ga-1">
-                          <span v-if="item.raw.seenAppear" title="Seen Appear">🌟</span>
-                          <span v-if="item.raw.seenDead" title="Dead">☠️</span>
-                          <span v-else-if="item.raw.disappeared" title="Disappeared/Despawned">🌀</span>
+                        <span v-if="item.raw.id" class="target-col-icons d-flex align-center justify-center">
+                          <knot-indicator
+                            :left="getKnotColors(item.raw).left"
+                            :right="getKnotColors(item.raw).right"
+                            :border="getKnotColors(item.raw).border"
+                            :tooltip="getKnotColors(item.raw).tooltip"
+                          />
                         </span>
 
                         <!-- Column 4: Damage Dealt -->
@@ -224,6 +227,7 @@ import ApplyDamageBySkillComponent from "@/components/applyDamageBySkill.vue";
 import DamageTakenBySourceComponent from "@/components/DamageTakenBySource.vue";
 import DamageGraph from "@/components/DamageGraph.vue";
 import TargetConditionView from "@/components/TargetConditionView.vue";
+import KnotIndicator from "@/components/KnotIndicator.vue";
 
 export default defineComponent({
   name: "DamageMeterView",
@@ -233,6 +237,7 @@ export default defineComponent({
     DamageTakenBySource: DamageTakenBySourceComponent,
     DamageGraph,
     TargetConditionView,
+    KnotIndicator,
   },
   setup() {
     const tab = ref("damageDealt");
@@ -416,7 +421,45 @@ export default defineComponent({
       window.removeEventListener("resize", calculateMaxHeight);
     });
 
+    const getKnotColors = (target: any) => {
+      if (!target) return { left: '#81c784', right: '#81c784', border: '#043916', tooltip: '' };
+      
+      // Scenario 1 & 2: Saw spawn/appear
+      if (target.seenAppear) {
+        if (target.seenDead) {
+          // Scenario 1: Good parse (Spawn + Death)
+          return {
+            left: '#81c784',
+            right: '#81c784',
+            border: '#043916',
+            tooltip: 'Good parse (Spawn & Death captured)'
+          };
+        } else {
+          // Scenario 2: Spawn captured but disappeared before death
+          return {
+            left: '#e97269',
+            right: '#e97269',
+            border: '#460101',
+            tooltip: 'Spawn captured, but disappeared/despawned'
+          };
+        }
+      } else {
+        // Scenario 3: Did not see spawn (right side is orange ffb74d)
+        const leftColor = target.seenDead ? '#81c784' : '#e97269';
+        const borderColor = target.seenDead ? '#043916' : '#460101';
+        const statusText = target.seenDead ? 'Death' : 'Disappeared/Despawned';
+        
+        return {
+          left: leftColor,
+          right: '#ffb74d',
+          border: borderColor,
+          tooltip: `${statusText} captured (Spawn not seen)`
+        };
+      }
+    };
+
     return {
+      getKnotColors,
       tab,
       selectedTargetId,
       targetList,
