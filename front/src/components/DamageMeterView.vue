@@ -35,24 +35,25 @@
                   <v-list-item v-bind="props">
                     <template v-slot:title>
                       <div class="target-item-grid py-1">
-                        <!-- Column 1: Name -->
-                        <span class="target-col-name font-weight-bold">{{ item.raw.rawName || item.raw.name }}</span>
-                        
-                        <!-- Column 2: Duration (Relative to fight start) -->
-                        <span class="target-col-duration text-grey text-caption">
-                          <template v-if="item.raw.id && item.raw.startTime !== undefined && item.raw.endTime !== undefined">
-                            {{ formatRelativeTime(item.raw.startTime) }} - {{ formatRelativeTime(item.raw.endTime) }} ({{ formatDuration(item.raw.endTime - item.raw.startTime) }})
-                          </template>
-                        </span>
-
-                        <!-- Column 3: Status Icons -->
-                        <span v-if="item.raw.id" class="target-col-icons d-flex align-center justify-center">
+                        <!-- Column 1: Status Icons -->
+                        <span class="target-col-icons d-flex align-center justify-center">
                           <knot-indicator
+                            v-if="item.raw.id"
                             :left="getKnotColors(item.raw).left"
                             :right="getKnotColors(item.raw).right"
                             :border="getKnotColors(item.raw).border"
                             :tooltip="getKnotColors(item.raw).tooltip"
                           />
+                        </span>
+
+                        <!-- Column 2: Name -->
+                        <span class="target-col-name font-weight-bold">{{ item.raw.rawName || item.raw.name }}</span>
+                        
+                        <!-- Column 3: Duration (Relative to fight start) -->
+                        <span class="target-col-duration text-grey text-caption">
+                          <template v-if="item.raw.id && item.raw.startTime !== undefined && item.raw.endTime !== undefined">
+                            {{ formatRelativeTime(item.raw.startTime) }} - {{ formatRelativeTime(item.raw.endTime) }} ({{ formatDuration(item.raw.endTime - item.raw.startTime) }})
+                          </template>
                         </span>
 
                         <!-- Column 4: Damage Dealt -->
@@ -666,7 +667,7 @@ export default defineComponent({
 
 .target-item-grid {
   display: grid;
-  grid-template-columns: 120px 160px 50px 90px; /* Rigid, fixed columns */
+  grid-template-columns: 36px 134px 160px 90px; /* Rigid, fixed columns */
   align-items: center;
   width: 100%;
   gap: 8px;
@@ -676,7 +677,7 @@ export default defineComponent({
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 120px;
+  max-width: 134px;
 }
 
 .target-col-duration {
