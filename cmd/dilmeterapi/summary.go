@@ -57,6 +57,7 @@ type SkillStats struct {
 	MaxDamage          float32 `json:"maxDamage"`
 	MaxDamageCrit      float32 `json:"maxDamageCrit"`
 	MaxDamageNonCrit   float32 `json:"maxDamageNonCrit"`
+	Uses               int     `json:"uses"` // New skill usage count
 }
 
 // DamageBreakdown now includes its own start and end times for precise DPS calculation.
@@ -72,6 +73,12 @@ type DamageBreakdown struct {
 	Conditions  map[uint32]*ConditionStats `json:"conditions,omitempty"` // NEW: Condition uptime stats
 }
 
+type SkillUseEvent struct {
+	SkillID   uint16
+	TargetID  uint64 // 0 if used without target
+	Timestamp int64
+}
+
 // PlayerStats is now more detailed.
 type PlayerStats struct {
 	ID                  string                     `json:"id"`
@@ -82,6 +89,7 @@ type PlayerStats struct {
 	MissingAppearPacket bool                       `json:"missingAppearPacket"` // NEW: True if we haven't seen an appear packet (cache warning)
 	OverallStats        DamageBreakdown            `json:"overallStats"`
 	DamageByTarget      map[string]DamageBreakdown `json:"damageByTarget"` // Key is Target ID
+	SkillUses           []SkillUseEvent            `json:"-"`
 }
 
 // --- (Structs for Damage Taken remain the same) ---

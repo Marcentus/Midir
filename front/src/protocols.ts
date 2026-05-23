@@ -10,6 +10,7 @@ export interface SkillStats {
   maxDamage: number;
   maxDamageCrit: number;
   maxDamageNonCrit: number;
+  uses?: number; // New field
 }
 
 // NEW: Interface for condition statistics

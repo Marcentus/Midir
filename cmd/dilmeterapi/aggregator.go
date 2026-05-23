@@ -185,6 +185,9 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 	if p.Op == opcodeEffectDelayed {
 		a.processEffectDelayed(p)
 	}
+	if p.Op == opcodeSkillUse {
+		a.processSkillUse(p)
+	}
 	if p.Op == opcodeCharacterCondition {
 		// Handle condition add/remove updates
 		if cond, err := packet.ParseCharacterConditionPacket(p); err == nil {
@@ -381,6 +384,54 @@ func (a *Aggregator) processEffectDelayed(p *packet.GamePacket) {
 	}
 }
 
+func (a *Aggregator) processSkillUse(p *packet.GamePacket) {
+	if len(p.Msg) < 1 {
+		return
+	}
+
+	// Element 0: short (skill ID)
+	if p.Msg[0].Type() != packet.MessageElemTypeShort {
+		return
+	}
+	skillID := p.Msg[0].Data().(uint16)
+
+	var targetID uint64
+	// Element 1: long (enemy ID)
+	if len(p.Msg) > 1 && p.Msg[1].Type() == packet.MessageElemTypeLong {
+		rawTargetID := p.Msg[1].Data().(uint64)
+
+		a.mu.RLock()
+		_, inEntityCache := a.entityCache[rawTargetID]
+		_, inTargetNames := a.targetNames[rawTargetID]
+		a.mu.RUnlock()
+
+		_, inPlayerCache := playerCache.Get(rawTargetID)
+
+		if inEntityCache || inTargetNames || inPlayerCache {
+			targetID = rawTargetID
+		} else {
+			targetID = 0 // Untracked target
+		}
+	} else {
+		targetID = 0 // Omitted or not a long target
+	}
+
+	casterID := p.Id
+	eventTime := p.At.Unix()
+
+	// Only track skill uses for players that we are tracking
+	if playerInfo, isPlayer := playerCache.Get(casterID); isPlayer {
+		a.mu.Lock()
+		stats := a.getOrCreatePlayerStats(playerInfo)
+		stats.SkillUses = append(stats.SkillUses, SkillUseEvent{
+			SkillID:   skillID,
+			TargetID:  targetID,
+			Timestamp: eventTime,
+		})
+		a.mu.Unlock()
+	}
+}
+
 func (a *Aggregator) getOrCreatePlayerStats(playerInfo *PlayerInfo) *PlayerStats {
 	stats, exists := a.playerStats[playerInfo.ID]
 	if !exists {
@@ -517,7 +568,7 @@ func (a *Aggregator) GetSummary() FightSummary {
 		}
 
 		// Finalize overall stats using the single overall encounter duration
-		playerCopy.OverallStats = a.finalizeBreakdown(pStats.OverallStats, summary.EncounterDuration, a.encounterStartTime, a.encounterEndTime, playerID)
+		playerCopy.OverallStats = a.finalizeBreakdown(pStats.OverallStats, summary.EncounterDuration, a.encounterStartTime, a.encounterEndTime, playerID, true, 0)
 		playerCopy.OverallStats.StartTime = a.encounterStartTime
 		playerCopy.OverallStats.EndTime = a.encounterEndTime
 
@@ -527,7 +578,7 @@ func (a *Aggregator) GetSummary() FightSummary {
 			targetTimes := a.targetTimestamps[targetIdUint]
 			targetDuration := float64(targetTimes.EndTime - targetTimes.StartTime)
 
-			finalizedBreakdown := a.finalizeBreakdown(breakdown, targetDuration, targetTimes.StartTime, targetTimes.EndTime, playerID)
+			finalizedBreakdown := a.finalizeBreakdown(breakdown, targetDuration, targetTimes.StartTime, targetTimes.EndTime, playerID, false, targetIdUint)
 			finalizedBreakdown.StartTime = targetTimes.StartTime
 			finalizedBreakdown.EndTime = targetTimes.EndTime
 			playerCopy.DamageByTarget[targetIdStr] = finalizedBreakdown
@@ -626,7 +677,7 @@ func isPlayerEntity(entity *packet.EntityInfo) bool {
 }
 
 // finalizeBreakdown calculates DPS and Condition Uptime based on a provided duration and time window.
-func (a *Aggregator) finalizeBreakdown(breakdown DamageBreakdown, duration float64, windowStart, windowEnd int64, playerID uint64) DamageBreakdown {
+func (a *Aggregator) finalizeBreakdown(breakdown DamageBreakdown, duration float64, windowStart, windowEnd int64, playerID uint64, isOverall bool, targetID uint64) DamageBreakdown {
 	if duration > 1 {
 		breakdown.DPS = breakdown.TotalDamage / float32(duration)
 	} else if breakdown.TotalDamage > 0 {
@@ -639,6 +690,35 @@ func (a *Aggregator) finalizeBreakdown(breakdown DamageBreakdown, duration float
 
 	// Calculate Condition Uptime specific to this window using helper
 	breakdown.Conditions = a.calculateConditions(playerID, duration, windowStart, windowEnd)
+
+	if breakdown.Skills == nil {
+		breakdown.Skills = make(map[uint16]SkillStats)
+	}
+
+	// Count uses for each skill
+	skillUsesCount := make(map[uint16]int)
+	if stats, exists := a.playerStats[playerID]; exists {
+		for _, use := range stats.SkillUses {
+			if isOverall {
+				skillUsesCount[use.SkillID]++
+			} else {
+				if use.TargetID == targetID {
+					skillUsesCount[use.SkillID]++
+				} else if use.TargetID == 0 && use.Timestamp >= windowStart && use.Timestamp <= windowEnd {
+					skillUsesCount[use.SkillID]++
+				}
+			}
+		}
+	}
+
+	// Ensure all used skills have their Uses count updated.
+	// If a skill was used but did no damage, initialize it!
+	for skillID, uses := range skillUsesCount {
+		skillStats := breakdown.Skills[skillID]
+		skillStats.ID = skillID
+		skillStats.Uses = uses
+		breakdown.Skills[skillID] = skillStats
+	}
 
 	return breakdown
 }

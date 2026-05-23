@@ -32,8 +32,8 @@ type eventPublisher struct {
 	batchMu           sync.Mutex
 
 	// Async logging
-	logCh             chan iEvent
-	damageLogMu       sync.Mutex
+	logCh       chan iEvent
+	damageLogMu sync.Mutex
 }
 
 type eventClient struct {
@@ -51,6 +51,7 @@ const (
 	opcodeEntityDisappear         = 0x520d
 	opcodeEntitiesDisappear       = 0x5335
 	opcodeEntityUpdateCombatPower = 0x9c6d
+	opcodeSkillUse                = 0x6988
 )
 
 // This map contains skill IDs for delayed damage effects (like bleeds)

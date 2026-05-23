@@ -135,6 +135,10 @@
               </div>
             </template>
 
+            <template v-slot:[`item.uses`]="{ item: skillItem }">
+              {{ formatNumber(skillItem.uses) }}
+            </template>
+
             <template v-slot:[`item.totalDamage`]="{ item: skillItem }">
               <span>{{ formatNumber(skillItem.totalDamage) }}</span>
               <span
@@ -313,6 +317,10 @@
                              </template>
                              <span>{{ getSkillName(skillItem.id) }}</span>
                          </v-tooltip>
+                    </template>
+
+                    <template v-slot:item.uses="{ item: skillItem }">
+                         {{ formatNumber(skillItem.uses) }}
                     </template>
 
                     <!-- Stats columns -->
@@ -648,6 +656,7 @@ watch(activeSessionId, () => {
 });
 
 const ALL_SKILL_METRICS_MAP: Record<string, { title: string, cardTitle: string }> = {
+  "uses": { title: "Uses", cardTitle: "Uses" },
   "dps": { title: "DPS", cardTitle: "DPS" },
   "totalDamage": { title: "Total Damage", cardTitle: "Total" },
   "count": { title: "Count", cardTitle: "Hits" },
@@ -682,6 +691,7 @@ const moveMetricDown = (index: number) => {
 const computedSkillTableHeaders = computed(() => {
   return [
     { title: "Skill", key: "skillName", sortable: true, cellProps: { class: "border-e" } },
+    { title: "Uses", key: "uses", sortable: true },
     
     // Totals Group
     { title: "Total Dmg", key: "totalDamage", sortable: true },
