@@ -94,3 +94,98 @@ func TestAggregator_EntityDisappear(t *testing.T) {
 		t.Errorf("Expected playerConditionActive to DELETE playerID after disappear")
 	}
 }
+
+func TestAggregator_DeathTracking(t *testing.T) {
+	agg := NewAggregator()
+	agg.SetLive(true)
+
+	playerID := uint64(5555)
+	enemyID := uint64(7777)
+
+	// Add player to entity cache
+	agg.entityCache[playerID] = &packet.EntityInfo{
+		Id:      playerID,
+		Name:    "Alice",
+		OwnerId: 0,
+		RaceId:  8001,
+	}
+
+	// Add enemy to entity cache
+	agg.entityCache[enemyID] = &packet.EntityInfo{
+		Id:      enemyID,
+		Name:    "123456", // Numeric name makes it an enemy
+		OwnerId: 0,
+		RaceId:  2000,
+	}
+
+	// 1. Verify initial state (not dead)
+	if agg.deadEntities[playerID] {
+		t.Errorf("Expected player to start as alive")
+	}
+	if agg.deadEntities[enemyID] {
+		t.Errorf("Expected enemy to start as alive")
+	}
+
+	// 2. Simulate Player Death (IsNowDead opcode 0x53fc)
+	pDeadPlayer := &packet.GamePacket{
+		Op: opcodeIsNowDead,
+		Id: playerID,
+		At: time.Now(),
+	}
+	agg.ProcessPacket(pDeadPlayer)
+
+	if !agg.deadEntities[playerID] {
+		t.Errorf("Expected player to be marked as dead after IsNowDead")
+	}
+
+	// 3. Simulate Enemy Death (SetFinisher opcode 0x7921)
+	pDeadEnemy := &packet.GamePacket{
+		Op: opcodeSetFinisher,
+		Id: enemyID,
+		At: time.Now(),
+	}
+	agg.ProcessPacket(pDeadEnemy)
+
+	if !agg.deadEntities[enemyID] {
+		t.Errorf("Expected enemy to be marked as dead after SetFinisher")
+	}
+
+	// Simulate SetFinisher spam on the enemy
+	agg.ProcessPacket(pDeadEnemy)
+	if !agg.deadEntities[enemyID] {
+		t.Errorf("Expected enemy to still be marked as dead after SetFinisher spam")
+	}
+
+	// 4. Simulate Player Revival (RiseFromTheDead opcode 0x701d)
+	pRevPlayer := &packet.GamePacket{
+		Op: opcodeRiseFromTheDead,
+		Id: playerID,
+		At: time.Now(),
+	}
+	agg.ProcessPacket(pRevPlayer)
+
+	if agg.deadEntities[playerID] {
+		t.Errorf("Expected player to be revived (alive) after RiseFromTheDead")
+	}
+
+	// 5. Simulate Enemy Disappear (EntityDisappear opcode 0x520d)
+	// First make the enemy dead again
+	agg.ProcessPacket(pDeadEnemy)
+	if !agg.deadEntities[enemyID] {
+		t.Errorf("Expected enemy to be dead again")
+	}
+
+	pDisEnemy := &packet.GamePacket{
+		Op: opcodeEntityDisappear,
+		Id: enemyID,
+		At: time.Now(),
+		Msg: []packet.IMessageElem{
+			packet.NewMessageElemLong(enemyID),
+		},
+	}
+	agg.ProcessPacket(pDisEnemy)
+
+	if agg.deadEntities[enemyID] {
+		t.Errorf("Expected enemy's dead status to be cleared after disappear")
+	}
+}

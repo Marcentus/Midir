@@ -44,6 +44,9 @@ type Aggregator struct {
 	// Live Session Handling
 	isLive              bool
 	ignorePacketsBefore time.Time
+
+	// Death Tracking Data
+	deadEntities map[uint64]bool
 }
 
 // NewAggregator creates and initializes a new Aggregator.
@@ -64,6 +67,7 @@ func NewAggregator() *Aggregator {
 		playerConditionHistory: make(map[uint64]map[uint32][]ConditionInterval),
 		playerSeenAppear:       make(map[uint64]bool),
 		isLive:                 false, // Default to false, explicitly enabled by caller if needed
+		deadEntities:           make(map[uint64]bool),
 	}
 }
 
@@ -207,6 +211,15 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 				a.processEntityDisappear(id)
 			}
 		}
+	}
+	if p.Op == opcodeIsNowDead {
+		a.processIsNowDead(p)
+	}
+	if p.Op == opcodeSetFinisher {
+		a.processSetFinisher(p)
+	}
+	if p.Op == opcodeRiseFromTheDead {
+		a.processRiseFromTheDead(p)
 	}
 }
 
@@ -851,6 +864,7 @@ func (a *Aggregator) processEntityDisappear(entityID uint64) {
 	delete(a.entityCache, entityID)
 	delete(a.playerSeenAppear, entityID)
 	delete(a.playerConditionActive, entityID)
+	delete(a.deadEntities, entityID)
 
 	// Note: We do NOT delete playerStats, targetNames, damageTaken, playerTalents, or playerConditionHistory here.
 	// Rationale: If a player does 1M damage and then disconnects/teleports,
@@ -883,6 +897,7 @@ func (a *Aggregator) Clear() {
 	})
 	a.encounterStartTime = 0
 	a.encounterEndTime = 0
+	a.deadEntities = make(map[uint64]bool)
 
 	// Clear condition HISTORY, but keep ACTIVE conditions.
 	// This ensures that when the new session starts, we know they still have the buff,
@@ -899,3 +914,76 @@ func (a *Aggregator) Clear() {
 		a.ignorePacketsBefore = time.Time{}
 	}
 }
+
+// isPlayer determines if an entity ID belongs to a player.
+// Note: This method assumes a.mu is held or is called within a locked context.
+func (a *Aggregator) isPlayer(entityID uint64) bool {
+	// First check playerCache
+	if _, isPlayer := playerCache.Get(entityID); isPlayer {
+		return true
+	}
+	// Then check entityCache
+	if entity, ok := a.entityCache[entityID]; ok {
+		return isPlayerEntity(entity)
+	}
+	return false
+}
+
+// getEntityName resolves and returns the name of an entity ID.
+// Note: This method assumes a.mu is held or is called within a locked context.
+func (a *Aggregator) getEntityName(entityID uint64) string {
+	if cachedName, ok := a.targetNames[entityID]; ok {
+		return cachedName
+	}
+	if entity, ok := a.entityCache[entityID]; ok {
+		if entity.Name != "" {
+			// Check if name is numeric
+			if _, err := strconv.Atoi(entity.Name); err == nil {
+				return getRaceName(entity.RaceId)
+			}
+			return entity.Name
+		}
+		return getRaceName(entity.RaceId)
+	}
+	if player, ok := playerCache.Get(entityID); ok {
+		return player.Name
+	}
+	return "Unknown"
+}
+
+func (a *Aggregator) processIsNowDead(p *packet.GamePacket) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	entityID := p.Id
+	// IsNowDead only applies to players
+	if a.isPlayer(entityID) {
+		if !a.deadEntities[entityID] {
+			a.deadEntities[entityID] = true
+		}
+	}
+}
+
+func (a *Aggregator) processSetFinisher(p *packet.GamePacket) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	entityID := p.Id
+	// SetFinisher only applies to enemies
+	if !a.isPlayer(entityID) {
+		if !a.deadEntities[entityID] {
+			a.deadEntities[entityID] = true
+		}
+	}
+}
+
+func (a *Aggregator) processRiseFromTheDead(p *packet.GamePacket) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	entityID := p.Id
+	if a.deadEntities[entityID] {
+		delete(a.deadEntities, entityID)
+	}
+}
+

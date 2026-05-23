@@ -52,6 +52,9 @@ const (
 	opcodeEntitiesDisappear       = 0x5335
 	opcodeEntityUpdateCombatPower = 0x9c6d
 	opcodeSkillUse                = 0x6988
+	opcodeIsNowDead               = 0x53fc
+	opcodeSetFinisher             = 0x7921
+	opcodeRiseFromTheDead         = 0x701d
 )
 
 // This map contains skill IDs for delayed damage effects (like bleeds)
