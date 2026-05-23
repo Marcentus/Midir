@@ -12,7 +12,6 @@
               <v-select
                 v-model="selectedTargetId"
                 :items="targetList"
-                item-title="name"
                 item-value="id"
                 variant="solo-filled"
                 flat
@@ -20,7 +19,45 @@
                 hide-details
                 class="target-select-refined"
                 placeholder="All Targets"
-              ></v-select>
+                :menu-props="{ minWidth: '480px' }"
+              >
+                <!-- Selection Display (when closed) -->
+                <template v-slot:selection="{ item }">
+                  <div class="d-flex align-center w-100 justify-space-between text-body-2 font-weight-medium">
+                    <span>{{ item.raw.rawName || item.raw.name }}</span>
+                    <span class="text-caption text-grey ml-2" v-if="item.raw.id">({{ formatNumber(item.raw.damage) }})</span>
+                  </div>
+                </template>
+
+                <!-- Item Display (when open in dropdown list) -->
+                <template v-slot:item="{ props, item }">
+                  <v-list-item v-bind="props">
+                    <template v-slot:title>
+                      <div class="target-item-grid py-1">
+                        <!-- Column 1: Name -->
+                        <span class="target-col-name font-weight-bold">{{ item.raw.rawName || item.raw.name }}</span>
+                        
+                        <!-- Column 2: Duration (Relative to fight start) -->
+                        <span class="target-col-duration text-grey text-caption">
+                          <template v-if="item.raw.id && item.raw.startTime !== undefined && item.raw.endTime !== undefined">
+                            {{ formatRelativeTime(item.raw.startTime) }} - {{ formatRelativeTime(item.raw.endTime) }} ({{ formatDuration(item.raw.endTime - item.raw.startTime) }})
+                          </template>
+                        </span>
+
+                        <!-- Column 3: Status Icons -->
+                        <span class="target-col-icons d-flex align-center justify-center ga-1">
+                          <span v-if="item.raw.seenAppear" title="Seen Appear">🌟</span>
+                          <span v-if="item.raw.seenDead" title="Dead">☠️</span>
+                          <span v-else-if="item.raw.disappeared" title="Disappeared/Despawned">🌀</span>
+                        </span>
+
+                        <!-- Column 4: Damage Dealt -->
+                        <span class="target-col-damage font-weight-bold text-amber text-right">{{ formatNumber(item.raw.damage) }}</span>
+                      </div>
+                    </template>
+                  </v-list-item>
+                </template>
+              </v-select>
             </div>
 
             <!-- Right: Vital Stats -->
@@ -282,15 +319,28 @@ export default defineComponent({
         }
       }
       const targets = Object.entries(fightSummary.targets).map(
-        ([id, stats]) => ({
-          id,
-          name: `${stats.name} (${formatNumber(totalDamageByTarget[id] || 0)})`,
-        })
+        ([id, stats]) => {
+          const damage = totalDamageByTarget[id] || 0;
+          return {
+            id,
+            name: `${stats.name} (${formatNumber(damage)})`,
+            rawName: stats.name,
+            damage,
+            seenAppear: stats.seenAppear,
+            seenDead: stats.seenDead,
+            disappeared: stats.disappeared,
+            startTime: stats.startTime,
+            endTime: stats.endTime,
+          };
+        }
       );
       targets.sort((a, b) => {
-        const damageA = totalDamageByTarget[a.id] || 0;
-        const damageB = totalDamageByTarget[b.id] || 0;
-        return damageB - damageA;
+        const startA = a.startTime || 0;
+        const startB = b.startTime || 0;
+        if (startB !== startA) {
+          return startB - startA;
+        }
+        return b.damage - a.damage;
       });
       const grandTotalDamage = Object.values(totalDamageByTarget).reduce(
         (sum, dmg) => sum + dmg,
@@ -299,6 +349,13 @@ export default defineComponent({
       targets.unshift({
         id: "",
         name: `All Targets (${formatNumber(grandTotalDamage)})`,
+        rawName: "All Targets",
+        damage: grandTotalDamage,
+        seenAppear: undefined,
+        seenDead: undefined,
+        disappeared: undefined,
+        startTime: undefined,
+        endTime: undefined,
       });
       return targets;
     });
@@ -313,6 +370,23 @@ export default defineComponent({
       return map;
     });
 
+    const formatTime = (ts: number | undefined): string => {
+      if (!ts) return "";
+      const date = new Date(ts * 1000);
+      return date.toLocaleTimeString("en-US", { 
+        hour12: false, 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit' 
+      });
+    };
+
+    const formatRelativeTime = (ts: number | undefined): string => {
+      if (ts === undefined || !fightSummary.startTime) return "0:00";
+      const relativeSeconds = ts - fightSummary.startTime;
+      return formatDuration(relativeSeconds);
+    };
+
     return {
       tab,
       selectedTargetId,
@@ -320,6 +394,10 @@ export default defineComponent({
       formattedEncounterDuration,
       formattedPartyDPS,
       attackerNameMap,
+      formatNumber,
+      formatDuration,
+      formatTime,
+      formatRelativeTime,
       selectedTargetConditions: computed(() => {
         if (!selectedTargetId.value) return undefined;
         return fightSummary.targets[selectedTargetId.value]?.conditions;
@@ -510,5 +588,36 @@ export default defineComponent({
 .modern-tabs :deep(.v-tab__slider) {
   height: 2px !important;
   bottom: 0 !important;
+}
+
+.target-item-grid {
+  display: grid;
+  grid-template-columns: 120px 160px 50px 90px; /* Rigid, fixed columns */
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+}
+
+.target-col-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.target-col-duration {
+  white-space: nowrap;
+  text-align: center;
+}
+
+.target-col-icons {
+  white-space: nowrap;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.target-col-damage {
+  white-space: nowrap;
+  text-align: right;
 }
 </style>

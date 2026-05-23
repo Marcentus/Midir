@@ -189,3 +189,98 @@ func TestAggregator_DeathTracking(t *testing.T) {
 		t.Errorf("Expected enemy's dead status to be cleared after disappear")
 	}
 }
+
+func TestAggregator_TargetIconStateTracking(t *testing.T) {
+	agg := NewAggregator()
+	agg.SetLive(true)
+
+	targetID := uint64(8888)
+
+	// 1. Initially it should not be tracked
+	if agg.seenAppear[targetID] || agg.seenDead[targetID] || agg.disappeared[targetID] {
+		t.Errorf("Expected target to have no status flags initialized")
+	}
+
+	// 2. Mock target appearance by manually setting fields
+	agg.mu.Lock()
+	agg.entityCache[targetID] = &packet.EntityInfo{Id: targetID, Name: "123456"}
+	agg.seenAppear[targetID] = true
+	agg.disappeared[targetID] = false
+	agg.seenDead[targetID] = false
+	agg.mu.Unlock()
+
+	if !agg.seenAppear[targetID] {
+		t.Errorf("Expected seenAppear to be true")
+	}
+
+	// 3. Simulate Death via ProcessPacket (opcodeSetFinisher)
+	pFinisher := &packet.GamePacket{
+		Op: opcodeSetFinisher,
+		Id: targetID,
+		At: time.Now(),
+	}
+	agg.ProcessPacket(pFinisher)
+
+	if !agg.seenDead[targetID] {
+		t.Errorf("Expected seenDead to be true after SetFinisher")
+	}
+
+	// 4. Simulate Disappear via ProcessPacket (opcodeEntityDisappear) for dead target
+	pDisappear := &packet.GamePacket{
+		Op: opcodeEntityDisappear,
+		Id: targetID,
+		At: time.Now(),
+		Msg: []packet.IMessageElem{
+			packet.NewMessageElemLong(targetID),
+		},
+	}
+	agg.ProcessPacket(pDisappear)
+
+	// Since target had died, disappeared must be false (death takes priority!)
+	if agg.disappeared[targetID] {
+		t.Errorf("Expected disappeared to be false because target was already dead")
+	}
+	if !agg.seenDead[targetID] {
+		t.Errorf("Expected seenDead to persist as true after EntityDisappear")
+	}
+
+	// 5. Simulate a living target disappearing (no prior death)
+	livingTargetID := uint64(9991)
+	agg.mu.Lock()
+	agg.entityCache[livingTargetID] = &packet.EntityInfo{Id: livingTargetID, Name: "123456"}
+	agg.seenAppear[livingTargetID] = true
+	agg.disappeared[livingTargetID] = false
+	agg.seenDead[livingTargetID] = false
+	agg.mu.Unlock()
+
+	pDisappearLiving := &packet.GamePacket{
+		Op: opcodeEntityDisappear,
+		Id: livingTargetID,
+		At: time.Now(),
+		Msg: []packet.IMessageElem{
+			packet.NewMessageElemLong(livingTargetID),
+		},
+	}
+	agg.ProcessPacket(pDisappearLiving)
+
+	if !agg.disappeared[livingTargetID] {
+		t.Errorf("Expected disappeared to be true for living entity after EntityDisappear")
+	}
+
+	// 6. Simulate Reappearance of the dead target
+	// Mock opcodeEntityAppear action as done in real aggregator
+	agg.mu.Lock()
+	agg.seenAppear[targetID] = true
+	agg.disappeared[targetID] = false
+	agg.mu.Unlock()
+
+	if !agg.seenAppear[targetID] {
+		t.Errorf("Expected seenAppear to remain true")
+	}
+	if agg.disappeared[targetID] {
+		t.Errorf("Expected disappeared to be reset to false after reappear")
+	}
+	if !agg.seenDead[targetID] {
+		t.Errorf("Expected seenDead to REMAIN true after reappear (corpse lingering)")
+	}
+}

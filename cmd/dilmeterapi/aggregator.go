@@ -47,6 +47,9 @@ type Aggregator struct {
 
 	// Death Tracking Data
 	deadEntities map[uint64]bool
+	seenDead     map[uint64]bool
+	seenAppear   map[uint64]bool
+	disappeared  map[uint64]bool
 }
 
 // NewAggregator creates and initializes a new Aggregator.
@@ -68,6 +71,9 @@ func NewAggregator() *Aggregator {
 		playerSeenAppear:       make(map[uint64]bool),
 		isLive:                 false, // Default to false, explicitly enabled by caller if needed
 		deadEntities:           make(map[uint64]bool),
+		seenDead:               make(map[uint64]bool),
+		seenAppear:             make(map[uint64]bool),
+		disappeared:            make(map[uint64]bool),
 	}
 }
 
@@ -134,6 +140,8 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 			a.entityCache[entity.Id] = entity
 			// Mark that we have seen this entity appear, so condition tracking is reliable
 			a.playerSeenAppear[entity.Id] = true
+			a.seenAppear[entity.Id] = true
+			a.disappeared[entity.Id] = false
 
 			// Initialize existing conditions from the appear packet
 			if a.playerConditionActive[entity.Id] == nil {
@@ -162,6 +170,8 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 			for _, entity := range entities {
 				a.entityCache[entity.Id] = entity
 				a.playerSeenAppear[entity.Id] = true
+				a.seenAppear[entity.Id] = true
+				a.disappeared[entity.Id] = false
 
 				if a.playerConditionActive[entity.Id] == nil {
 					a.playerConditionActive[entity.Id] = make(map[uint32]ActiveCondition)
@@ -624,8 +634,13 @@ func (a *Aggregator) GetSummary() FightSummary {
 		conditions := a.calculateConditions(targetId, targetDuration, targetTimes.StartTime, targetTimes.EndTime)
 
 		summary.Targets[targetIdStr] = TargetStats{
-			Name:       name,
-			Conditions: conditions,
+			Name:        name,
+			Conditions:  conditions,
+			SeenDead:    a.seenDead[targetId],
+			SeenAppear:  a.seenAppear[targetId],
+			Disappeared: a.disappeared[targetId],
+			StartTime:   targetTimes.StartTime,
+			EndTime:     targetTimes.EndTime,
 		}
 	}
 
@@ -866,6 +881,11 @@ func (a *Aggregator) processEntityDisappear(entityID uint64) {
 	delete(a.playerConditionActive, entityID)
 	delete(a.deadEntities, entityID)
 
+	// If it has died, we should consider it dead, not disappeared. Death takes priority.
+	if !a.seenDead[entityID] {
+		a.disappeared[entityID] = true
+	}
+
 	// Note: We do NOT delete playerStats, targetNames, damageTaken, playerTalents, or playerConditionHistory here.
 	// Rationale: If a player does 1M damage and then disconnects/teleports,
 	// their contribution to the *current session* should still be visible until "Clear" is pressed.
@@ -898,6 +918,9 @@ func (a *Aggregator) Clear() {
 	a.encounterStartTime = 0
 	a.encounterEndTime = 0
 	a.deadEntities = make(map[uint64]bool)
+	a.seenDead = make(map[uint64]bool)
+	a.seenAppear = make(map[uint64]bool)
+	a.disappeared = make(map[uint64]bool)
 
 	// Clear condition HISTORY, but keep ACTIVE conditions.
 	// This ensures that when the new session starts, we know they still have the buff,
@@ -927,6 +950,12 @@ func (a *Aggregator) isPlayer(entityID uint64) bool {
 		return isPlayerEntity(entity)
 	}
 	return false
+}
+
+func (a *Aggregator) IsPlayerSafe(entityID uint64) bool {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return a.isPlayer(entityID)
 }
 
 // getEntityName resolves and returns the name of an entity ID.
@@ -961,6 +990,7 @@ func (a *Aggregator) processIsNowDead(p *packet.GamePacket) {
 		if !a.deadEntities[entityID] {
 			a.deadEntities[entityID] = true
 		}
+		a.seenDead[entityID] = true
 	}
 }
 
@@ -974,6 +1004,7 @@ func (a *Aggregator) processSetFinisher(p *packet.GamePacket) {
 		if !a.deadEntities[entityID] {
 			a.deadEntities[entityID] = true
 		}
+		a.seenDead[entityID] = true
 	}
 }
 
@@ -985,5 +1016,6 @@ func (a *Aggregator) processRiseFromTheDead(p *packet.GamePacket) {
 	if a.deadEntities[entityID] {
 		delete(a.deadEntities, entityID)
 	}
+	a.seenDead[entityID] = false
 }
 

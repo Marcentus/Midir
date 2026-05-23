@@ -194,6 +194,9 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 	conditionHistory := make(map[string]map[uint32][]ConditionInterval)
 	activeConditions := make(map[string]map[uint32]ActiveCondition)
 	seenAppear := make(map[string]bool)
+	targetSeenAppear := make(map[string]bool)
+	targetDisappeared := make(map[string]bool)
+	targetSeenDead := make(map[string]bool)
 
 	for scanner.Scan() {
 		line := scanner.Bytes()
@@ -213,6 +216,8 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 			var appear eventEntityAppear
 			if err := json.Unmarshal(line, &appear); err == nil {
 				seenAppear[appear.Id] = true
+				targetSeenAppear[appear.Id] = true
+				targetDisappeared[appear.Id] = false
 
 				// Initialize conditions present on appearance
 				if activeConditions[appear.Id] == nil {
@@ -227,6 +232,27 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 						}
 					}
 				}
+			}
+
+		case eventIdEntityDisappear:
+			var disappear eventEntityDisappear
+			if err := json.Unmarshal(line, &disappear); err == nil {
+				if !targetSeenDead[disappear.Id] {
+					targetDisappeared[disappear.Id] = true
+				}
+			}
+
+		case eventIdEntityDeath:
+			var death eventEntityDeath
+			if err := json.Unmarshal(line, &death); err == nil {
+				targetSeenDead[death.Id] = true
+				targetDisappeared[death.Id] = false
+			}
+
+		case eventIdEntityRevive:
+			var revive eventEntityRevive
+			if err := json.Unmarshal(line, &revive); err == nil {
+				targetSeenDead[revive.Id] = false
 			}
 
 		case eventIdCharacterConditionEnable:
@@ -303,6 +329,9 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 		conditionHistory,
 		activeConditions,
 		seenAppear,
+		targetSeenAppear,
+		targetDisappeared,
+		targetSeenDead,
 	)
 	summary.GraphData = graphDataByTarget
 
@@ -737,6 +766,9 @@ func finalizeSummaryFromLog(
 	conditionHistory map[string]map[uint32][]ConditionInterval,
 	activeConditions map[string]map[uint32]ActiveCondition,
 	seenAppear map[string]bool,
+	targetSeenAppear map[string]bool,
+	targetDisappeared map[string]bool,
+	targetSeenDead map[string]bool,
 ) FightSummary {
 	summary := FightSummary{
 		Players:     make(map[string]PlayerStats),
@@ -806,9 +838,14 @@ func finalizeSummaryFromLog(
 		conditions := calculateConditionsFromLog(targetIdStr, targetDuration, targetTimes.StartTime, targetTimes.EndTime, conditionHistory, activeConditions)
 
 		summary.Targets[targetIdStr] = TargetStats{
-			Name:       name,
-			RaceID:     raceId,
-			Conditions: conditions,
+			Name:        name,
+			RaceID:      raceId,
+			Conditions:  conditions,
+			SeenDead:    targetSeenDead[targetIdStr],
+			SeenAppear:  targetSeenAppear[targetIdStr],
+			Disappeared: targetDisappeared[targetIdStr],
+			StartTime:   targetTimes.StartTime,
+			EndTime:     targetTimes.EndTime,
 		}
 	}
 

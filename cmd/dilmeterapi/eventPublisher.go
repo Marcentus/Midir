@@ -403,6 +403,39 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 				})
 			}
 		}
+
+	case opcodeIsNowDead:
+		// IsNowDead only applies to players
+		if t.aggregator.IsPlayerSafe(p.Id) {
+			events = append(events, &eventEntityDeath{
+				eventBase: eventBase{
+					EventId: eventIdEntityDeath,
+					At:      p.At.Unix(),
+					Id:      strconv.FormatUint(p.Id, 10),
+				},
+			})
+		}
+
+	case opcodeSetFinisher:
+		// SetFinisher only applies to enemies
+		if !t.aggregator.IsPlayerSafe(p.Id) {
+			events = append(events, &eventEntityDeath{
+				eventBase: eventBase{
+					EventId: eventIdEntityDeath,
+					At:      p.At.Unix(),
+					Id:      strconv.FormatUint(p.Id, 10),
+				},
+			})
+		}
+
+	case opcodeRiseFromTheDead:
+		events = append(events, &eventEntityRevive{
+			eventBase: eventBase{
+				EventId: eventIdEntityRevive,
+				At:      p.At.Unix(),
+				Id:      strconv.FormatUint(p.Id, 10),
+			},
+		})
 	}
 
 	if err != nil {

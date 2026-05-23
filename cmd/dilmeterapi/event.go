@@ -8,11 +8,21 @@ const (
 	eventIdDamage
 	eventIdCharacterConditionEnable
 	eventIdCharacterConditionDisable
+	eventIdEntityDeath
+	eventIdEntityRevive
 	eventIdSessionSummary eventId = 9999
 )
 
 type iEvent interface {
 	GetEventId() eventId
+}
+
+type eventEntityDeath struct {
+	eventBase
+}
+
+type eventEntityRevive struct {
+	eventBase
 }
 
 type eventBase struct {

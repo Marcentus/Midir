@@ -87,6 +87,11 @@ export interface PlayerDamageTakenStats {
 export interface TargetStats {
   name: string;
   conditions?: { [id: number]: ConditionStats };
+  seenDead?: boolean;
+  seenAppear?: boolean;
+  disappeared?: boolean;
+  startTime?: number;
+  endTime?: number;
 }
 
 // NEW: ActiveCondition matches the backend struct for currently active conditions
