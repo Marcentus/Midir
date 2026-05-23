@@ -19,7 +19,7 @@
                 hide-details
                 class="target-select-refined"
                 placeholder="All Targets"
-                :menu-props="{ minWidth: '480px', maxHeight: menuMaxHeight, location: 'bottom', offset: 4 }"
+                :menu-props="{ minWidth: '520px', maxWidth: '520px', maxHeight: menuMaxHeight, location: 'bottom', offset: 4 }"
                 @update:menu="handleMenuUpdate"
               >
                 <!-- Selection Display (when closed) -->
@@ -551,7 +551,7 @@ export default defineComponent({
 }
 
 .target-section {
-  width: 320px;
+  width: 400px;
 }
 
 .header-label {
@@ -667,22 +667,21 @@ export default defineComponent({
 
 .target-item-grid {
   display: grid;
-  grid-template-columns: 36px 134px 160px 90px; /* Rigid, fixed columns */
+  grid-template-columns: 36px minmax(100px, 1fr) 140px 110px; /* Precise matching columns, name constrained to wrap */
   align-items: center;
   width: 100%;
-  gap: 8px;
+  gap: 12px;
 }
 
 .target-col-name {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 134px;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .target-col-duration {
   white-space: nowrap;
-  text-align: center;
+  text-align: left;
 }
 
 .target-col-icons {
