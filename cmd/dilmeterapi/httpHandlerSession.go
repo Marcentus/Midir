@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/Marcentus/Midir/packet"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -58,6 +59,15 @@ func handleSaveSession(sm *SessionManager) http.HandlerFunc {
 		if _, err := sm.StartLiveSession(); err != nil {
 			respondWithError(w, http.StatusInternalServerError, "Failed to start new live session after saving: "+err.Error())
 			return
+		}
+		if globalPub != nil {
+			globalPub.aggregator.mu.RLock()
+			var activeEntities []*packet.EntityInfo
+			for _, entity := range globalPub.aggregator.entityCache {
+				activeEntities = append(activeEntities, entity)
+			}
+			globalPub.aggregator.mu.RUnlock()
+			sm.WriteEntityAppearEvents(activeEntities)
 		}
 		w.WriteHeader(http.StatusCreated)
 	}

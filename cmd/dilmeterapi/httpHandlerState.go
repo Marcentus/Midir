@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 
+	"github.com/Marcentus/Midir/packet"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -29,6 +30,15 @@ func handleClearState(pub *eventPublisher, sm *SessionManager) http.HandlerFunc 
 			respondWithError(w, http.StatusInternalServerError, "Failed to start new session after clearing: "+err.Error())
 			return
 		}
+
+		// Re-write appear events for all currently cached entities so the new log has them
+		pub.aggregator.mu.RLock()
+		var activeEntities []*packet.EntityInfo
+		for _, entity := range pub.aggregator.entityCache {
+			activeEntities = append(activeEntities, entity)
+		}
+		pub.aggregator.mu.RUnlock()
+		sm.WriteEntityAppearEvents(activeEntities)
 
 		w.WriteHeader(http.StatusNoContent)
 	}
