@@ -52,6 +52,9 @@ func TestAggregator_SoftClear(t *testing.T) {
 	if _, ok := agg.entityCache[playerID]; !ok {
 		t.Errorf("Expected entityCache to preserve playerID")
 	}
+	if !agg.seenAppear[playerID] {
+		t.Errorf("Expected seenAppear to preserve/re-populate playerID after soft clear")
+	}
 	if _, ok := agg.playerTalentNames[playerID]; !ok {
 		t.Errorf("Expected playerTalentNames to preserve playerID")
 	}

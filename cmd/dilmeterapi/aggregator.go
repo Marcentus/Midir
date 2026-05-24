@@ -1024,6 +1024,9 @@ func (a *Aggregator) Clear() {
 	a.deadEntities = make(map[uint64]bool)
 	a.seenDead = make(map[uint64]bool)
 	a.seenAppear = make(map[uint64]bool)
+	for id := range a.entityCache {
+		a.seenAppear[id] = true
+	}
 	a.disappeared = make(map[uint64]bool)
 	a.targetPresenceIntervals = make(map[uint64][]PresenceInterval)
 
