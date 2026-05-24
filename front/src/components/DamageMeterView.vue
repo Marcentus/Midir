@@ -25,7 +25,18 @@
                 <!-- Selection Display (when closed) -->
                 <template v-slot:selection="{ item }">
                   <div class="d-flex align-center w-100 justify-space-between text-body-2 font-weight-medium">
-                    <span>{{ item.raw.rawName || item.raw.name }}</span>
+                    <span class="d-flex align-center">
+                      <span class="mr-2 d-flex align-center">
+                        <knot-indicator
+                          v-if="item.raw.id"
+                          :left="getKnotColors(item.raw).left"
+                          :right="getKnotColors(item.raw).right"
+                          :border="getKnotColors(item.raw).border"
+                          :tooltip="getKnotColors(item.raw).tooltip"
+                        />
+                      </span>
+                      <span>{{ item.raw.rawName || item.raw.name }}</span>
+                    </span>
                     <span class="text-caption text-grey ml-2" v-if="item.raw.id">({{ formatNumber(item.raw.damage) }})</span>
                   </div>
                 </template>
