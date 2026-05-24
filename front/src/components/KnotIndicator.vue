@@ -65,6 +65,21 @@
             </div>
           </div>
 
+          <!-- Half Green indicator -->
+          <div class="guide-row">
+            <div class="guide-icon-wrapper">
+              <svg width="14" height="14" viewBox="0 0 338 335" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <use href="#def-knot-border" fill="#043916" />
+                <use href="#def-knot-right" fill="#81c784" />
+                <use href="#def-knot-left" fill="#424242" />
+              </svg>
+            </div>
+            <div class="guide-text">
+              <span class="highlight-green">Half Green</span>
+              <span class="text-grey-lighten-3 ml-1">Spawn seen, target currently alive & active in area</span>
+            </div>
+          </div>
+
           <!-- Orange indicator -->
           <div class="guide-row">
             <div class="guide-icon-wrapper">

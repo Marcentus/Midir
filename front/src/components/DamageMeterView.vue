@@ -449,7 +449,6 @@ export default defineComponent({
     const getKnotColors = (target: any) => {
       if (!target) return { left: '#81c784', right: '#81c784', border: '#043916', tooltip: '' };
       
-      // Scenario 1 & 2: Saw spawn/appear
       if (target.seenAppear) {
         if (target.seenDead) {
           // Scenario 1: Good parse (Spawn + Death)
@@ -459,7 +458,7 @@ export default defineComponent({
             border: '#043916',
             tooltip: 'Good parse (Spawn & Death captured)'
           };
-        } else {
+        } else if (target.disappeared) {
           // Scenario 2: Spawn captured but disappeared before death
           return {
             left: '#e97269',
@@ -467,19 +466,39 @@ export default defineComponent({
             border: '#460101',
             tooltip: 'Spawn captured, but disappeared/despawned'
           };
+        } else {
+          // New Scenario: Spawn captured, still alive and in area (Half Green)
+          return {
+            left: '#424242',
+            right: '#81c784',
+            border: '#043916',
+            tooltip: 'Active (Spawn captured, currently alive in area)'
+          };
         }
       } else {
         // Scenario 3: Did not see spawn (right side is orange ffb74d)
-        const leftColor = target.seenDead ? '#81c784' : '#e97269';
-        const borderColor = target.seenDead ? '#043916' : '#460101';
-        const statusText = target.seenDead ? 'Death' : 'Disappeared/Despawned';
-        
-        return {
-          left: leftColor,
-          right: '#ffb74d',
-          border: borderColor,
-          tooltip: `${statusText} captured (Spawn not seen)`
-        };
+        if (target.seenDead) {
+          return {
+            left: '#81c784',
+            right: '#ffb74d',
+            border: '#043916',
+            tooltip: 'Death captured (Spawn not seen)'
+          };
+        } else if (target.disappeared) {
+          return {
+            left: '#e97269',
+            right: '#ffb74d',
+            border: '#460101',
+            tooltip: 'Disappeared/Despawned (Spawn not seen)'
+          };
+        } else {
+          return {
+            left: '#424242',
+            right: '#ffb74d',
+            border: '#4d320c',
+            tooltip: 'Active (Spawn not seen, currently alive in area)'
+          };
+        }
       }
     };
 
