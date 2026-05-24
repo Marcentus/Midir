@@ -8,7 +8,10 @@
           <div class="header-main-row">
             <!-- Left: Target Selector -->
             <div class="header-section target-section">
-              <div class="header-label">COMBAT TARGET</div>
+              <div class="header-label d-flex align-center">
+                <knot-indicator legend class="mr-1" />
+                COMBAT TARGET
+              </div>
               <v-select
                 v-model="selectedTargetId"
                 :items="targetList"
