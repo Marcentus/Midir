@@ -304,8 +304,8 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 	if p.Op == opcodeSetFinisher {
 		a.processSetFinisher(p)
 	}
-	if p.Op == opcodeRiseFromTheDead {
-		a.processRiseFromTheDead(p)
+	if p.Op == opcodeDeadFeather {
+		a.processDeadFeather(p)
 	}
 }
 
@@ -1115,7 +1115,17 @@ func (a *Aggregator) processSetFinisher(p *packet.GamePacket) {
 	}
 }
 
-func (a *Aggregator) processRiseFromTheDead(p *packet.GamePacket) {
+func (a *Aggregator) processDeadFeather(p *packet.GamePacket) {
+	if len(p.Msg) < 3 ||
+		p.Msg[0].Type() != packet.MessageElemTypeShort ||
+		p.Msg[0].Data().(uint16) != 1 ||
+		p.Msg[1].Type() != packet.MessageElemTypeInt ||
+		p.Msg[1].Data().(uint32) != 0 ||
+		p.Msg[2].Type() != packet.MessageElemTypeByte ||
+		p.Msg[2].Data().(uint8) != 0 {
+		return
+	}
+
 	a.mu.Lock()
 	defer a.mu.Unlock()
 

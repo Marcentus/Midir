@@ -161,16 +161,21 @@ func TestAggregator_DeathTracking(t *testing.T) {
 		t.Errorf("Expected enemy to still be marked as dead after SetFinisher spam")
 	}
 
-	// 4. Simulate Player Revival (RiseFromTheDead opcode 0x701d)
+	// 4. Simulate Player Revival (DeadFeather opcode 0x5403)
 	pRevPlayer := &packet.GamePacket{
-		Op: opcodeRiseFromTheDead,
+		Op: opcodeDeadFeather,
 		Id: playerID,
 		At: time.Now(),
+		Msg: []packet.IMessageElem{
+			packet.NewMessageElemShort(1),
+			packet.NewMessageElemInt(0),
+			packet.NewMessageElemByte(0),
+		},
 	}
 	agg.ProcessPacket(pRevPlayer)
 
 	if agg.deadEntities[playerID] {
-		t.Errorf("Expected player to be revived (alive) after RiseFromTheDead")
+		t.Errorf("Expected player to be revived (alive) after DeadFeather")
 	}
 
 	// 5. Simulate Enemy Disappear (EntityDisappear opcode 0x520d)

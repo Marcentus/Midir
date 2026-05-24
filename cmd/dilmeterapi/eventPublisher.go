@@ -55,7 +55,7 @@ const (
 	opcodeSkillStart              = 0x698c
 	opcodeIsNowDead               = 0x53fc
 	opcodeSetFinisher             = 0x7921
-	opcodeRiseFromTheDead         = 0x701d
+	opcodeDeadFeather             = 0x5403
 )
 
 // This map contains skill IDs for delayed damage effects (like bleeds)
@@ -429,14 +429,23 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 			})
 		}
 
-	case opcodeRiseFromTheDead:
-		events = append(events, &eventEntityRevive{
-			eventBase: eventBase{
-				EventId: eventIdEntityRevive,
-				At:      p.At.Unix(),
-				Id:      strconv.FormatUint(p.Id, 10),
-			},
-		})
+	case opcodeDeadFeather:
+		if len(p.Msg) >= 3 &&
+			p.Msg[0].Type() == packet.MessageElemTypeShort &&
+			p.Msg[0].Data().(uint16) == 1 &&
+			p.Msg[1].Type() == packet.MessageElemTypeInt &&
+			p.Msg[1].Data().(uint32) == 0 &&
+			p.Msg[2].Type() == packet.MessageElemTypeByte &&
+			p.Msg[2].Data().(uint8) == 0 {
+
+			events = append(events, &eventEntityRevive{
+				eventBase: eventBase{
+					EventId: eventIdEntityRevive,
+					At:      p.At.Unix(),
+					Id:      strconv.FormatUint(p.Id, 10),
+				},
+			})
+		}
 
 	case opcodeSkillUse, opcodeSkillStart:
 		if len(p.Msg) < 1 {
