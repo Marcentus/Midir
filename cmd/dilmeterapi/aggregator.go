@@ -32,6 +32,7 @@ type Aggregator struct {
 	// General Entity Info
 	entityCache map[uint64]*packet.EntityInfo
 	targetNames map[uint64]string // Cache for entity names to persist after they disappear
+	targetRaceIDs map[uint64]uint32 // Cache for entity race IDs to persist after they disappear
 
 	// Condition Tracking
 	// playerConditionActive: PlayerID -> ConditionID -> ActiveCondition
@@ -62,6 +63,7 @@ func NewAggregator() *Aggregator {
 		damageTaken:        make(map[uint64]*PlayerDamageTakenStats),
 		entityCache:        make(map[uint64]*packet.EntityInfo),
 		targetNames:        make(map[uint64]string),
+		targetRaceIDs:      make(map[uint64]uint32),
 		targetTimestamps: make(map[uint64]struct {
 			StartTime int64
 			EndTime   int64
@@ -106,7 +108,7 @@ func (a *Aggregator) updateTimestamps(targetId uint64, eventTime time.Time) {
 	a.resolveAndCacheName(targetId)
 }
 
-// resolveAndCacheName attempts to find and store the name of an entity.
+// resolveAndCacheName attempts to find and store the name and race ID of an entity.
 // This is called when an entity is involved in combat to ensure we have a name
 // even if the entity disappears from the area later.
 func (a *Aggregator) resolveAndCacheName(entityID uint64) {
@@ -115,8 +117,10 @@ func (a *Aggregator) resolveAndCacheName(entityID uint64) {
 	}
 	if entity, ok := a.entityCache[entityID]; ok {
 		a.targetNames[entityID] = getRaceName(entity.RaceId)
+		a.targetRaceIDs[entityID] = entity.RaceId
 	} else if player, ok := playerCache.Get(entityID); ok {
 		a.targetNames[entityID] = player.Name
+		a.targetRaceIDs[entityID] = player.RaceId
 	}
 }
 
@@ -628,6 +632,13 @@ func (a *Aggregator) GetSummary() FightSummary {
 			name = "Unknown"
 		}
 
+		var raceId uint32
+		if cachedRaceId, ok := a.targetRaceIDs[targetId]; ok {
+			raceId = cachedRaceId
+		} else if entity, ok := a.entityCache[targetId]; ok {
+			raceId = entity.RaceId
+		}
+
 		// Calculate conditions for target
 		targetTimes := a.targetTimestamps[targetId]
 		targetDuration := float64(targetTimes.EndTime - targetTimes.StartTime)
@@ -635,6 +646,7 @@ func (a *Aggregator) GetSummary() FightSummary {
 
 		summary.Targets[targetIdStr] = TargetStats{
 			Name:        name,
+			RaceID:      raceId,
 			Conditions:  conditions,
 			SeenDead:    a.seenDead[targetId],
 			SeenAppear:  a.seenAppear[targetId],
@@ -911,6 +923,7 @@ func (a *Aggregator) Clear() {
 
 	a.damageTaken = make(map[uint64]*PlayerDamageTakenStats)
 	a.targetNames = make(map[uint64]string)
+	a.targetRaceIDs = make(map[uint64]uint32)
 	a.targetTimestamps = make(map[uint64]struct {
 		StartTime int64
 		EndTime   int64

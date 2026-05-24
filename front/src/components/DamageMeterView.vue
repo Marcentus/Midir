@@ -17,7 +17,7 @@
                 flat
                 density="compact"
                 hide-details
-                class="target-select-refined"
+                :class="['target-select-refined', selectedTargetClass]"
                 placeholder="All Targets"
                 :menu-props="{ minWidth: '520px', maxWidth: '520px', maxHeight: menuMaxHeight, location: 'bottom', offset: 4 }"
                 @update:menu="handleMenuUpdate"
@@ -32,7 +32,7 @@
 
                 <!-- Item Display (when open in dropdown list) -->
                 <template v-slot:item="{ props, item }">
-                  <v-list-item v-bind="props">
+                  <v-list-item v-bind="props" :class="getTargetClass(item.raw.raceId)">
                     <template v-slot:title>
                       <div class="target-item-grid py-1">
                         <!-- Column 1: Status Icons -->
@@ -230,6 +230,14 @@ import DamageGraph from "@/components/DamageGraph.vue";
 import TargetConditionView from "@/components/TargetConditionView.vue";
 import KnotIndicator from "@/components/KnotIndicator.vue";
 
+const SPECIAL_TARGET_CLASSES: Record<number, string> = {
+  7600: "target-blue",
+  7601: "target-blue",
+  7602: "target-green",
+  7615: "target-gold",
+  7603: "target-red",
+};
+
 export default defineComponent({
   name: "DamageMeterView",
   components: {
@@ -338,6 +346,7 @@ export default defineComponent({
             disappeared: stats.disappeared,
             startTime: stats.startTime,
             endTime: stats.endTime,
+            raceId: stats.raceId,
           };
         }
       );
@@ -363,6 +372,7 @@ export default defineComponent({
         disappeared: undefined,
         startTime: undefined,
         endTime: undefined,
+        raceId: undefined,
       });
       return targets;
     });
@@ -459,8 +469,23 @@ export default defineComponent({
       }
     };
 
+    const getTargetClass = (raceId: number | undefined): string => {
+      if (!raceId) return "";
+      return SPECIAL_TARGET_CLASSES[raceId] || "";
+    };
+
+    const selectedTargetObj = computed(() => {
+      return targetList.value.find(t => t.id === selectedTargetId.value);
+    });
+
+    const selectedTargetClass = computed(() => {
+      return getTargetClass(selectedTargetObj.value?.raceId);
+    });
+
     return {
       getKnotColors,
+      getTargetClass,
+      selectedTargetClass,
       tab,
       selectedTargetId,
       targetList,
@@ -693,5 +718,76 @@ export default defineComponent({
 .target-col-damage {
   white-space: nowrap;
   text-align: right;
+}
+
+/* Beautiful target-specific backgrounds & gradients for the dropdown list items */
+.target-blue {
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.28) 0%, rgba(29, 78, 216, 0.5) 100%) !important;
+  border-left: 5px solid #3b82f6 !important;
+  box-shadow: inset 5px 0 10px rgba(59, 130, 246, 0.25) !important;
+}
+.target-blue:hover {
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.42) 0%, rgba(29, 78, 216, 0.65) 100%) !important;
+  border-left: 5px solid #60a5fa !important;
+  box-shadow: inset 6px 0 15px rgba(96, 165, 250, 0.45) !important;
+}
+
+.target-green {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.28) 0%, rgba(4, 120, 87, 0.5) 100%) !important;
+  border-left: 5px solid #10b981 !important;
+  box-shadow: inset 5px 0 10px rgba(16, 185, 129, 0.25) !important;
+}
+.target-green:hover {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.42) 0%, rgba(4, 120, 87, 0.65) 100%) !important;
+  border-left: 5px solid #34d399 !important;
+  box-shadow: inset 6px 0 15px rgba(52, 211, 153, 0.45) !important;
+}
+
+.target-gold {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.28) 0%, rgba(180, 83, 9, 0.5) 100%) !important;
+  border-left: 5px solid #f59e0b !important;
+  box-shadow: inset 5px 0 10px rgba(245, 158, 11, 0.25) !important;
+}
+.target-gold:hover {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.42) 0%, rgba(180, 83, 9, 0.65) 100%) !important;
+  border-left: 5px solid #fbbf24 !important;
+  box-shadow: inset 6px 0 15px rgba(251, 191, 36, 0.45) !important;
+}
+
+.target-red {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.28) 0%, rgba(185, 28, 28, 0.5) 100%) !important;
+  border-left: 5px solid #ef4444 !important;
+  box-shadow: inset 5px 0 10px rgba(239, 68, 68, 0.25) !important;
+}
+.target-red:hover {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.42) 0%, rgba(185, 28, 28, 0.65) 100%) !important;
+  border-left: 5px solid #f87171 !important;
+  box-shadow: inset 6px 0 15px rgba(248, 113, 113, 0.45) !important;
+}
+
+/* Beautiful target-specific backgrounds & gradients for the collapsed select field */
+.target-select-refined.target-blue :deep(.v-field) {
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.28) 0%, rgba(29, 78, 216, 0.5) 100%) !important;
+  border-color: rgba(59, 130, 246, 0.6) !important;
+  border-left: 5px solid #3b82f6 !important;
+  box-shadow: inset 5px 0 10px rgba(59, 130, 246, 0.2) !important;
+}
+.target-select-refined.target-green :deep(.v-field) {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.28) 0%, rgba(4, 120, 87, 0.5) 100%) !important;
+  border-color: rgba(16, 185, 129, 0.6) !important;
+  border-left: 5px solid #10b981 !important;
+  box-shadow: inset 5px 0 10px rgba(16, 185, 129, 0.2) !important;
+}
+.target-select-refined.target-gold :deep(.v-field) {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.28) 0%, rgba(180, 83, 9, 0.5) 100%) !important;
+  border-color: rgba(245, 158, 11, 0.6) !important;
+  border-left: 5px solid #f59e0b !important;
+  box-shadow: inset 5px 0 10px rgba(245, 158, 11, 0.2) !important;
+}
+.target-select-refined.target-red :deep(.v-field) {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.28) 0%, rgba(185, 28, 28, 0.5) 100%) !important;
+  border-color: rgba(239, 68, 68, 0.6) !important;
+  border-left: 5px solid #ef4444 !important;
+  box-shadow: inset 5px 0 10px rgba(239, 68, 68, 0.2) !important;
 }
 </style>

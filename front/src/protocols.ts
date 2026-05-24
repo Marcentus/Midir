@@ -86,6 +86,7 @@ export interface PlayerDamageTakenStats {
 
 export interface TargetStats {
   name: string;
+  raceId?: number;
   conditions?: { [id: number]: ConditionStats };
   seenDead?: boolean;
   seenAppear?: boolean;
