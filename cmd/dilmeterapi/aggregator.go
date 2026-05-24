@@ -307,6 +307,58 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 	if p.Op == opcodeDeadFeather {
 		a.processDeadFeather(p)
 	}
+	if p.Op == opcodePublicStatUpdate {
+		a.processPublicStatUpdate(p)
+	}
+}
+
+func (a *Aggregator) processPublicStatUpdate(p *packet.GamePacket) {
+	statUpdate, err := packet.ParsePublicStatUpdatePacket(p)
+	if err != nil {
+		return
+	}
+
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	entity, ok := a.entityCache[statUpdate.EntityId]
+	if !ok {
+		return
+	}
+
+	hpChanged := false
+	baseChanged := false
+	bonusChanged := false
+
+	if val, ok := statUpdate.Stats[28]; ok {
+		entity.CurrentHP = val
+		hpChanged = true
+	}
+	if val, ok := statUpdate.Stats[30]; ok {
+		entity.BaseHP = val
+		baseChanged = true
+	}
+	if val, ok := statUpdate.Stats[31]; ok {
+		entity.AdditionalHP = val
+		bonusChanged = true
+	}
+
+	if baseChanged || bonusChanged {
+		entity.MaxHP = entity.BaseHP + entity.AdditionalHP
+	}
+	_ = hpChanged // Keep compiler happy if unused locally
+}
+
+// GetEntityHP retrieves the current HP fields for a cached entity in a thread-safe manner.
+func (a *Aggregator) GetEntityHP(entityID uint64) (currentHp, baseHp, additionalHp, maxHp float32, exists bool) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	entity, ok := a.entityCache[entityID]
+	if !ok {
+		return 0, 0, 0, 0, false
+	}
+	return entity.CurrentHP, entity.BaseHP, entity.AdditionalHP, entity.MaxHP, true
 }
 
 func (a *Aggregator) processCharacterCondition(p *packet.CharacterConditionPacket, at time.Time) {

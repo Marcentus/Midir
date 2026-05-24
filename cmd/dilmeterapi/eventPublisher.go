@@ -17,6 +17,13 @@ type WebSocketMessage struct {
 	Data interface{} `json:"data"`
 }
 
+type entityHPLogState struct {
+	LastCurrentHP float32
+	LastBaseHP    float32
+	LastBonusHP   float32
+	LastLoggedAt  time.Time
+}
+
 type eventPublisher struct {
 	sync.Mutex
 
@@ -34,6 +41,10 @@ type eventPublisher struct {
 	// Async logging
 	logCh       chan iEvent
 	damageLogMu sync.Mutex
+
+	// HP tracking and spam prevention
+	hpLogStates  map[uint64]*entityHPLogState
+	lastCombatAt map[uint64]time.Time
 }
 
 type eventClient struct {
@@ -56,6 +67,7 @@ const (
 	opcodeIsNowDead               = 0x53fc
 	opcodeSetFinisher             = 0x7921
 	opcodeDeadFeather             = 0x5403
+	opcodePublicStatUpdate        = 0x7532
 )
 
 // This map contains skill IDs for delayed damage effects (like bleeds)
@@ -78,6 +90,9 @@ func newEventPublisher(ctx context.Context, packetCh <-chan *packet.GamePacket, 
 		currentClientId:   1,
 		playerUpdateBatch: make([]*PlayerInfo, 0),
 		logCh:             make(chan iEvent, 1000), // Buffered channel for events
+
+		hpLogStates:  make(map[uint64]*entityHPLogState),
+		lastCombatAt: make(map[uint64]time.Time),
 	}
 
 	v.aggregator.SetLive(isLive)
@@ -281,6 +296,14 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 			break
 		}
 
+		// Record combat timestamps
+		t.lastCombatAt[attackerId] = p.At
+		for _, sub := range pack.SubPackets {
+			if sub.Hit != nil {
+				t.lastCombatAt[sub.EntityId] = p.At
+			}
+		}
+
 		// Now, create damage events for each hit using the correct skill ID.
 		for _, sub := range pack.SubPackets {
 			if sub.Hit != nil && (sub.Hit.Damage > 0 || sub.Hit.ManaDamage > 0) {
@@ -319,6 +342,10 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		attackerId := p.Msg[5].Data().(uint64)
 		skillId := p.Msg[6].Data().(uint16)
 		targetId := p.Id
+
+		t.lastCombatAt[attackerId] = p.At
+		t.lastCombatAt[targetId] = p.At
+
 		e := &eventDamage{
 			eventBase: eventBase{
 				EventId: eventIdDamage,
@@ -467,6 +494,11 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 			}
 		}
 
+		t.lastCombatAt[p.Id] = p.At
+		if targetID != 0 {
+			t.lastCombatAt[targetID] = p.At
+		}
+
 		var e iEvent
 		if p.Op == opcodeSkillUse {
 			e = &eventSkillUse{
@@ -490,6 +522,91 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 			}
 		}
 		events = append(events, e)
+
+	case opcodePublicStatUpdate:
+		var statPack *packet.PublicStatUpdatePacket
+		statPack, err = packet.ParsePublicStatUpdatePacket(p)
+		if err != nil {
+			break
+		}
+
+		// Retrieve active HP in a thread-safe way from the aggregator
+		curHP, baseHP, additionalHP, maxHP, exists := t.aggregator.GetEntityHP(statPack.EntityId)
+		if !exists {
+			// Skip logging if the entity is not currently tracked in the active entityCache
+			break
+		}
+
+		// Look up or create the last logged HP state
+		state, found := t.hpLogStates[statPack.EntityId]
+		if !found {
+			state = &entityHPLogState{}
+			t.hpLogStates[statPack.EntityId] = state
+		}
+
+		// If nothing changed, we do not log
+		if curHP == state.LastCurrentHP && baseHP == state.LastBaseHP && additionalHP == state.LastBonusHP && !state.LastLoggedAt.IsZero() {
+			break
+		}
+
+		// Apply HP change threshold check:
+		// Skip if this is not the first log, HP is not 0, Max HP didn't change, and the delta is < 0.1% of Max HP
+		if !state.LastLoggedAt.IsZero() && curHP > 0 && baseHP == state.LastBaseHP && additionalHP == state.LastBonusHP {
+			hpDiff := curHP - state.LastCurrentHP
+			if hpDiff < 0 {
+				hpDiff = -hpDiff
+			}
+			threshold := 0.001 * maxHP
+			if hpDiff < threshold {
+				break
+			}
+		}
+
+		// Apply the Hybrid Throttling Scheme:
+		// 1. Log immediately if Current HP is 0 (death milestone)
+		// 2. Log immediately if Max HP (BaseHP or AdditionalHP) changed
+		// 3. Otherwise, check combat context:
+		//    - If recently active in combat (within 5 seconds), log at most once per 1.0s.
+		//    - If idle, log at most once per 5.0s.
+		shouldLog := false
+		if curHP == 0 {
+			shouldLog = true
+		} else if baseHP != state.LastBaseHP || additionalHP != state.LastBonusHP {
+			shouldLog = true
+		} else {
+			lastCombat := t.lastCombatAt[statPack.EntityId]
+			inCombat := !lastCombat.IsZero() && p.At.Sub(lastCombat) <= 5*time.Second
+
+			throttleDuration := 5 * time.Second
+			if inCombat {
+				throttleDuration = 1 * time.Second
+			}
+
+			if state.LastLoggedAt.IsZero() || p.At.Sub(state.LastLoggedAt) >= throttleDuration {
+				shouldLog = true
+			}
+		}
+
+		if shouldLog {
+			e := &eventEntityHPUpdate{
+				eventBase: eventBase{
+					EventId: eventIdEntityHPUpdate,
+					At:      p.At.Unix(),
+					Id:      strconv.FormatUint(statPack.EntityId, 10),
+				},
+				CurrentHP:    curHP,
+				BaseHP:       baseHP,
+				AdditionalHP: additionalHP,
+				MaxHP:        maxHP,
+			}
+			events = append(events, e)
+
+			// Update the logged state
+			state.LastCurrentHP = curHP
+			state.LastBaseHP = baseHP
+			state.LastBonusHP = additionalHP
+			state.LastLoggedAt = p.At
+		}
 	}
 
 	if err != nil {
