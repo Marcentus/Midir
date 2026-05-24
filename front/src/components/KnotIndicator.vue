@@ -46,11 +46,9 @@
       </template>
 
       <div class="knot-tooltip-container pa-1">
-
-        <div class="guide-title text-caption text-grey-lighten-2 mb-2 font-weight-medium">KNOT COLOR GUIDE</div>
-        
-        <div class="guide-section">
-          <!-- Green indicator -->
+        <div class="guide-title text-caption text-grey-lighten-2 mb-2 font-weight-medium">KNOT STATUS</div>
+        <div class="guide-section mb-3">
+          <!-- Green = Alive -->
           <div class="guide-row">
             <div class="guide-icon-wrapper">
               <svg width="14" height="14" viewBox="0 0 338 335" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -61,41 +59,11 @@
             </div>
             <div class="guide-text">
               <span class="highlight-green">Green</span>
-              <span class="text-grey-lighten-3 ml-1">Good Parse (Saw enemy spawn and death)</span>
+              <span class="text-grey-lighten-3 ml-1">Active / Alive in area</span>
             </div>
           </div>
 
-          <!-- Half Green indicator -->
-          <div class="guide-row">
-            <div class="guide-icon-wrapper">
-              <svg width="14" height="14" viewBox="0 0 338 335" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <use href="#def-knot-border" fill="#043916" />
-                <use href="#def-knot-right" fill="#81c784" />
-                <use href="#def-knot-left" fill="#424242" />
-              </svg>
-            </div>
-            <div class="guide-text">
-              <span class="highlight-green">Half Green</span>
-              <span class="text-grey-lighten-3 ml-1">Spawn seen, target currently alive & active in area</span>
-            </div>
-          </div>
-
-          <!-- Orange indicator -->
-          <div class="guide-row">
-            <div class="guide-icon-wrapper">
-              <svg width="14" height="14" viewBox="0 0 338 335" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <use href="#def-knot-border" fill="#4d320c" />
-                <use href="#def-knot-right" fill="#ffb74d" />
-                <use href="#def-knot-left" fill="#424242" />
-              </svg>
-            </div>
-            <div class="guide-text">
-              <span class="highlight-orange">Orange</span>
-              <span class="text-grey-lighten-3 ml-1">Spawn not seen (parser started late)</span>
-            </div>
-          </div>
-
-          <!-- Red indicator -->
+          <!-- Red = Died -->
           <div class="guide-row">
             <div class="guide-icon-wrapper">
               <svg width="14" height="14" viewBox="0 0 338 335" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -106,7 +74,37 @@
             </div>
             <div class="guide-text">
               <span class="highlight-red">Red</span>
-              <span class="text-grey-lighten-3 ml-1">Disappeared or despawned without dying</span>
+              <span class="text-grey-lighten-3 ml-1">Died (Death event captured)</span>
+            </div>
+          </div>
+
+          <!-- Orange = Despawned -->
+          <div class="guide-row">
+            <div class="guide-icon-wrapper">
+              <svg width="14" height="14" viewBox="0 0 338 335" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <use href="#def-knot-border" fill="#4d320c" />
+                <use href="#def-knot-right" fill="#ffb74d" />
+                <use href="#def-knot-left" fill="#ffb74d" />
+              </svg>
+            </div>
+            <div class="guide-text">
+              <span class="highlight-orange">Orange</span>
+              <span class="text-grey-lighten-3 ml-1">Despawned or disappeared before death</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tooltip-divider"></div>
+
+        <div class="guide-title text-caption text-grey-lighten-2 mb-2 font-weight-medium">SPAWN ALERT</div>
+        <div class="guide-section">
+          <div class="guide-row">
+            <div class="guide-icon-wrapper">
+              <v-icon icon="mdi-alert-circle-outline" color="warning" size="small"></v-icon>
+            </div>
+            <div class="guide-text">
+              <span class="highlight-orange">Orange Alert Icon</span>
+              <span class="text-grey-lighten-3 ml-1">Spawn not captured by parser (started late)</span>
             </div>
           </div>
         </div>
@@ -237,6 +235,11 @@ export default defineComponent({
 
 .highlight-green {
   color: #81c784;
+  font-weight: 700;
+}
+
+.highlight-purple {
+  color: #a78bfa;
   font-weight: 700;
 }
 

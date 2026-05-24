@@ -39,6 +39,21 @@
                         />
                       </span>
                       <span>{{ item.raw.rawName || item.raw.name }}</span>
+                      <v-tooltip
+                        v-if="item.raw.id && item.raw.seenAppear === false"
+                        location="top"
+                        text="Spawn not captured by parser."
+                      >
+                        <template v-slot:activator="{ props }">
+                          <v-icon
+                            v-bind="props"
+                            icon="mdi-alert-circle-outline"
+                            color="warning"
+                            size="small"
+                            class="ml-1"
+                          ></v-icon>
+                        </template>
+                      </v-tooltip>
                     </span>
                     <span class="text-caption text-grey ml-2" v-if="item.raw.id">({{ formatNumber(item.raw.damage) }})</span>
                   </div>
@@ -61,7 +76,24 @@
                         </span>
 
                         <!-- Column 2: Name -->
-                        <span class="target-col-name font-weight-bold">{{ item.raw.rawName || item.raw.name }}</span>
+                        <span class="target-col-name font-weight-bold d-flex align-center">
+                          <span>{{ item.raw.rawName || item.raw.name }}</span>
+                          <v-tooltip
+                            v-if="item.raw.id && item.raw.seenAppear === false"
+                            location="top"
+                            text="Spawn not captured by parser."
+                          >
+                            <template v-slot:activator="{ props }">
+                              <v-icon
+                                v-bind="props"
+                                icon="mdi-alert-circle-outline"
+                                color="warning"
+                                size="small"
+                                class="ml-1 flex-shrink-0"
+                              ></v-icon>
+                            </template>
+                          </v-tooltip>
+                        </span>
                         
                         <!-- Column 3: Duration (Relative to fight start) -->
                         <span class="target-col-duration text-grey text-caption">
@@ -449,57 +481,26 @@ export default defineComponent({
     const getKnotColors = (target: any) => {
       if (!target) return { left: '#81c784', right: '#81c784', border: '#043916', tooltip: '' };
       
-      if (target.seenAppear) {
-        if (target.seenDead) {
-          // Scenario 1: Good parse (Spawn + Death)
-          return {
-            left: '#81c784',
-            right: '#81c784',
-            border: '#043916',
-            tooltip: 'Good parse (Spawn & Death captured)'
-          };
-        } else if (target.disappeared) {
-          // Scenario 2: Spawn captured but disappeared before death
-          return {
-            left: '#e97269',
-            right: '#e97269',
-            border: '#460101',
-            tooltip: 'Spawn captured, but disappeared/despawned'
-          };
-        } else {
-          // New Scenario: Spawn captured, still alive and in area (Half Green)
-          return {
-            left: '#424242',
-            right: '#81c784',
-            border: '#043916',
-            tooltip: 'Active (Spawn captured, currently alive in area)'
-          };
-        }
-      } else {
-        // Scenario 3: Did not see spawn (right side is orange ffb74d)
-        if (target.seenDead) {
-          return {
-            left: '#81c784',
-            right: '#ffb74d',
-            border: '#043916',
-            tooltip: 'Death captured (Spawn not seen)'
-          };
-        } else if (target.disappeared) {
-          return {
-            left: '#e97269',
-            right: '#ffb74d',
-            border: '#460101',
-            tooltip: 'Disappeared/Despawned (Spawn not seen)'
-          };
-        } else {
-          return {
-            left: '#424242',
-            right: '#ffb74d',
-            border: '#4d320c',
-            tooltip: 'Active (Spawn not seen, currently alive in area)'
-          };
-        }
+      let centerColor = '#81c784'; // Default Green (still alive)
+      let border = '#043916'; // Default Dark Green border
+      let statusName = 'Active';
+      
+      if (target.seenDead) {
+        centerColor = '#e97269'; // Red (died)
+        border = '#460101'; // Dark Red border
+        statusName = 'Died';
+      } else if (target.disappeared) {
+        centerColor = '#ffb74d'; // Orange (despawned before death)
+        border = '#4d320c'; // Dark Orange border
+        statusName = 'Despawned';
       }
+      
+      return {
+        left: centerColor,
+        right: centerColor,
+        border,
+        tooltip: statusName
+      };
     };
 
     const getTargetClass = (raceId: number | undefined): string => {
