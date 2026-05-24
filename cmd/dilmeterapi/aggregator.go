@@ -738,9 +738,10 @@ func (a *Aggregator) GetSummary() FightSummary {
 
 	// NEW: Populate Current Entities
 	for entityID, entity := range a.entityCache {
-		// Filter out non-players
-		if !isPlayerEntity(entity) {
-			continue
+		// Resolve name if numeric
+		name := entity.Name
+		if _, err := strconv.Atoi(entity.Name); err == nil {
+			name = getRaceName(entity.RaceId)
 		}
 
 		// Calculate conditions for current entity
@@ -750,13 +751,16 @@ func (a *Aggregator) GetSummary() FightSummary {
 			conditions = active
 		}
 
+		category := getEntityCategory(entity)
+
 		summary.CurrentEntities = append(summary.CurrentEntities, EntityState{
 			ID:         strconv.FormatUint(entityID, 10),
-			Name:       entity.Name,
+			Name:       name,
 			RaceID:     entity.RaceId,
 			Conditions: conditions,
 			CurrentHP:  entity.CurrentHP,
 			MaxHP:      entity.MaxHP,
+			Category:   category,
 		})
 	}
 
@@ -768,6 +772,37 @@ func (a *Aggregator) GetSummary() FightSummary {
 	computePartyBuffs(&summary)
 
 	return summary
+}
+
+// getEntityCategory classifies an entity into categorized groups: Players, Enemies, Pets, NPCs, or Other.
+func getEntityCategory(entity *packet.EntityInfo) string {
+	// 1. Players: Human, Elf, Giant
+	switch entity.RaceId {
+	case 8001, 8002, 9001, 9002, 10001, 10002:
+		return "Players"
+	}
+
+	// 2. Pets / Summons: OwnerId != 0
+	if entity.OwnerId != 0 {
+		return "Pets"
+	}
+
+	// 3. NPCs: Name starts with "_"
+	if strings.HasPrefix(entity.Name, "_") {
+		return "NPCs"
+	}
+
+	// 4. Enemies: Name is numeric
+	if _, err := strconv.Atoi(entity.Name); err == nil {
+		return "Enemies"
+	}
+
+	// Fallback check using player criteria
+	if isPlayerEntity(entity) {
+		return "Players"
+	}
+
+	return "Other"
 }
 
 // isPlayerEntity determines if an entity is a player based on Name and OwnerId.

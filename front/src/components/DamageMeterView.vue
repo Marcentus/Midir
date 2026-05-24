@@ -261,6 +261,109 @@
             </v-window-item>
           </v-window>
         </div>
+
+        <!-- Entity Viewer Floating Button and Panel -->
+        <div 
+          class="entity-viewer-container"
+          :style="{ left: isNavDrawerOpen ? '344px' : '24px' }"
+        >
+          <!-- Floating Button when Collapsed -->
+          <v-btn
+            v-if="!isEntityViewerOpen"
+            color="indigo-darken-3"
+            class="entity-viewer-toggle-btn"
+            prepend-icon="mdi-shield-half-full"
+            @click="isEntityViewerOpen = true"
+          >
+            Entities
+            <v-badge
+              color="red"
+              :content="totalEntitiesCount"
+              inline
+              class="ml-2"
+              v-if="totalEntitiesCount > 0"
+            ></v-badge>
+          </v-btn>
+
+          <!-- Slide-out Glassmorphic Panel when Expanded -->
+          <div 
+            class="entity-viewer-panel" 
+            :class="isEntityViewerOpen ? 'expanded-state' : 'collapsed-state'"
+          >
+            <div class="panel-header">
+              <span class="panel-title">
+                <v-icon color="indigo-lighten-2" class="mr-2">mdi-shield-half-full</v-icon>
+                Entities ({{ totalEntitiesCount }})
+              </span>
+              <v-btn
+                icon="mdi-close"
+                variant="text"
+                size="small"
+                class="close-btn"
+                @click="isEntityViewerOpen = false"
+              ></v-btn>
+            </div>
+
+            <v-divider class="border-white-05"></v-divider>
+
+            <div class="panel-content">
+              <!-- Grid columns of categories -->
+              <div class="panel-columns" v-if="totalEntitiesCount > 0">
+                <!-- Loop through categories as columns -->
+                <div
+                  v-for="(entities, catName) in nonUncategorizedGroups"
+                  :key="catName"
+                  class="category-column"
+                  v-show="entities.length > 0"
+                >
+                  <div class="category-header d-flex justify-space-between align-center py-1 mb-2">
+                    <span class="category-title text-caption font-weight-bold">
+                      {{ catName.toUpperCase() }}
+                    </span>
+                    <span class="category-count text-caption text-grey">
+                      {{ entities.length }}
+                    </span>
+                  </div>
+                  
+                  <div class="entity-list">
+                    <div
+                      v-for="entity in entities"
+                      :key="entity.id"
+                      class="entity-item pa-2 mb-2 rounded"
+                    >
+                      <div class="entity-meta d-flex justify-space-between align-center mb-1 ga-2">
+                        <span class="entity-name font-weight-bold text-truncate text-left" :title="entity.name">
+                          {{ entity.name }}
+                        </span>
+                        <span class="entity-hp-text text-caption text-grey text-right flex-shrink-0">
+                          {{ formatNumber(entity.currentHp) }} / {{ formatNumber(entity.maxHp) }}
+                        </span>
+                      </div>
+
+                      <!-- Beautiful, animated HP bar -->
+                      <div class="hp-bar-bg">
+                        <div
+                          class="hp-bar-fill"
+                          :class="getHPBarClass(catName)"
+                          :style="{ width: getHPPercent(entity) + '%' }"
+                        >
+                          <div class="hp-bar-glow"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Empty State -->
+              <div v-else class="empty-state text-center pa-4 text-grey h-100 justify-center">
+                <v-icon size="36" class="mb-2" style="opacity: 0.3;">mdi-radar</v-icon>
+                <div class="text-caption">No entities in area</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </v-main>
   </v-layout>
@@ -268,7 +371,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, computed, inject, nextTick, onMounted, onBeforeUnmount } from "vue";
-import { fightSummary, selectedTargetId } from "@/store";
+import { fightSummary, selectedTargetId, isNavDrawerOpen } from "@/store";
 import SessionPanel from "@/components/SessionPanel.vue";
 import ApplyDamageBySkillComponent from "@/components/applyDamageBySkill.vue";
 import DamageTakenBySourceComponent from "@/components/DamageTakenBySource.vue";
@@ -298,6 +401,9 @@ export default defineComponent({
     const tab = ref("damageDealt");
     const condNameMap = inject("condNameMap") as any;
     const showBuffDetails = ref(false);
+
+    // Entity Viewer State
+    const isEntityViewerOpen = ref(false);
 
     const formatNumber = (num: number | undefined | null): string => {
       if (num === undefined || num === null) return "0";
@@ -571,6 +677,42 @@ export default defineComponent({
         }
         return results;
       }),
+      isEntityViewerOpen,
+      isNavDrawerOpen,
+      totalEntitiesCount: computed(() => (fightSummary.currentEntities || []).length),
+      nonUncategorizedGroups: computed(() => {
+        const groups: Record<string, any[]> = {
+          Enemies: [],
+          Players: [],
+          Pets: [],
+          NPCs: [],
+          Other: [],
+        };
+        
+        const entities = fightSummary.currentEntities || [];
+        entities.forEach((entity) => {
+          const cat = entity.category || "Other";
+          if (groups[cat]) {
+            groups[cat].push(entity);
+          } else {
+            groups["Other"].push(entity);
+          }
+        });
+        
+        return groups;
+      }),
+      getHPPercent: (entity: any) => {
+        if (!entity || entity.maxHp <= 0) return 0;
+        const pct = (entity.currentHp / entity.maxHp) * 100;
+        return Math.max(0, Math.min(100, pct));
+      },
+      getHPBarClass: (catName: string) => {
+        if (catName === "Enemies") return "hp-enemy";
+        if (catName === "Players") return "hp-player";
+        if (catName === "Pets") return "hp-pet";
+        if (catName === "NPCs") return "hp-npc";
+        return "hp-other";
+      },
     };
   },
 });
@@ -790,5 +932,255 @@ export default defineComponent({
   box-shadow: inset 6px 0 15px rgba(248, 113, 113, 0.45) !important;
 }
 
+/* --- ENTITY VIEWER FLOATING PANEL & BUTTON STYLES --- */
+.entity-viewer-container {
+  position: fixed;
+  bottom: 24px;
+  z-index: 99;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+}
+
+/* Floating button */
+.entity-viewer-toggle-btn {
+  background: rgba(23, 27, 36, 0.8) !important;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(129, 138, 248, 0.3) !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 15px rgba(129, 138, 248, 0.15);
+  border-radius: 10px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.entity-viewer-toggle-btn:hover {
+  transform: translateY(-2px);
+  border-color: rgba(129, 138, 248, 0.6) !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(129, 138, 248, 0.3);
+}
+
+/* Sliding Panel */
+.entity-viewer-panel {
+  width: 900px;
+  max-width: calc(100vw - 360px);
+  height: 480px;
+  background: rgba(17, 20, 28, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(129, 138, 248, 0.25);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: bottom left;
+}
+
+.entity-viewer-panel.collapsed-state {
+  transform: scale(0.85);
+  opacity: 0;
+  pointer-events: none;
+  height: 0;
+  width: 0;
+  margin-bottom: 0;
+}
+
+.entity-viewer-panel.expanded-state {
+  transform: scale(1);
+  opacity: 1;
+  pointer-events: auto;
+  margin-bottom: 12px;
+}
+
+/* Panel Internal Styling */
+.panel-header {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.02);
+  flex-shrink: 0;
+}
+
+.panel-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+}
+
+.panel-content {
+  flex: 1;
+  overflow: hidden;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-columns {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  height: 100%;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.category-column {
+  flex: 1 1 0;
+  min-width: 220px;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.01);
+  border-radius: 8px;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  height: 100%;
+}
+
+.entity-list {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* Custom Scrollbar for columns scroll */
+.panel-columns::-webkit-scrollbar {
+  height: 6px;
+}
+.panel-columns::-webkit-scrollbar-track {
+  background: transparent;
+}
+.panel-columns::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+.panel-columns::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Custom Scrollbar for entity list in each column */
+.entity-list::-webkit-scrollbar {
+  width: 4px;
+}
+.entity-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.entity-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+}
+.entity-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.category-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.category-title {
+  color: #818cf8; /* Light indigo */
+  letter-spacing: 0.05em;
+}
+
+.entity-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
+}
+
+.entity-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(129, 138, 248, 0.2);
+}
+
+.entity-name {
+  color: #fff;
+  font-size: 0.85rem;
+  max-width: 170px;
+}
+
+.entity-hp-text {
+  font-size: 0.75rem;
+}
+
+/* HP Bar Styling */
+.hp-bar-bg {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.hp-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  position: relative;
+  transition: width 0.3s ease;
+}
+
+.hp-bar-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: hp-shimmer 2s infinite linear;
+}
+
+@keyframes hp-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Gradients for different categories */
+.hp-enemy {
+  background: linear-gradient(90deg, #ef4444 0%, #ff7849 100%);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+
+.hp-player {
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+.hp-pet {
+  background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 100%);
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
+}
+
+.hp-npc {
+  background: linear-gradient(90deg, #0ea5e9 0%, #38bdf8 100%);
+  box-shadow: 0 0 8px rgba(14, 165, 233, 0.4);
+}
+
+.hp-other {
+  background: linear-gradient(90deg, #6b7280 0%, #9ca3af 100%);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
 
 </style>

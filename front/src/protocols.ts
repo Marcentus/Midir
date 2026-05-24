@@ -111,6 +111,7 @@ export interface EntityState {
   conditions?: { [id: number]: ActiveCondition };
   currentHp: number;
   maxHp: number;
+  category: string;
 }
 
 export interface FightSummary {
