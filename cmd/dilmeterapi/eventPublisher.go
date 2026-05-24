@@ -437,6 +437,50 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 				Id:      strconv.FormatUint(p.Id, 10),
 			},
 		})
+
+	case opcodeSkillUse, opcodeSkillStart:
+		if len(p.Msg) < 1 {
+			break
+		}
+		if p.Msg[0].Type() != packet.MessageElemTypeShort {
+			break
+		}
+		skillID := p.Msg[0].Data().(uint16)
+
+		var targetID uint64
+		if len(p.Msg) > 1 && p.Msg[1].Type() == packet.MessageElemTypeLong {
+			rawTargetID := p.Msg[1].Data().(uint64)
+			casterID := p.Id
+			if rawTargetID == casterID {
+				targetID = 0
+			} else {
+				targetID = rawTargetID
+			}
+		}
+
+		var e iEvent
+		if p.Op == opcodeSkillUse {
+			e = &eventSkillUse{
+				eventBase: eventBase{
+					EventId: eventIdSkillUse,
+					At:      p.At.Unix(),
+					Id:      strconv.FormatUint(p.Id, 10),
+				},
+				SkillId:  skillID,
+				TargetId: strconv.FormatUint(targetID, 10),
+			}
+		} else {
+			e = &eventSkillStart{
+				eventBase: eventBase{
+					EventId: eventIdSkillStart,
+					At:      p.At.Unix(),
+					Id:      strconv.FormatUint(p.Id, 10),
+				},
+				SkillId:  skillID,
+				TargetId: strconv.FormatUint(targetID, 10),
+			}
+		}
+		events = append(events, e)
 	}
 
 	if err != nil {

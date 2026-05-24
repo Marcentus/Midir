@@ -197,6 +197,8 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 	targetSeenAppear := make(map[string]bool)
 	targetDisappeared := make(map[string]bool)
 	targetSeenDead := make(map[string]bool)
+	// Skill Uses Data Structure
+	skillUsesByPlayer := make(map[string][]SkillUseEvent)
 
 	for scanner.Scan() {
 		line := scanner.Bytes()
@@ -289,11 +291,45 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 					delete(activeConditions[cond.Id], cond.CCId)
 				}
 			}
+
+		case eventIdSkillUse, eventIdSkillStart:
+			var skillEvent struct {
+				eventBase
+				SkillId  uint16 `json:"skillId"`
+				TargetId string `json:"targetId"`
+			}
+			if err := json.Unmarshal(line, &skillEvent); err == nil {
+				targetID := parseUint64(skillEvent.TargetId)
+				casterID := parseUint64(skillEvent.Id)
+				if targetID == casterID {
+					targetID = 0
+				}
+				skillUsesByPlayer[skillEvent.Id] = append(skillUsesByPlayer[skillEvent.Id], SkillUseEvent{
+					SkillID:   skillEvent.SkillId,
+					TargetID:  targetID,
+					Timestamp: skillEvent.At,
+				})
+			}
 		}
 	}
 
 	// STEP 1: Process the collected events to generate the main summary tables.
 	playerStats, damageTaken, talents, talentNames, talentColors, targets, startTime, endTime, targetTimestamps := processEventsForSummary(allDamageEvents, entitiesInLog)
+
+	// Ensure players who only used skills but did no damage are in playerStats
+	for playerIDStr := range skillUsesByPlayer {
+		if _, exists := playerStats[playerIDStr]; !exists {
+			playerID := parseUint64(playerIDStr)
+			if playerInfo, isPlayer := playerCache.Get(playerID); isPlayer {
+				playerStats[playerIDStr] = &PlayerStats{
+					ID:             playerIDStr,
+					Name:           playerInfo.Name,
+					OverallStats:   newDamageBreakdown(),
+					DamageByTarget: make(map[string]DamageBreakdown),
+				}
+			}
+		}
+	}
 
 	// STEP 2: Generate graph data
 	graphDataByTarget := make(map[string]map[string][]GraphDataPoint)
@@ -314,7 +350,7 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 		}
 	}
 
-	// STEP 3: Finalize the summary object, attaching conditions
+	// STEP 3: Finalize the summary object, attaching conditions and skill uses
 	summary := finalizeSummaryFromLog(
 		playerStats,
 		damageTaken,
@@ -332,6 +368,7 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 		targetSeenAppear,
 		targetDisappeared,
 		targetSeenDead,
+		skillUsesByPlayer,
 	)
 	summary.GraphData = graphDataByTarget
 
@@ -562,7 +599,7 @@ func updateBreakdownFromLog(breakdown *DamageBreakdown, damageEvent *eventDamage
 	breakdown.Skills[damageEvent.SkillId] = skillStats
 }
 
-// Updated finalizeBreakdownFromLog to include condition tracking
+// Updated finalizeBreakdownFromLog to include condition tracking and skill uses
 func finalizeBreakdownFromLog(
 	breakdown DamageBreakdown,
 	duration float64,
@@ -570,6 +607,13 @@ func finalizeBreakdownFromLog(
 	playerID string,
 	conditionHistory map[string]map[uint32][]ConditionInterval,
 	activeConditions map[string]map[uint32]ActiveCondition,
+	skillUses []SkillUseEvent,
+	isOverall bool,
+	targetID uint64,
+	targetTimestamps map[string]struct {
+		StartTime int64
+		EndTime   int64
+	},
 ) DamageBreakdown {
 	if duration > 1 {
 		breakdown.DPS = breakdown.TotalDamage / float32(duration)
@@ -582,6 +626,48 @@ func finalizeBreakdownFromLog(
 
 	// --- CONDITION TRACKING LOGIC (Mirrors Aggregator) ---
 	breakdown.Conditions = calculateConditionsFromLog(playerID, duration, windowStart, windowEnd, conditionHistory, activeConditions)
+
+	// --- SKILL USES COUNTING LOGIC (Mirrors Aggregator) ---
+	skillUsesCount := make(map[uint16]int)
+	for _, use := range skillUses {
+		if isOverall {
+			skillUsesCount[use.SkillID]++
+		} else {
+			resolvedTargetID := use.TargetID
+			if resolvedTargetID != 0 {
+				targetIDStr := strconv.FormatUint(resolvedTargetID, 10)
+				_, isTracked := targetTimestamps[targetIDStr]
+				_, isPlayer := playerCache.Get(resolvedTargetID)
+				if !isTracked && !isPlayer {
+					resolvedTargetID = 0
+				}
+			}
+
+			if resolvedTargetID == targetID || resolvedTargetID == 0 {
+				targetIDStr := strconv.FormatUint(targetID, 10)
+				if times, ok := targetTimestamps[targetIDStr]; ok && times.StartTime > 0 {
+					end := times.EndTime
+					if end == 0 || end < times.StartTime {
+						end = use.Timestamp
+					}
+					if use.Timestamp >= times.StartTime && use.Timestamp <= end {
+						skillUsesCount[use.SkillID]++
+					}
+				}
+			}
+		}
+	}
+
+	if breakdown.Skills == nil {
+		breakdown.Skills = make(map[uint16]SkillStats)
+	}
+
+	for skillID, uses := range skillUsesCount {
+		skillStats := breakdown.Skills[skillID]
+		skillStats.ID = skillID
+		skillStats.Uses = uses
+		breakdown.Skills[skillID] = skillStats
+	}
 
 	return breakdown
 }
@@ -769,6 +855,7 @@ func finalizeSummaryFromLog(
 	targetSeenAppear map[string]bool,
 	targetDisappeared map[string]bool,
 	targetSeenDead map[string]bool,
+	skillUsesByPlayer map[string][]SkillUseEvent,
 ) FightSummary {
 	summary := FightSummary{
 		Players:     make(map[string]PlayerStats),
@@ -786,10 +873,12 @@ func finalizeSummaryFromLog(
 		finalizedPstats := *pStats
 		finalizedPstats.MissingAppearPacket = !seenAppear[pStats.ID]
 
+		playerSkillUses := skillUsesByPlayer[pStats.ID]
+
 		overallDuration := float64(encounterEndTime - encounterStartTime)
-		// Pass overall window and condition data
+		// Pass overall window and condition/skill data
 		finalizedPstats.OverallStats = finalizeBreakdownFromLog(
-			pStats.OverallStats, overallDuration, encounterStartTime, encounterEndTime, pStats.ID, conditionHistory, activeConditions)
+			pStats.OverallStats, overallDuration, encounterStartTime, encounterEndTime, pStats.ID, conditionHistory, activeConditions, playerSkillUses, true, 0, targetTimestamps)
 		finalizedPstats.OverallStats.StartTime = encounterStartTime
 		finalizedPstats.OverallStats.EndTime = encounterEndTime
 
@@ -797,9 +886,10 @@ func finalizeSummaryFromLog(
 		for targetId, breakdown := range pStats.DamageByTarget {
 			targetTimes := targetTimestamps[targetId]
 			targetDuration := float64(targetTimes.EndTime - targetTimes.StartTime)
-			// Pass specific target window and condition data
+			targetIdUint, _ := strconv.ParseUint(targetId, 10, 64)
+			// Pass specific target window and condition/skill data
 			finalizedBreakdown := finalizeBreakdownFromLog(
-				breakdown, targetDuration, targetTimes.StartTime, targetTimes.EndTime, pStats.ID, conditionHistory, activeConditions)
+				breakdown, targetDuration, targetTimes.StartTime, targetTimes.EndTime, pStats.ID, conditionHistory, activeConditions, playerSkillUses, false, targetIdUint, targetTimestamps)
 			finalizedBreakdown.StartTime = targetTimes.StartTime
 			finalizedBreakdown.EndTime = targetTimes.EndTime
 			finalizedPstats.DamageByTarget[targetId] = finalizedBreakdown
