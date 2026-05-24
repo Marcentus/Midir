@@ -8,6 +8,12 @@ type ConditionInterval struct {
 	AttackerID uint64 `json:"attackerId"`
 }
 
+// PresenceInterval represents a time range where an entity was alive and in the area.
+type PresenceInterval struct {
+	Start int64 `json:"start"`
+	End   int64 `json:"end"`
+}
+
 // ConditionMetaStats holds stats for a specific metadata variant of a condition.
 type ConditionMetaStats struct {
 	MetaData  string   `json:"metaData"`

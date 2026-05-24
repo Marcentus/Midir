@@ -51,6 +51,8 @@ type Aggregator struct {
 	seenDead     map[uint64]bool
 	seenAppear   map[uint64]bool
 	disappeared  map[uint64]bool
+	// Presence Intervals Tracking
+	targetPresenceIntervals map[uint64][]PresenceInterval
 }
 
 // NewAggregator creates and initializes a new Aggregator.
@@ -76,6 +78,7 @@ func NewAggregator() *Aggregator {
 		seenDead:               make(map[uint64]bool),
 		seenAppear:             make(map[uint64]bool),
 		disappeared:            make(map[uint64]bool),
+		targetPresenceIntervals: make(map[uint64][]PresenceInterval),
 	}
 }
 
@@ -83,6 +86,68 @@ func (a *Aggregator) SetLive(live bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.isLive = live
+}
+
+// startPresenceInterval starts a presence interval for the target at the given timestamp.
+// Note: This method assumes a.mu is held or is called within a locked context.
+func (a *Aggregator) startPresenceInterval(targetID uint64, ts int64) {
+	intervals := a.targetPresenceIntervals[targetID]
+	// Check if there is already an active interval
+	for _, iv := range intervals {
+		if iv.End == 0 {
+			return // Already active
+		}
+	}
+	// Start a new active interval
+	a.targetPresenceIntervals[targetID] = append(intervals, PresenceInterval{
+		Start: ts,
+		End:   0,
+	})
+}
+
+// endPresenceInterval ends the active presence interval for the target at the given timestamp.
+// Note: This method assumes a.mu is held or is called within a locked context.
+func (a *Aggregator) endPresenceInterval(targetID uint64, ts int64) {
+	intervals := a.targetPresenceIntervals[targetID]
+	for i := len(intervals) - 1; i >= 0; i-- {
+		if intervals[i].End == 0 {
+			intervals[i].End = ts
+			return
+		}
+	}
+}
+
+// isTimestampInPresenceIntervals checks if the given timestamp falls within any active or completed presence intervals for the target.
+// Note: This method assumes a.mu is held or is called within a locked context.
+func (a *Aggregator) isTimestampInPresenceIntervals(targetID uint64, ts int64) bool {
+	intervals, exists := a.targetPresenceIntervals[targetID]
+	if !exists || len(intervals) == 0 {
+		// Fallback: If no intervals are recorded, check target's windowStart/windowEnd from targetTimestamps
+		if times, ok := a.targetTimestamps[targetID]; ok && times.StartTime > 0 {
+			end := times.EndTime
+			if end == 0 || end < times.StartTime {
+				end = ts // Fallback if end is 0
+			}
+			return ts >= times.StartTime && ts <= end
+		}
+		return false
+	}
+
+	for _, iv := range intervals {
+		start := iv.Start
+		end := iv.End
+		if end == 0 {
+			// Active interval: any time after Start is valid
+			if ts >= start {
+				return true
+			}
+		} else {
+			if ts >= start && ts <= end {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // updateTimestamps is a new helper to manage all time tracking logic.
@@ -106,6 +171,11 @@ func (a *Aggregator) updateTimestamps(targetId uint64, eventTime time.Time) {
 
 	// Ensure the name is cached before the entity potentially disappears
 	a.resolveAndCacheName(targetId)
+
+	// Start presence interval if target is active in combat and not dead
+	if !a.deadEntities[targetId] {
+		a.startPresenceInterval(targetId, eventUnix)
+	}
 }
 
 // resolveAndCacheName attempts to find and store the name and race ID of an entity.
@@ -146,6 +216,7 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 			a.playerSeenAppear[entity.Id] = true
 			a.seenAppear[entity.Id] = true
 			a.disappeared[entity.Id] = false
+			a.startPresenceInterval(entity.Id, p.At.Unix())
 
 			// Initialize existing conditions from the appear packet
 			if a.playerConditionActive[entity.Id] == nil {
@@ -176,6 +247,7 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 				a.playerSeenAppear[entity.Id] = true
 				a.seenAppear[entity.Id] = true
 				a.disappeared[entity.Id] = false
+				a.startPresenceInterval(entity.Id, p.At.Unix())
 
 				if a.playerConditionActive[entity.Id] == nil {
 					a.playerConditionActive[entity.Id] = make(map[uint32]ActiveCondition)
@@ -215,14 +287,14 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 	if p.Op == opcodeEntityDisappear {
 		// UPDATED: Use the new parser to get the correct ID
 		if id, err := packet.ParseEntityDisappearPacket(p); err == nil {
-			a.processEntityDisappear(id)
+			a.processEntityDisappear(id, p.At.Unix())
 		}
 	}
 	if p.Op == opcodeEntitiesDisappear {
 		// NEW: Handle batch disappear for the live aggregator
 		if ids, err := packet.ParseEntitiesDisappearPacket(p); err == nil {
 			for _, id := range ids {
-				a.processEntityDisappear(id)
+				a.processEntityDisappear(id, p.At.Unix())
 			}
 		}
 	}
@@ -446,6 +518,11 @@ func (a *Aggregator) processSkillUse(p *packet.GamePacket) {
 	casterID := p.Id
 	eventTime := p.At.Unix()
 
+	// If the target ID equals the caster ID, consider it a self-cast (untargeted / 0)
+	if targetID == casterID {
+		targetID = 0
+	}
+
 	// Only track skill uses for players that we are tracking
 	if playerInfo, isPlayer := playerCache.Get(casterID); isPlayer {
 		a.mu.Lock()
@@ -455,6 +532,9 @@ func (a *Aggregator) processSkillUse(p *packet.GamePacket) {
 			TargetID:  targetID,
 			Timestamp: eventTime,
 		})
+		if targetID != 0 && !a.deadEntities[targetID] {
+			a.startPresenceInterval(targetID, eventTime)
+		}
 		a.mu.Unlock()
 	}
 }
@@ -742,10 +822,19 @@ func (a *Aggregator) finalizeBreakdown(breakdown DamageBreakdown, duration float
 			if isOverall {
 				skillUsesCount[use.SkillID]++
 			} else {
-				if use.TargetID == targetID {
-					skillUsesCount[use.SkillID]++
-				} else if use.TargetID == 0 && use.Timestamp >= windowStart && use.Timestamp <= windowEnd {
-					skillUsesCount[use.SkillID]++
+				resolvedTargetID := use.TargetID
+				if resolvedTargetID != 0 {
+					// If the target ID is not on our tracked entity list (and not a player), consider it blank (0)
+					_, isTracked := a.targetNames[resolvedTargetID]
+					if !isTracked && !a.isPlayer(resolvedTargetID) {
+						resolvedTargetID = 0
+					}
+				}
+
+				if resolvedTargetID == targetID || resolvedTargetID == 0 {
+					if a.isTimestampInPresenceIntervals(targetID, use.Timestamp) {
+						skillUsesCount[use.SkillID]++
+					}
 				}
 			}
 		}
@@ -881,9 +970,11 @@ func (a *Aggregator) calculateConditions(entityID uint64, duration float64, wind
 	return conditions
 }
 
-func (a *Aggregator) processEntityDisappear(entityID uint64) {
+func (a *Aggregator) processEntityDisappear(entityID uint64, ts int64) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+
+	a.endPresenceInterval(entityID, ts)
 
 	// packet ID extraction moved to caller
 
@@ -934,6 +1025,7 @@ func (a *Aggregator) Clear() {
 	a.seenDead = make(map[uint64]bool)
 	a.seenAppear = make(map[uint64]bool)
 	a.disappeared = make(map[uint64]bool)
+	a.targetPresenceIntervals = make(map[uint64][]PresenceInterval)
 
 	// Clear condition HISTORY, but keep ACTIVE conditions.
 	// This ensures that when the new session starts, we know they still have the buff,
@@ -1002,6 +1094,7 @@ func (a *Aggregator) processIsNowDead(p *packet.GamePacket) {
 	if a.isPlayer(entityID) {
 		if !a.deadEntities[entityID] {
 			a.deadEntities[entityID] = true
+			a.endPresenceInterval(entityID, p.At.Unix())
 		}
 		a.seenDead[entityID] = true
 	}
@@ -1016,6 +1109,7 @@ func (a *Aggregator) processSetFinisher(p *packet.GamePacket) {
 	if !a.isPlayer(entityID) {
 		if !a.deadEntities[entityID] {
 			a.deadEntities[entityID] = true
+			a.endPresenceInterval(entityID, p.At.Unix())
 		}
 		a.seenDead[entityID] = true
 	}
@@ -1030,5 +1124,6 @@ func (a *Aggregator) processRiseFromTheDead(p *packet.GamePacket) {
 		delete(a.deadEntities, entityID)
 	}
 	a.seenDead[entityID] = false
+	a.startPresenceInterval(entityID, p.At.Unix())
 }
 
