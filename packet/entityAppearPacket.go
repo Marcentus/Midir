@@ -39,7 +39,7 @@ type EntityInfo struct {
 	OverflowMaxHP     float32 // From element[36]
 	CurrentVitalSurge float32 // From element[37]
 	MaxVitalSurge     float32 // From element[38]
-	MaxHP             float32 // From element[45]
+	MaxHP             float32 // Calculated as BaseHP + AdditionalHP
 }
 
 type EntityItem struct {
@@ -210,9 +210,7 @@ func ParseEntityAppearPacket(msg Message) (*EntityInfo, error) {
 	if len(msg) > 38 && msg[38].Type() == MessageElemTypeFloat {
 		v.MaxVitalSurge = msg[38].Data().(float32)
 	}
-	if msg[45].Type() == MessageElemTypeFloat {
-		v.MaxHP = msg[45].Data().(float32)
-	}
+	v.MaxHP = v.BaseHP + v.AdditionalHP
 
 	if msg[28].Type() != MessageElemTypeByte {
 		err := fmt.Errorf("leftEyeColor has unexpected type %v", msg[28].Type())
