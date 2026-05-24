@@ -158,11 +158,11 @@ export default defineComponent({
 }
 
 :deep(.custom-knot-tooltip) {
-  background: rgba(15, 23, 42, 0.95) !important;
+  background: rgba(23, 27, 36, 0.95) !important;
   border: 1px solid rgba(129, 138, 248, 0.35) !important;
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6) !important;
   backdrop-filter: blur(8px) !important;
-  border-radius: 10px !important;
+  border-radius: 5px !important;
   padding: 12px 14px !important;
   opacity: 1 !important;
   pointer-events: none !important;
