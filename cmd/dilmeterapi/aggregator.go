@@ -275,7 +275,7 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 	if p.Op == opcodeEffectDelayed {
 		a.processEffectDelayed(p)
 	}
-	if p.Op == opcodeSkillUse {
+	if p.Op == opcodeSkillUse || p.Op == opcodeSkillStart {
 		a.processSkillUse(p)
 	}
 	if p.Op == opcodeCharacterCondition {

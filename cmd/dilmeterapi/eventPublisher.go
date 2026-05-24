@@ -52,6 +52,7 @@ const (
 	opcodeEntitiesDisappear       = 0x5335
 	opcodeEntityUpdateCombatPower = 0x9c6d
 	opcodeSkillUse                = 0x6988
+	opcodeSkillStart              = 0x698c
 	opcodeIsNowDead               = 0x53fc
 	opcodeSetFinisher             = 0x7921
 	opcodeRiseFromTheDead         = 0x701d
