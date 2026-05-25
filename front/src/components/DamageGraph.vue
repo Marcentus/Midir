@@ -1,7 +1,7 @@
 <template>
-  <div v-if="chartData.datasets.length > 0">
+  <div v-if="chartData.datasets.length > 0" class="graph-container">
     <div class="pa-4">
-      <div style="height: 500px">
+      <div style="height: 500px" class="chart-wrapper">
         <LineChart :data="chartData" :options="chartOptions" />
       </div>
       <div v-if="selectedTargetConditions" class="mt-4">
@@ -13,8 +13,8 @@
       </div>
     </div>
   </div>
-  <v-sheet v-else class="d-flex align-center justify-center" height="400">
-    <div class="text-h6 text-grey">
+  <v-sheet v-else class="d-flex align-center justify-center rounded-lg" height="400" style="background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.08)">
+    <div class="text-h6 text-grey-darken-1">
       Graph data is only available for saved sessions.
     </div>
   </v-sheet>
@@ -114,12 +114,19 @@ export default defineComponent({
         scales: {
           x: {
             type: "linear" as const,
-            title: { display: true, text: "Time (minutes:seconds)" },
+            title: { 
+              display: true, 
+              text: "Time (minutes:seconds)", 
+              color: "#ffffff",
+              font: { family: "Outfit, Inter, sans-serif", size: 13, weight: "bold" as const }
+            },
             // Set the max value of the axis to our calculated nice, round number
             max: xAxisConfig.value.max,
             ticks: {
               // Set the explicit step size for our ticks
               stepSize: xAxisConfig.value.stepSize,
+              color: "#cbd5e1", // bright slate gray
+              font: { family: "Outfit, Inter, sans-serif", size: 11 },
               callback: function (
                 this: Scale<CoreScaleOptions>,
                 tickValue: string | number
@@ -127,12 +134,27 @@ export default defineComponent({
                 return formatTimeLabel(Number(tickValue));
               },
             },
+            grid: {
+              color: "rgba(255, 255, 255, 0.08)", // high-contrast subtle grid line
+            },
           },
           y: {
             type: "linear" as const,
             display: true,
             position: "left" as const,
-            title: { display: true, text: "60s Rolling DPS" },
+            title: { 
+              display: true, 
+              text: "15s Rolling DPS", 
+              color: "#ffffff",
+              font: { family: "Outfit, Inter, sans-serif", size: 13, weight: "bold" as const }
+            },
+            ticks: {
+              color: "#cbd5e1",
+              font: { family: "Outfit, Inter, sans-serif", size: 11 },
+            },
+            grid: {
+              color: "rgba(255, 255, 255, 0.08)",
+            },
           },
           yHp: {
             type: "linear" as const,
@@ -143,7 +165,24 @@ export default defineComponent({
           },
         },
         plugins: {
+          legend: {
+            labels: {
+              color: "#ffffff",
+              font: { family: "Outfit, Inter, sans-serif", size: 12, weight: "bold" as const },
+              padding: 15,
+            },
+          },
           tooltip: {
+            backgroundColor: "rgba(15, 23, 42, 0.95)", // dark premium slate tooltip
+            titleColor: "#ffffff",
+            bodyColor: "#cbd5e1",
+            footerColor: "#38bdf8", // bright sky blue footer
+            borderColor: "rgba(255, 255, 255, 0.1)",
+            borderWidth: 1,
+            padding: 12,
+            titleFont: { family: "Outfit, Inter, sans-serif", weight: "bold" as const },
+            bodyFont: { family: "Outfit, Inter, sans-serif" },
+            footerFont: { family: "Outfit, Inter, sans-serif", weight: "bold" as const },
             itemSort: (a: TooltipItem<"line">, b: TooltipItem<"line">) => {
               // Keep HP at the bottom of the tooltip, then sort players by DPS descending
               if (a.dataset.yAxisID === "yHp") return 1;
@@ -198,13 +237,14 @@ export default defineComponent({
 
           datasets.push({
             label: `${targetStats.name} HP %`,
-            backgroundColor: "rgba(239, 68, 68, 0.05)", // subtle transparent red
-            borderColor: "rgba(239, 68, 68, 0.15)",     // subtle red border
+            backgroundColor: "rgba(244, 63, 94, 0.05)", // smooth rose/red transparent area
+            borderColor: "rgba(244, 63, 94, 0.25)",     // more defined boundary line
             data: labels.map((t) => getTargetHPAtTime(t, targetStats.hpHistory!)),
             yAxisID: "yHp",
             pointRadius: 0,
             borderWidth: 1.5,
             fill: true,
+            tension: 0.3, // organic, curved line
             order: 99, // drawn behind DPS lines
           });
         }
@@ -228,13 +268,14 @@ export default defineComponent({
         }
 
         datasets.push({
-          label: `${displayLabel} - 60s DPS`,
+          label: `${displayLabel} - 15s DPS`,
           backgroundColor: displayColor,
           borderColor: displayColor,
           data: playerData.map((p) => p.rollingDPS),
           yAxisID: "y",
           pointRadius: 0,
-          borderWidth: 2,
+          borderWidth: 3, // Thicker, bold lines that stand out wonderfully
+          tension: 0.3,   // Curved lines for modern flowing aesthetic
           order: 1, // drawn in front of HP area
         });
       }
@@ -270,3 +311,20 @@ export default defineComponent({
   },
 });
 </script>
+
+<style scoped>
+.graph-container {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.chart-wrapper {
+  background: rgba(255, 255, 255, 0.02); /* extremely subtle gray backdrop overlay */
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+</style>

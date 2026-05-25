@@ -543,7 +543,7 @@ func generateGraphDataFromEvents(allDamageEvents []eventDamage, startTime, endTi
 	}
 
 	const graphInterval int64 = 2 // seconds - our sampling rate
-	const dpsWindow int64 = 60   // seconds - for the rolling DPS calculation
+	const dpsWindow int64 = 15   // seconds - for the rolling DPS calculation
 
 	graphData := make(map[string][]GraphDataPoint)
 
