@@ -96,6 +96,40 @@ ChartJS.register(
   annotationPlugin
 );
 
+// Register a custom tooltip positioner to place tooltips cleanly to the left or right of the cursor/hover line
+(Tooltip.positioners as any).leftRight = function (this: any, elements: any[]) {
+  if (elements.length === 0) {
+    return false;
+  }
+  const tooltip = this;
+  const chart = tooltip.chart;
+  const x = elements[0].element.x;
+  const chartWidth = chart.width;
+  const offset = 20; // safe offset from cursor/vertical line
+
+  let xAlign: "left" | "right" = "left";
+  let targetX = x;
+
+  if (x > chartWidth / 2) {
+    xAlign = "right"; // renders tooltip to the LEFT of the coordinate
+    targetX = x - offset;
+  } else {
+    xAlign = "left";  // renders tooltip to the RIGHT of the coordinate
+    targetX = x + offset;
+  }
+
+  // Stable vertical centering within the chart area
+  const chartArea = chart.chartArea;
+  const y = chartArea.top + (chartArea.bottom - chartArea.top) / 2;
+
+  return {
+    x: targetX,
+    y,
+    xAlign,
+    yAlign: "center",
+  };
+};
+
 export default defineComponent({
   name: "DamageGraph",
   components: { LineChart, ConditionTimeline },
@@ -396,6 +430,7 @@ export default defineComponent({
             },
           },
           tooltip: {
+            position: "leftRight" as any,
             backgroundColor: "rgba(15, 23, 42, 0.95)", // dark premium slate tooltip
             titleColor: "#ffffff",
             bodyColor: "#cbd5e1",
@@ -422,7 +457,7 @@ export default defineComponent({
                   if (targetStats && targetStats.hpHistory && targetStats.hpHistory.length > 0) {
                     const t = parseFloat(tooltipItems[0].label);
                     const hp = getTargetHPAtTime(t, targetStats.hpHistory);
-                    return `${targetStats.name} HP: ${hp.toFixed(1)}%\n──────────────────`;
+                    return `🎯 ${targetStats.name} HP: ${hp.toFixed(1)}%\n──────────────────`;
                   }
                 }
                 return "";
