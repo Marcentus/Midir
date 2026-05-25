@@ -13,6 +13,7 @@
     "@mdi/font": "^7.4.47",
     "@protobuf-ts/runtime": "^2.9.6",
     "chart.js": "^4.4.9",
+    "chartjs-plugin-annotation": "^3.0.1",
     "chartjs-plugin-zoom": "^2.2.0",
     "uuid": "^11.1.0",
     "vue": "^3.5.13",

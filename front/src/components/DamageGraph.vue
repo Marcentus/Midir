@@ -1,6 +1,36 @@
 <template>
   <div v-if="chartData.datasets.length > 0" class="graph-container">
     <div class="pa-4">
+      <div v-if="conditionItems.length > 0" class="d-flex align-center mb-4" style="max-width: 320px;">
+        <v-select
+          v-model="selectedConditionId"
+          :items="conditionItems"
+          label="Highlight Condition on Timeline"
+          density="compact"
+          hide-details
+          clearable
+          variant="outlined"
+          color="primary"
+        >
+          <template v-slot:item="{ props, item }">
+            <v-list-item v-bind="props" :title="item.raw.title">
+              <template v-slot:prepend>
+                <v-avatar size="24" class="mr-2" rounded="sm" v-if="item.raw.icon">
+                  <v-img :src="item.raw.icon" />
+                </v-avatar>
+              </template>
+            </v-list-item>
+          </template>
+          <template v-slot:selection="{ item }">
+            <div class="d-flex align-center">
+              <v-avatar size="20" class="mr-2" rounded="sm" v-if="item.raw.icon">
+                <v-img :src="item.raw.icon" />
+              </v-avatar>
+              <span>{{ item.raw.title }}</span>
+            </div>
+          </template>
+        </v-select>
+      </div>
       <div style="height: 500px" class="chart-wrapper">
         <LineChart :data="chartData" :options="chartOptions" />
       </div>
@@ -21,7 +51,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from "vue";
+import { defineComponent, computed, inject, ref, watch } from "vue";
 import { Line as LineChart } from "vue-chartjs";
 import ConditionTimeline from "./ConditionTimeline.vue";
 import {
@@ -42,6 +72,7 @@ import {
 import { fightSummary, selectedTargetId, hiddenPlayers, showClassColorsForVisiblePlayers, globalHideMode } from "@/store";
 import { getMabiNameColor } from "@/util";
 import zoomPlugin from "chartjs-plugin-zoom";
+import annotationPlugin from "chartjs-plugin-annotation";
 
 ChartJS.register(
   Title,
@@ -52,19 +83,97 @@ ChartJS.register(
   PointElement,
   CategoryScale,
   Filler,
-  zoomPlugin
+  zoomPlugin,
+  annotationPlugin
 );
 
 export default defineComponent({
   name: "DamageGraph",
   components: { LineChart, ConditionTimeline },
   setup() {
+    const condNameMap = inject("condNameMap") as any;
+    const selectedConditionId = ref<number | null>(null);
+    const conditionImage = ref<HTMLImageElement | null>(null);
+
+    // Watcher to pre-load the condition icon image reactively
+    watch(selectedConditionId, (newId) => {
+      if (!newId) {
+        conditionImage.value = null;
+        return;
+      }
+      const iconUrl = condNameMap.value[newId]?.iconUrl;
+      if (!iconUrl) {
+        conditionImage.value = null;
+        return;
+      }
+      const img = new Image();
+      img.src = iconUrl;
+      img.onload = () => {
+        conditionImage.value = img;
+      };
+    });
+
     const formatTimeLabel = (seconds: number) => {
       if (isNaN(seconds)) return "0:00";
       const minutes = Math.floor(seconds / 60);
       const remainingSeconds = Math.round(seconds % 60);
       return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
     };
+
+    const encounterStartTime = computed(() => {
+      if (!selectedTargetId.value) {
+        return fightSummary.startTime || 0;
+      }
+      for (const player of Object.values(fightSummary.players)) {
+        const breakdown = player.damageByTarget[selectedTargetId.value];
+        if (breakdown && breakdown.startTime) {
+          return breakdown.startTime;
+        }
+      }
+      return fightSummary.startTime || 0;
+    });
+
+    const conditionItems = computed(() => {
+      if (!selectedTargetId.value) return [];
+      const targetStats = fightSummary.targets[selectedTargetId.value];
+      if (!targetStats || !targetStats.conditions) return [];
+
+      return Object.keys(targetStats.conditions)
+        .map((idStr) => {
+          const id = parseInt(idStr, 10);
+          const name = condNameMap.value[id]?.name || `Unknown Condition ${id}`;
+          const icon = condNameMap.value[id]?.iconUrl || "";
+          return {
+            title: name,
+            value: id,
+            icon,
+          };
+        })
+        .sort((a, b) => a.title.localeCompare(b.title));
+    });
+
+    const activeIntervals = computed(() => {
+      if (!selectedTargetId.value || !selectedConditionId.value) return [];
+      const targetStats = fightSummary.targets[selectedTargetId.value];
+      if (!targetStats || !targetStats.conditions) return [];
+      const cond = targetStats.conditions[selectedConditionId.value];
+      if (!cond || !cond.intervals) return [];
+
+      return cond.intervals.map((iv, index) => {
+        let start = iv.start - encounterStartTime.value;
+        let end = iv.end - encounterStartTime.value;
+        if (start < 0) start = 0;
+        if (end < start) end = start;
+        if (end - start < 0.5) {
+          end = start + 0.5; // guarantee minimum thickness
+        }
+        return {
+          id: `ann-${index}`,
+          start,
+          end,
+        };
+      });
+    });
 
     // START: NEW LOGIC FOR DYNAMIC X-AXIS
     const fightDuration = computed(() => {
@@ -109,6 +218,33 @@ export default defineComponent({
     // END: NEW LOGIC FOR DYNAMIC X-AXIS
 
     const chartOptions = computed(() => {
+      const annotations: Record<string, any> = {};
+
+      if (selectedConditionId.value) {
+        activeIntervals.value.forEach((iv) => {
+          annotations[iv.id] = {
+            type: "box" as const,
+            xMin: iv.start,
+            xMax: iv.end,
+            backgroundColor: "rgba(6, 182, 212, 0.06)", // subtle vibrant transparent cyan overlay
+            borderColor: "rgba(6, 182, 212, 0.35)",     // subtle cyan dashed border
+            borderWidth: 1,
+            borderDash: [4, 4],
+            label: conditionImage.value ? {
+              display: true,
+              content: conditionImage.value,
+              width: 20,
+              height: 20,
+              position: {
+                x: "center" as const,
+                y: "start" as const,
+              },
+              yAdjust: 12,
+            } : undefined
+          };
+        });
+      }
+
       return {
         responsive: true,
         maintainAspectRatio: false,
@@ -167,6 +303,9 @@ export default defineComponent({
           },
         },
         plugins: {
+          annotation: {
+            annotations,
+          },
           zoom: {
             zoom: {
               wheel: {
@@ -306,25 +445,14 @@ export default defineComponent({
         return fightSummary.targets[selectedTargetId.value]?.conditions;
     });
 
-    const encounterStartTime = computed(() => {
-        if (!selectedTargetId.value) {
-            return fightSummary.startTime || 0;
-        }
-        for (const player of Object.values(fightSummary.players)) {
-            const breakdown = player.damageByTarget[selectedTargetId.value];
-            if (breakdown && breakdown.startTime) {
-                return breakdown.startTime;
-            }
-        }
-        return fightSummary.startTime || 0;
-    });
-
     return {
       chartData,
       chartOptions,
       selectedTargetConditions,
       encounterStartTime,
-      xAxisConfig
+      xAxisConfig,
+      selectedConditionId,
+      conditionItems
     };
   },
 });
