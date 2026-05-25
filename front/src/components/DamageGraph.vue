@@ -433,29 +433,36 @@ export default defineComponent({
       if (selectedTargetId.value) {
         const targetStats = fightSummary.targets[selectedTargetId.value];
         if (targetStats && targetStats.hpHistory && targetStats.hpHistory.length > 0) {
-          const getTargetHPAtTime = (t: number, hpHistory: any[]) => {
-            if (!hpHistory || hpHistory.length === 0) return 100;
-            let lastPt = hpHistory[0];
+          const getHPDataPoints = (hpHistory: any[], maxTime: number) => {
+            if (!hpHistory || hpHistory.length === 0) return [];
+            
+            const points: { x: number; y: number }[] = [];
             for (const pt of hpHistory) {
-              if (pt.time <= t) {
-                lastPt = pt;
-              } else {
-                break;
-              }
+              const relTime = Math.max(0, pt.time);
+              const pct = pt.maxHp > 0 ? (pt.currentHp / pt.maxHp) * 100 : 0;
+              points.push({ x: relTime, y: pct });
             }
-            return lastPt.maxHp > 0 ? (lastPt.currentHp / lastPt.maxHp) * 100 : 0;
+
+            // Extend the line flatly to the end of the fight
+            if (points.length > 0 && maxTime > points[points.length - 1].x) {
+              points.push({
+                x: maxTime,
+                y: points[points.length - 1].y,
+              });
+            }
+            return points;
           };
 
           datasets.push({
             label: `${targetStats.name} HP %`,
             backgroundColor: "rgba(244, 63, 94, 0.05)", // smooth rose/red transparent area
             borderColor: "rgba(244, 63, 94, 0.25)",     // more defined boundary line
-            data: labels.map((t) => getTargetHPAtTime(t, targetStats.hpHistory!)),
+            data: getHPDataPoints(targetStats.hpHistory!, labels[labels.length - 1] || 0),
             yAxisID: "yHp",
             pointRadius: 0,
             borderWidth: 1.5,
             fill: true,
-            tension: 0.3, // organic, curved line
+            stepped: true, // vertical drop and horizontal flat lines
             order: 99, // drawn behind DPS lines
           });
         }
