@@ -128,6 +128,13 @@ type GraphDataPoint struct {
 	RollingDPS  float32 `json:"rollingDPS"`
 }
 
+// TargetHPPoint represents an enemy's HP at a specific timestamp.
+type TargetHPPoint struct {
+	Time      int64   `json:"time"`
+	CurrentHP float32 `json:"currentHp"`
+	MaxHP     float32 `json:"maxHp"`
+}
+
 // TargetStats holds information about a specific target, including active conditions.
 type TargetStats struct {
 	Name        string                     `json:"name"`
@@ -138,6 +145,7 @@ type TargetStats struct {
 	Disappeared bool                       `json:"disappeared"`
 	StartTime   int64                      `json:"startTime"`
 	EndTime     int64                      `json:"endTime"`
+	HPHistory   []TargetHPPoint            `json:"hpHistory,omitempty"`
 }
 
 // NEW: EntityState represents an entity currently in the area.

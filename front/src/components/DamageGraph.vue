@@ -1,10 +1,6 @@
 <template>
   <div v-if="chartData.datasets.length > 0">
     <div class="pa-4">
-      <div class="d-flex ga-2 mb-2">
-        <v-btn @click="toggleTotalDmg" size="small">Toggle Total Damage</v-btn>
-        <v-btn @click="toggleRollingDps" size="small">Toggle 180s DPS</v-btn>
-      </div>
       <div style="height: 500px">
         <LineChart :data="chartData" :options="chartOptions" />
       </div>
@@ -25,7 +21,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref } from "vue";
+import { defineComponent, computed } from "vue";
 import { Line as LineChart } from "vue-chartjs";
 import ConditionTimeline from "./ConditionTimeline.vue";
 import {
@@ -40,6 +36,7 @@ import {
   Scale,
   CoreScaleOptions,
   TooltipItem,
+  Filler,
 } from "chart.js";
 // Import selectedTargetId from the store
 import { fightSummary, selectedTargetId, hiddenPlayers, showClassColorsForVisiblePlayers, globalHideMode } from "@/store";
@@ -52,20 +49,14 @@ ChartJS.register(
   LineElement,
   LinearScale,
   PointElement,
-  CategoryScale
+  CategoryScale,
+  Filler
 );
 
 export default defineComponent({
   name: "DamageGraph",
   components: { LineChart, ConditionTimeline },
   setup() {
-    const showTotalDmg = ref(true);
-    const showRollingDps = ref(true);
-
-    const toggleTotalDmg = () => (showTotalDmg.value = !showTotalDmg.value);
-    const toggleRollingDps = () =>
-      (showRollingDps.value = !showRollingDps.value);
-
     const formatTimeLabel = (seconds: number) => {
       if (isNaN(seconds)) return "0:00";
       const minutes = Math.floor(seconds / 60);
@@ -141,36 +132,35 @@ export default defineComponent({
             type: "linear" as const,
             display: true,
             position: "left" as const,
-            title: { display: true, text: "Total Damage" },
+            title: { display: true, text: "60s Rolling DPS" },
           },
-          y1: {
+          yHp: {
             type: "linear" as const,
-            display: true,
-            position: "right" as const,
-            title: { display: true, text: "180s Rolling DPS" },
+            display: false,
+            min: 0,
+            max: 100,
             grid: { drawOnChartArea: false },
           },
         },
         plugins: {
           tooltip: {
             itemSort: (a: TooltipItem<"line">, b: TooltipItem<"line">) => {
-              const aIsTotalDmg = a.dataset.yAxisID === "y";
-              const bIsTotalDmg = b.dataset.yAxisID === "y";
-              if (aIsTotalDmg && !bIsTotalDmg) return -1;
-              if (!aIsTotalDmg && bIsTotalDmg) return 1;
+              // Keep HP at the bottom of the tooltip, then sort players by DPS descending
+              if (a.dataset.yAxisID === "yHp") return 1;
+              if (b.dataset.yAxisID === "yHp") return -1;
               return (b.raw as number) - (a.raw as number);
             },
             callbacks: {
               title: (tooltipItems: any) =>
                 `Time: ${formatTimeLabel(parseFloat(tooltipItems[0].label))}`,
               footer: (tooltipItems: any) => {
-                let totalDamage = 0;
+                let totalDps = 0;
                 tooltipItems.forEach((item: any) => {
                   if (item.dataset.yAxisID === "y") {
-                    totalDamage += item.raw;
+                    totalDps += item.raw;
                   }
                 });
-                return `Total Raid Damage: ${totalDamage.toLocaleString()}`;
+                return `Total Raid DPS: ${Math.round(totalDps).toLocaleString()}`;
               },
             },
           },
@@ -189,12 +179,39 @@ export default defineComponent({
       const labels = graphDataForView[firstPlayerId]?.map((p) => p.time) ?? [];
       const datasets: any[] = [];
 
+      // Add Enemy HP dataset if a target is selected and has hpHistory
+      if (selectedTargetId.value) {
+        const targetStats = fightSummary.targets[selectedTargetId.value];
+        if (targetStats && targetStats.hpHistory && targetStats.hpHistory.length > 0) {
+          const getTargetHPAtTime = (t: number, hpHistory: any[]) => {
+            if (!hpHistory || hpHistory.length === 0) return 100;
+            let lastPt = hpHistory[0];
+            for (const pt of hpHistory) {
+              if (pt.time <= t) {
+                lastPt = pt;
+              } else {
+                break;
+              }
+            }
+            return lastPt.maxHp > 0 ? (lastPt.currentHp / lastPt.maxHp) * 100 : 0;
+          };
+
+          datasets.push({
+            label: `${targetStats.name} HP %`,
+            backgroundColor: "rgba(239, 68, 68, 0.05)", // subtle transparent red
+            borderColor: "rgba(239, 68, 68, 0.15)",     // subtle red border
+            data: labels.map((t) => getTargetHPAtTime(t, targetStats.hpHistory!)),
+            yAxisID: "yHp",
+            pointRadius: 0,
+            borderWidth: 1.5,
+            fill: true,
+            order: 99, // drawn behind DPS lines
+          });
+        }
+      }
+
       for (const playerId in graphDataForView) {
         const playerData = graphDataForView[playerId];
-        
-        // Debugging Reactivity
-        // console.log(`[DamageGraph] Processing ${playerId}. GlobalHide: ${globalHideMode.value}, Hidden: ${hiddenPlayers.has(playerId)}`);
-        
         const isHidden = globalHideMode.value || hiddenPlayers.has(playerId);
         const player = fightSummary.players[playerId];
 
@@ -202,38 +219,23 @@ export default defineComponent({
         let displayColor = getMabiNameColor(displayLabel);
 
         if (isHidden) {
-          // Hidden Mode: Use Talent Name and Talent Color
-          // If no talent info, fallback to "Hidden" and Grey
           displayLabel = player?.talentName || "Hidden";
           displayColor = player?.talentColor || "#808080";
         } else {
-          // Visible Mode: Use Real Name
-          // Color depends on preference
           if (showClassColorsForVisiblePlayers.value && player?.talentColor) {
             displayColor = player.talentColor;
           }
         }
 
         datasets.push({
-          label: `${displayLabel} - Total Dmg`,
-          backgroundColor: displayColor,
-          borderColor: displayColor,
-          data: playerData.map((p) => p.totalDamage),
-          yAxisID: "y",
-          pointRadius: 0,
-          borderWidth: 2.5,
-          hidden: !showTotalDmg.value,
-        });
-
-        datasets.push({
-          label: `${displayLabel} - 180s DPS`,
+          label: `${displayLabel} - 60s DPS`,
           backgroundColor: displayColor,
           borderColor: displayColor,
           data: playerData.map((p) => p.rollingDPS),
-          yAxisID: "y1",
+          yAxisID: "y",
           pointRadius: 0,
-          borderWidth: 1.5,
-          hidden: !showRollingDps.value,
+          borderWidth: 2,
+          order: 1, // drawn in front of HP area
         });
       }
 
@@ -249,25 +251,6 @@ export default defineComponent({
         if (!selectedTargetId.value) {
             return fightSummary.startTime || 0;
         }
-        // If sorting by target, ideally we use the target's start time for relative sync.
-        // However, the graph X-axis is "Time since Encounter Start" (0-based) for general view,
-        // BUT specific target graph data is typically relative to that target's engagement?
-        // Let's check how graph data is generated. 
-        // In aggregator.go: `Time: t - startTime` where startTime is targetStartTime if filtered.
-        // So graph X=0 corresponds to targetStartTime.
-        
-        // However, condition intervals are ABSOLUTE timestamps (Unix).
-        // So we need to pass the reference "Zero Point" to the timeline component.
-        
-        // If selectedTargetId present:
-        // We need to find the start time used for that target's graph generation.
-        // The backend `processEventsForSummary` & `generateGraphDataFromEvents` uses `targetTimes.StartTime`.
-        // The issue is `FightSummary` struct doesn't strictly expose per-target StartTime cleanly in a map,
-        // but `DamageBreakdown` has `startTime`.
-        
-        // Let's look up the start time from a player's breakdown against this target.
-        // Use the first available player which engaged this target.
-        
         for (const player of Object.values(fightSummary.players)) {
             const breakdown = player.damageByTarget[selectedTargetId.value];
             if (breakdown && breakdown.startTime) {
@@ -280,8 +263,6 @@ export default defineComponent({
     return {
       chartData,
       chartOptions,
-      toggleTotalDmg,
-      toggleRollingDps,
       selectedTargetConditions,
       encounterStartTime,
       xAxisConfig

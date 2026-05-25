@@ -84,6 +84,12 @@ export interface PlayerDamageTakenStats {
 
 // --- END: NEW INTERFACES FOR DAMAGE TAKEN ---
 
+export interface TargetHPPoint {
+  time: number;
+  currentHp: number;
+  maxHp: number;
+}
+
 export interface TargetStats {
   name: string;
   raceId?: number;
@@ -93,6 +99,7 @@ export interface TargetStats {
   disappeared?: boolean;
   startTime?: number;
   endTime?: number;
+  hpHistory?: TargetHPPoint[];
 }
 
 // NEW: ActiveCondition matches the backend struct for currently active conditions

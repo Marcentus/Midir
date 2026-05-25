@@ -209,6 +209,8 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 	targetSeenDead := make(map[string]bool)
 	// Skill Uses Data Structure
 	skillUsesByPlayer := make(map[string][]SkillUseEvent)
+	// HP history tracking by Target/Entity ID
+	hpHistoryByTarget := make(map[string][]TargetHPPoint)
 
 	for scanner.Scan() {
 		line := scanner.Bytes()
@@ -243,6 +245,15 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 							AttackerID: parseUint64(cond.AttackerId),
 						}
 					}
+				}
+
+				// Capture initial HP if available
+				if appear.MaxHP > 0 {
+					hpHistoryByTarget[appear.Id] = append(hpHistoryByTarget[appear.Id], TargetHPPoint{
+						Time:      baseEvent.At,
+						CurrentHP: appear.CurrentHP,
+						MaxHP:     appear.MaxHP,
+					})
 				}
 			}
 
@@ -320,6 +331,16 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 					Timestamp: skillEvent.At,
 				})
 			}
+
+		case eventIdEntityHPUpdate:
+			var hpUpdate eventEntityHPUpdate
+			if err := json.Unmarshal(line, &hpUpdate); err == nil {
+				hpHistoryByTarget[hpUpdate.Id] = append(hpHistoryByTarget[hpUpdate.Id], TargetHPPoint{
+					Time:      baseEvent.At,
+					CurrentHP: hpUpdate.CurrentHP,
+					MaxHP:     hpUpdate.MaxHP,
+				})
+			}
 		}
 	}
 
@@ -379,6 +400,7 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 		targetDisappeared,
 		targetSeenDead,
 		skillUsesByPlayer,
+		hpHistoryByTarget,
 	)
 	summary.GraphData = graphDataByTarget
 
@@ -521,7 +543,7 @@ func generateGraphDataFromEvents(allDamageEvents []eventDamage, startTime, endTi
 	}
 
 	const graphInterval int64 = 2 // seconds - our sampling rate
-	const dpsWindow int64 = 180   // seconds - for the rolling DPS calculation
+	const dpsWindow int64 = 60   // seconds - for the rolling DPS calculation
 
 	graphData := make(map[string][]GraphDataPoint)
 
@@ -866,6 +888,7 @@ func finalizeSummaryFromLog(
 	targetDisappeared map[string]bool,
 	targetSeenDead map[string]bool,
 	skillUsesByPlayer map[string][]SkillUseEvent,
+	hpHistoryByTarget map[string][]TargetHPPoint, // NEW
 ) FightSummary {
 	summary := FightSummary{
 		Players:     make(map[string]PlayerStats),
@@ -937,6 +960,16 @@ func finalizeSummaryFromLog(
 		targetDuration := float64(targetTimes.EndTime - targetTimes.StartTime)
 		conditions := calculateConditionsFromLog(targetIdStr, targetDuration, targetTimes.StartTime, targetTimes.EndTime, conditionHistory, activeConditions)
 
+		// Process HP history for this target (convert to relative time)
+		var hpHistory []TargetHPPoint
+		for _, hpPt := range hpHistoryByTarget[targetIdStr] {
+			hpHistory = append(hpHistory, TargetHPPoint{
+				Time:      hpPt.Time - targetTimes.StartTime,
+				CurrentHP: hpPt.CurrentHP,
+				MaxHP:     hpPt.MaxHP,
+			})
+		}
+
 		summary.Targets[targetIdStr] = TargetStats{
 			Name:        name,
 			RaceID:      raceId,
@@ -946,6 +979,7 @@ func finalizeSummaryFromLog(
 			Disappeared: targetDisappeared[targetIdStr],
 			StartTime:   targetTimes.StartTime,
 			EndTime:     targetTimes.EndTime,
+			HPHistory:   hpHistory,
 		}
 	}
 
