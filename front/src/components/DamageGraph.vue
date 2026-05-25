@@ -101,6 +101,18 @@ export default defineComponent({
   components: { LineChart, ConditionTimeline },
   setup() {
     const condNameMap = inject("condNameMap") as any;
+    const getTargetHPAtTime = (t: number, hpHistory: any[]) => {
+      if (!hpHistory || hpHistory.length === 0) return 100;
+      let lastPt = hpHistory[0];
+      for (const pt of hpHistory) {
+        if (pt.time <= t) {
+          lastPt = pt;
+        } else {
+          break;
+        }
+      }
+      return lastPt.maxHp > 0 ? (lastPt.currentHp / lastPt.maxHp) * 100 : 0;
+    };
     const selectedConditionId = ref<number | null>(null);
     const conditionImage = ref<HTMLImageElement | null>(null);
 
@@ -394,15 +406,27 @@ export default defineComponent({
             titleFont: { family: "Outfit, Inter, sans-serif", weight: "bold" as const },
             bodyFont: { family: "Outfit, Inter, sans-serif" },
             footerFont: { family: "Outfit, Inter, sans-serif", weight: "bold" as const },
+            // Filter out the HP dataset from standard player listing
+            filter: (tooltipItem: any) => {
+              return tooltipItem.dataset.yAxisID !== "yHp";
+            },
             itemSort: (a: TooltipItem<"line">, b: TooltipItem<"line">) => {
-              // Keep HP at the bottom of the tooltip, then sort players by DPS descending
-              if (a.dataset.yAxisID === "yHp") return 1;
-              if (b.dataset.yAxisID === "yHp") return -1;
               return (b.raw as number) - (a.raw as number);
             },
             callbacks: {
               title: (tooltipItems: any) =>
                 `Time: ${formatTimeLabel(parseFloat(tooltipItems[0].label))}`,
+              beforeBody: (tooltipItems: any) => {
+                if (selectedTargetId.value) {
+                  const targetStats = fightSummary.targets[selectedTargetId.value];
+                  if (targetStats && targetStats.hpHistory && targetStats.hpHistory.length > 0) {
+                    const t = parseFloat(tooltipItems[0].label);
+                    const hp = getTargetHPAtTime(t, targetStats.hpHistory);
+                    return `${targetStats.name} HP: ${hp.toFixed(1)}%\n──────────────────`;
+                  }
+                }
+                return "";
+              },
               footer: (tooltipItems: any) => {
                 let totalDps = 0;
                 tooltipItems.forEach((item: any) => {
