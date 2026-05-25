@@ -1,35 +1,44 @@
 <template>
   <div v-if="chartData.datasets.length > 0" class="graph-container">
     <div class="pa-4">
-      <div v-if="conditionItems.length > 0" class="d-flex align-center mb-4" style="max-width: 320px;">
-        <v-select
-          v-model="selectedConditionId"
-          :items="conditionItems"
-          label="Highlight Condition on Timeline"
-          density="compact"
-          hide-details
-          clearable
-          variant="outlined"
-          color="primary"
-        >
-          <template v-slot:item="{ props, item }">
-            <v-list-item v-bind="props" :title="item.raw.title">
-              <template v-slot:prepend>
-                <v-avatar size="24" class="mr-2" rounded="sm" v-if="item.raw.icon">
+      <div class="d-flex ga-4 align-center mb-4 flex-wrap">
+        <div v-if="conditionItems.length > 0" style="max-width: 320px; flex-grow: 1;">
+          <v-select
+            v-model="selectedConditionId"
+            :items="conditionItems"
+            label="Highlight Condition on Timeline"
+            density="compact"
+            hide-details
+            clearable
+            variant="outlined"
+            color="primary"
+          >
+            <template v-slot:item="{ props, item }">
+              <v-list-item v-bind="props" :title="item.raw.title">
+                <template v-slot:prepend>
+                  <v-avatar size="24" class="mr-2" rounded="sm" v-if="item.raw.icon">
+                    <v-img :src="item.raw.icon" />
+                  </v-avatar>
+                </template>
+              </v-list-item>
+            </template>
+            <template v-slot:selection="{ item }">
+              <div class="d-flex align-center">
+                <v-avatar size="20" class="mr-2" rounded="sm" v-if="item.raw.icon">
                   <v-img :src="item.raw.icon" />
                 </v-avatar>
-              </template>
-            </v-list-item>
-          </template>
-          <template v-slot:selection="{ item }">
-            <div class="d-flex align-center">
-              <v-avatar size="20" class="mr-2" rounded="sm" v-if="item.raw.icon">
-                <v-img :src="item.raw.icon" />
-              </v-avatar>
-              <span>{{ item.raw.title }}</span>
-            </div>
-          </template>
-        </v-select>
+                <span>{{ item.raw.title }}</span>
+              </div>
+            </template>
+          </v-select>
+        </div>
+        <v-checkbox
+          v-model="showDeaths"
+          label="Highlight Player Deaths"
+          density="compact"
+          hide-details
+          color="error"
+        />
       </div>
       <div style="height: 500px" class="chart-wrapper">
         <LineChart :data="chartData" :options="chartOptions" />
@@ -175,6 +184,28 @@ export default defineComponent({
       });
     });
 
+    const showDeaths = ref(false);
+
+    const playerDeaths = computed(() => {
+      const deathsList: { time: number; playerName: string }[] = [];
+      for (const playerId in fightSummary.players) {
+        const player = fightSummary.players[playerId];
+        if (player.deaths && player.deaths.length > 0) {
+          player.deaths.forEach((deathTime) => {
+            // Convert to relative time
+            const relativeTime = deathTime - encounterStartTime.value;
+            if (relativeTime >= 0) {
+              deathsList.push({
+                time: relativeTime,
+                playerName: player.name,
+              });
+            }
+          });
+        }
+      }
+      return deathsList;
+    });
+
     // START: NEW LOGIC FOR DYNAMIC X-AXIS
     const fightDuration = computed(() => {
       const labels = chartData.value.labels;
@@ -241,6 +272,29 @@ export default defineComponent({
               },
               yAdjust: 12,
             } : undefined
+          };
+        });
+      }
+
+      if (showDeaths.value) {
+        playerDeaths.value.forEach((death, index) => {
+          annotations[`death-${index}`] = {
+            type: "line" as const,
+            scaleID: "x",
+            value: death.time,
+            borderColor: "rgba(239, 68, 68, 0.6)",
+            borderWidth: 1.5,
+            borderDash: [6, 4],
+            label: {
+              display: true,
+              content: `☠️ ${death.playerName}`,
+              position: "start" as const,
+              yAdjust: 35,
+              backgroundColor: "rgba(15, 23, 42, 0.85)",
+              color: "#fca5a5",
+              font: { family: "Outfit, Inter, sans-serif", size: 10, weight: "bold" as const },
+              padding: 4,
+            }
           };
         });
       }
@@ -452,7 +506,8 @@ export default defineComponent({
       encounterStartTime,
       xAxisConfig,
       selectedConditionId,
-      conditionItems
+      conditionItems,
+      showDeaths
     };
   },
 });

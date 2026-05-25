@@ -96,6 +96,7 @@ type PlayerStats struct {
 	OverallStats        DamageBreakdown            `json:"overallStats"`
 	DamageByTarget      map[string]DamageBreakdown `json:"damageByTarget"` // Key is Target ID
 	SkillUses           []SkillUseEvent            `json:"-"`
+	Deaths              []int64                    `json:"deaths,omitempty"`
 }
 
 // --- (Structs for Damage Taken remain the same) ---

@@ -58,6 +58,7 @@ export interface PlayerStats {
   missingAppearPacket: boolean; // NEW: Cache warning flag
   overallStats: DamageBreakdown;
   damageByTarget: { [targetId: string]: DamageBreakdown };
+  deaths?: number[];
 }
 
 // --- START: NEW INTERFACES FOR DAMAGE TAKEN ---

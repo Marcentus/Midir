@@ -211,6 +211,8 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 	skillUsesByPlayer := make(map[string][]SkillUseEvent)
 	// HP history tracking by Target/Entity ID
 	hpHistoryByTarget := make(map[string][]TargetHPPoint)
+	// Player deaths history by Player ID
+	playerDeaths := make(map[string][]int64)
 
 	for scanner.Scan() {
 		line := scanner.Bytes()
@@ -270,6 +272,7 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 			if err := json.Unmarshal(line, &death); err == nil {
 				targetSeenDead[death.Id] = true
 				targetDisappeared[death.Id] = false
+				playerDeaths[death.Id] = append(playerDeaths[death.Id], baseEvent.At)
 			}
 
 		case eventIdEntityRevive:
@@ -401,6 +404,7 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 		targetSeenDead,
 		skillUsesByPlayer,
 		hpHistoryByTarget,
+		playerDeaths,
 	)
 	summary.GraphData = graphDataByTarget
 
@@ -889,6 +893,7 @@ func finalizeSummaryFromLog(
 	targetSeenDead map[string]bool,
 	skillUsesByPlayer map[string][]SkillUseEvent,
 	hpHistoryByTarget map[string][]TargetHPPoint, // NEW
+	playerDeaths map[string][]int64, // NEW
 ) FightSummary {
 	summary := FightSummary{
 		Players:     make(map[string]PlayerStats),
@@ -905,6 +910,7 @@ func finalizeSummaryFromLog(
 	for _, pStats := range playerStats {
 		finalizedPstats := *pStats
 		finalizedPstats.MissingAppearPacket = !seenAppear[pStats.ID]
+		finalizedPstats.Deaths = playerDeaths[pStats.ID]
 
 		playerSkillUses := skillUsesByPlayer[pStats.ID]
 
