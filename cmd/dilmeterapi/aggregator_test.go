@@ -2,8 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
-	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -355,81 +353,6 @@ func TestAggregator_SkillUses(t *testing.T) {
 	playerStats, exists := summary.Players[strconv.FormatUint(playerID, 10)]
 	if !exists {
 		t.Fatalf("Expected stats for player %d", playerID)
-	}
-
-	skill1Stats, ok1 := playerStats.OverallStats.Skills[123]
-	if !ok1 || skill1Stats.Uses != 1 {
-		t.Errorf("Expected skill 123 to have 1 use, got ok=%v, uses=%d", ok1, skill1Stats.Uses)
-	}
-
-	skill2Stats, ok2 := playerStats.OverallStats.Skills[456]
-	if !ok2 || skill2Stats.Uses != 1 {
-		t.Errorf("Expected skill 456 to have 1 use, got ok=%v, uses=%d", ok2, skill2Stats.Uses)
-	}
-}
-
-func TestGenerateSummaryFromFile_SkillUses(t *testing.T) {
-	// Initialize database
-	var err error
-	db, err = sql.Open("sqlite", ":memory:")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		db.Close()
-		db = nil
-	}()
-
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS players (
-		id INTEGER PRIMARY KEY,
-		name TEXT,
-		race_id INTEGER
-	);`)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Insert mock player
-	playerID := uint64(5555)
-	_, err = db.Exec("INSERT INTO players (id, name, race_id) VALUES (?, ?, ?)", playerID, "Alice", 8001)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Create temporary log file
-	tmpFile, err := os.CreateTemp("", "session-*.ndjson")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.Remove(tmpFile.Name())
-	defer tmpFile.Close()
-
-	// Write mock events to the temporary NDJSON file
-	now := time.Now().Unix()
-	events := []string{
-		fmt.Sprintf(`{"EventId":1,"At":%d,"Id":"5555","Name":"Alice","RaceId":8001,"OwnerId":"0"}`, now),
-		fmt.Sprintf(`{"EventId":3,"At":%d,"Id":"5555","TargetId":"9999","SkillId":123,"Damage":100,"IsCritical":false,"IsDelayed":false}`, now),
-		fmt.Sprintf(`{"EventId":8,"At":%d,"Id":"5555","SkillId":123,"TargetId":"9999"}`, now),
-		fmt.Sprintf(`{"EventId":9,"At":%d,"Id":"5555","SkillId":456,"TargetId":"0"}`, now),
-	}
-
-	for _, ev := range events {
-		if _, err := tmpFile.WriteString(ev + "\n"); err != nil {
-			t.Fatal(err)
-		}
-	}
-	tmpFile.Close()
-
-	// Parse file and generate summary
-	summary, err := GenerateSummaryFromFile(tmpFile.Name())
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Verify counts in player stats
-	playerStats, exists := summary.Players[strconv.FormatUint(playerID, 10)]
-	if !exists {
-		t.Fatalf("Expected player %d in summary", playerID)
 	}
 
 	skill1Stats, ok1 := playerStats.OverallStats.Skills[123]

@@ -1153,6 +1153,15 @@ func (a *Aggregator) IsPlayerSafe(entityID uint64) bool {
 	return a.isPlayer(entityID)
 }
 
+// IsCombatTarget checks if an entity ID is tracked in the active combat target timestamps.
+func (a *Aggregator) IsCombatTarget(entityID uint64) bool {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	_, exists := a.targetTimestamps[entityID]
+	return exists
+}
+
+
 // getEntityName resolves and returns the name of an entity ID.
 // Note: This method assumes a.mu is held or is called within a locked context.
 func (a *Aggregator) getEntityName(entityID uint64) string {

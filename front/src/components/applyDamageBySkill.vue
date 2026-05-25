@@ -691,7 +691,6 @@ const moveMetricDown = (index: number) => {
 const computedSkillTableHeaders = computed(() => {
   return [
     { title: "Skill", key: "skillName", sortable: true, cellProps: { class: "border-e" } },
-    { title: "Uses", key: "uses", sortable: true },
     
     // Totals Group
     { title: "Total Dmg", key: "totalDamage", sortable: true },

@@ -204,7 +204,6 @@ export interface MetricPref {
   visible: boolean;
 }
 const DEFAULT_METRICS: MetricPref[] = [
-  { key: 'uses', visible: true },
   { key: 'totalDamage', visible: true },
   { key: 'count', visible: true },
   { key: 'hpm', visible: true },

@@ -45,6 +45,9 @@ type eventPublisher struct {
 	// HP tracking and spam prevention
 	hpLogStates  map[uint64]*entityHPLogState
 	lastCombatAt map[uint64]time.Time
+
+	// Condition tracking to prevent redundant log spam
+	activeConditions map[uint64]map[uint32]string
 }
 
 type eventClient struct {
@@ -93,6 +96,7 @@ func newEventPublisher(ctx context.Context, packetCh <-chan *packet.GamePacket, 
 
 		hpLogStates:  make(map[uint64]*entityHPLogState),
 		lastCombatAt: make(map[uint64]time.Time),
+		activeConditions: make(map[uint64]map[uint32]string),
 	}
 
 	v.aggregator.SetLive(isLive)
@@ -365,6 +369,7 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		entity, err = packet.ParseEntityAppearPacket(p.Msg)
 		if err == nil && entity != nil {
 			events = append(events, newEventFromEntity(entity, p.At))
+			t.trackEntityConditions(entity.Id, entity.CharacterConditionMap)
 		}
 
 	case opcodeEntitiesAppear:
@@ -373,6 +378,7 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		if err == nil {
 			for _, entity := range entities {
 				events = append(events, newEventFromEntity(entity, p.At))
+				t.trackEntityConditions(entity.Id, entity.CharacterConditionMap)
 			}
 		}
 
@@ -387,6 +393,7 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 					Id:      strconv.FormatUint(dID, 10),
 				},
 			})
+			t.cleanupEntityState(dID)
 		}
 
 	case opcodeEntitiesDisappear:
@@ -401,6 +408,7 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 						Id:      strconv.FormatUint(dID, 10),
 					},
 				})
+				t.cleanupEntityState(dID)
 			}
 		}
 
@@ -409,18 +417,39 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		cond, err = packet.ParseCharacterConditionPacket(p)
 		if err == nil {
 			if cond.IsEnable {
-				events = append(events, &eventCharacterConditionEnable{
-					eventBase: eventBase{
-						EventId: eventIdCharacterConditionEnable,
-						At:      p.At.Unix(),
-						Id:      strconv.FormatUint(cond.Id, 10),
-					},
-					CCId:       cond.CCId,
-					DisableAt:  cond.DisableAt,
-					MetaData:   cond.MetaData,
-					AttackerId: strconv.FormatUint(cond.AttackerId, 10),
-				})
+				alreadyActive := false
+				if active, exists := t.activeConditions[cond.Id]; exists {
+					if _, found := active[cond.CCId]; found {
+						alreadyActive = true
+					}
+				}
+
+				if !alreadyActive {
+					if t.activeConditions[cond.Id] == nil {
+						t.activeConditions[cond.Id] = make(map[uint32]string)
+					}
+					t.activeConditions[cond.Id][cond.CCId] = cond.MetaData
+
+					events = append(events, &eventCharacterConditionEnable{
+						eventBase: eventBase{
+							EventId: eventIdCharacterConditionEnable,
+							At:      p.At.Unix(),
+							Id:      strconv.FormatUint(cond.Id, 10),
+						},
+						CCId:       cond.CCId,
+						DisableAt:  cond.DisableAt,
+						MetaData:   cond.MetaData,
+						AttackerId: strconv.FormatUint(cond.AttackerId, 10),
+					})
+				}
 			} else {
+				if active, exists := t.activeConditions[cond.Id]; exists {
+					delete(active, cond.CCId)
+					if len(active) == 0 {
+						delete(t.activeConditions, cond.Id)
+					}
+				}
+
 				events = append(events, &eventCharacterConditionDisable{
 					eventBase: eventBase{
 						EventId: eventIdCharacterConditionDisable,
@@ -481,7 +510,6 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		if p.Msg[0].Type() != packet.MessageElemTypeShort {
 			break
 		}
-		skillID := p.Msg[0].Data().(uint16)
 
 		var targetID uint64
 		if len(p.Msg) > 1 && p.Msg[1].Type() == packet.MessageElemTypeLong {
@@ -499,30 +527,6 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 			t.lastCombatAt[targetID] = p.At
 		}
 
-		var e iEvent
-		if p.Op == opcodeSkillUse {
-			e = &eventSkillUse{
-				eventBase: eventBase{
-					EventId: eventIdSkillUse,
-					At:      p.At.Unix(),
-					Id:      strconv.FormatUint(p.Id, 10),
-				},
-				SkillId:  skillID,
-				TargetId: strconv.FormatUint(targetID, 10),
-			}
-		} else {
-			e = &eventSkillStart{
-				eventBase: eventBase{
-					EventId: eventIdSkillStart,
-					At:      p.At.Unix(),
-					Id:      strconv.FormatUint(p.Id, 10),
-				},
-				SkillId:  skillID,
-				TargetId: strconv.FormatUint(targetID, 10),
-			}
-		}
-		events = append(events, e)
-
 	case opcodePublicStatUpdate:
 		var statPack *packet.PublicStatUpdatePacket
 		statPack, err = packet.ParsePublicStatUpdatePacket(p)
@@ -534,6 +538,12 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		curHP, baseHP, additionalHP, maxHP, exists := t.aggregator.GetEntityHP(statPack.EntityId)
 		if !exists {
 			// Skip logging if the entity is not currently tracked in the active entityCache
+			break
+		}
+
+		// Only log HP changes for enemies that are in our combat target list.
+		// Skip players, NPCs, props, or unengaged entities.
+		if t.aggregator.IsPlayerSafe(statPack.EntityId) || !t.aggregator.IsCombatTarget(statPack.EntityId) {
 			break
 		}
 
@@ -566,8 +576,8 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		// 1. Log immediately if Current HP is 0 (death milestone)
 		// 2. Log immediately if Max HP (BaseHP or AdditionalHP) changed
 		// 3. Otherwise, check combat context:
-		//    - If recently active in combat (within 5 seconds), log at most once per 1.0s.
-		//    - If idle, log at most once per 5.0s.
+		//    - If recently active in combat (within 5 seconds), log at most once per 3.0s.
+		//    - If idle, log at most once per 10.0s.
 		shouldLog := false
 		if curHP == 0 {
 			shouldLog = true
@@ -577,9 +587,9 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 			lastCombat := t.lastCombatAt[statPack.EntityId]
 			inCombat := !lastCombat.IsZero() && p.At.Sub(lastCombat) <= 5*time.Second
 
-			throttleDuration := 5 * time.Second
+			throttleDuration := 10 * time.Second
 			if inCombat {
-				throttleDuration = 1 * time.Second
+				throttleDuration = 3 * time.Second
 			}
 
 			if state.LastLoggedAt.IsZero() || p.At.Sub(state.LastLoggedAt) >= throttleDuration {
@@ -696,4 +706,24 @@ func (t *eventPublisher) addClient(ctx context.Context, ch chan<- []byte) uint32
 
 	logger.Println("Client connected:", clientId)
 	return clientId
+}
+
+// Helper to track conditions from an appearing entity
+func (t *eventPublisher) trackEntityConditions(entityID uint64, condMap map[uint32]*packet.EntityCharacterCondition) {
+	if len(condMap) == 0 {
+		return
+	}
+	if t.activeConditions[entityID] == nil {
+		t.activeConditions[entityID] = make(map[uint32]string)
+	}
+	for _, cond := range condMap {
+		t.activeConditions[entityID][cond.CCId] = cond.MetaData
+	}
+}
+
+// Helper to clean up all tracked state for a disappeared entity (to prevent memory leaks)
+func (t *eventPublisher) cleanupEntityState(entityID uint64) {
+	delete(t.activeConditions, entityID)
+	delete(t.hpLogStates, entityID)
+	delete(t.lastCombatAt, entityID)
 }

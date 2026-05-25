@@ -316,24 +316,7 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 				}
 			}
 
-		case eventIdSkillUse, eventIdSkillStart:
-			var skillEvent struct {
-				eventBase
-				SkillId  uint16 `json:"skillId"`
-				TargetId string `json:"targetId"`
-			}
-			if err := json.Unmarshal(line, &skillEvent); err == nil {
-				targetID := parseUint64(skillEvent.TargetId)
-				casterID := parseUint64(skillEvent.Id)
-				if targetID == casterID {
-					targetID = 0
-				}
-				skillUsesByPlayer[skillEvent.Id] = append(skillUsesByPlayer[skillEvent.Id], SkillUseEvent{
-					SkillID:   skillEvent.SkillId,
-					TargetID:  targetID,
-					Timestamp: skillEvent.At,
-				})
-			}
+
 
 		case eventIdEntityHPUpdate:
 			var hpUpdate eventEntityHPUpdate
