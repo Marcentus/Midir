@@ -24,6 +24,11 @@ type entityHPLogState struct {
 	LastLoggedAt  time.Time
 }
 
+type pendingDisable struct {
+	packet    *packet.GamePacket
+	cancelled bool
+}
+
 type eventPublisher struct {
 	sync.Mutex
 
@@ -48,6 +53,11 @@ type eventPublisher struct {
 
 	// Condition tracking to prevent redundant log spam
 	activeConditions map[uint64]map[uint32]string
+
+	// Debouncing character condition drops (stack refreshes)
+	pendingDisables map[string]*pendingDisable
+	flushCh         chan string
+	pendingMu       sync.Mutex
 }
 
 type eventClient struct {
@@ -97,6 +107,9 @@ func newEventPublisher(ctx context.Context, packetCh <-chan *packet.GamePacket, 
 		hpLogStates:  make(map[uint64]*entityHPLogState),
 		lastCombatAt: make(map[uint64]time.Time),
 		activeConditions: make(map[uint64]map[uint32]string),
+
+		pendingDisables: make(map[string]*pendingDisable),
+		flushCh:         make(chan string, 1000),
 	}
 
 	v.aggregator.SetLive(isLive)
@@ -133,7 +146,31 @@ func (t *eventPublisher) loop() {
 	for {
 		select {
 		case <-t.ctx.Done():
+			// Flush any remaining pending disables on shutdown
+			t.pendingMu.Lock()
+			for _, pd := range t.pendingDisables {
+				if !pd.cancelled {
+					t.aggregator.ProcessPacket(pd.packet)
+					t.logPacketAsEvent(pd.packet)
+				}
+			}
+			t.pendingDisables = make(map[string]*pendingDisable)
+			t.pendingMu.Unlock()
 			return
+		case key := <-t.flushCh:
+			t.pendingMu.Lock()
+			pd, exists := t.pendingDisables[key]
+			if exists && !pd.cancelled {
+				p := pd.packet
+				delete(t.pendingDisables, key)
+				t.pendingMu.Unlock()
+
+				// Normal processing for the expired Disable event
+				t.aggregator.ProcessPacket(p)
+				t.logPacketAsEvent(p)
+			} else {
+				t.pendingMu.Unlock()
+			}
 		case p := <-t.packetCh:
 			totalPackets++
 			packetsThisSecond++
@@ -167,6 +204,68 @@ func (t *eventPublisher) loop() {
 				// We no longer broadcast system warnings to the frontend to avoid UX clutter.
 				// They are already logged to the backend console by the packet reader.
 				continue
+			}
+
+			// --- PATH 0.5: Debounce Character Condition Disables (Stack Refreshes) ---
+			if p.Op == opcodeCharacterCondition {
+				if cond, err := packet.ParseCharacterConditionPacket(p); err == nil {
+					key := strconv.FormatUint(cond.Id, 10) + "_" + strconv.FormatUint(uint64(cond.CCId), 10)
+					if !cond.IsEnable {
+						// BUFFERING DISABLE: Hold for 100ms
+						t.pendingMu.Lock()
+						t.pendingDisables[key] = &pendingDisable{
+							packet:    p,
+							cancelled: false,
+						}
+						t.pendingMu.Unlock()
+
+						time.AfterFunc(100*time.Millisecond, func() {
+							select {
+							case t.flushCh <- key:
+							case <-t.ctx.Done():
+							}
+						})
+						continue // Do not process or log this packet yet!
+					} else {
+						// An Enable arrived within 100ms of a pending Disable!
+						t.pendingMu.Lock()
+						pd, hasPending := t.pendingDisables[key]
+
+						// Check if metadata is actually changing
+						metaChanged := true
+						storedMeta := "none"
+						if active, exists := t.activeConditions[cond.Id]; exists {
+							if meta, found := active[cond.CCId]; found {
+								storedMeta = meta
+								if storedMeta == normalizeMetaData(cond.MetaData) {
+									metaChanged = false
+								}
+							}
+						}
+
+						if hasPending {
+							if !metaChanged {
+								// CASE A: Same metadata (redundant refresh). Cancel/discard the Disable packet completely.
+								pd.cancelled = true
+								delete(t.pendingDisables, key)
+								t.pendingMu.Unlock()
+							} else {
+								// CASE B: Different metadata (stack change). We want to log both, but align timestamps!
+								disablePacket := pd.packet
+								disablePacket.At = p.At // Align timestamps to prevent second-boundary gaps!
+								delete(t.pendingDisables, key)
+								t.pendingMu.Unlock()
+
+								// Process the Disable packet immediately with aligned timestamp
+								t.aggregator.ProcessPacket(disablePacket)
+								t.logPacketAsEvent(disablePacket)
+							}
+						} else {
+							t.pendingMu.Unlock()
+						}
+						// Process this Enable immediately
+					}
+				}
 			}
 
 			// --- PATH 1: Update the live aggregator (for the UI) ---
@@ -419,8 +518,10 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 			if cond.IsEnable {
 				alreadyActive := false
 				if active, exists := t.activeConditions[cond.Id]; exists {
-					if _, found := active[cond.CCId]; found {
-						alreadyActive = true
+					if storedMeta, found := active[cond.CCId]; found {
+						if storedMeta == normalizeMetaData(cond.MetaData) {
+							alreadyActive = true
+						}
 					}
 				}
 
@@ -428,7 +529,7 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 					if t.activeConditions[cond.Id] == nil {
 						t.activeConditions[cond.Id] = make(map[uint32]string)
 					}
-					t.activeConditions[cond.Id][cond.CCId] = cond.MetaData
+					t.activeConditions[cond.Id][cond.CCId] = normalizeMetaData(cond.MetaData)
 
 					events = append(events, &eventCharacterConditionEnable{
 						eventBase: eventBase{
@@ -717,7 +818,7 @@ func (t *eventPublisher) trackEntityConditions(entityID uint64, condMap map[uint
 		t.activeConditions[entityID] = make(map[uint32]string)
 	}
 	for _, cond := range condMap {
-		t.activeConditions[entityID][cond.CCId] = cond.MetaData
+		t.activeConditions[entityID][cond.CCId] = normalizeMetaData(cond.MetaData)
 	}
 }
 
