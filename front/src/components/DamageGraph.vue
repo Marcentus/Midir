@@ -41,6 +41,7 @@ import {
 // Import selectedTargetId from the store
 import { fightSummary, selectedTargetId, hiddenPlayers, showClassColorsForVisiblePlayers, globalHideMode } from "@/store";
 import { getMabiNameColor } from "@/util";
+import zoomPlugin from "chartjs-plugin-zoom";
 
 ChartJS.register(
   Title,
@@ -50,7 +51,8 @@ ChartJS.register(
   LinearScale,
   PointElement,
   CategoryScale,
-  Filler
+  Filler,
+  zoomPlugin
 );
 
 export default defineComponent({
@@ -165,6 +167,22 @@ export default defineComponent({
           },
         },
         plugins: {
+          zoom: {
+            zoom: {
+              wheel: {
+                enabled: true,
+                modifierKey: "ctrl" as const,
+              },
+              pinch: {
+                enabled: true,
+              },
+              mode: "x" as const,
+            },
+            pan: {
+              enabled: true,
+              mode: "x" as const,
+            },
+          },
           legend: {
             labels: {
               color: "#ffffff",
