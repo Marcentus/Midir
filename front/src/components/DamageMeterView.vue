@@ -95,10 +95,10 @@
                           </v-tooltip>
                         </span>
                         
-                        <!-- Column 3: Duration (Relative to fight start) -->
+                        <!-- Column 3: Duration -->
                         <span class="target-col-duration text-grey text-caption">
                           <template v-if="item.raw.id && item.raw.startTime !== undefined && item.raw.endTime !== undefined">
-                            {{ formatRelativeTime(item.raw.startTime) }} - {{ formatRelativeTime(item.raw.endTime) }} ({{ formatDuration(item.raw.endTime - item.raw.startTime) }})
+                            {{ formatDuration(item.raw.endTime - item.raw.startTime) }}
                           </template>
                         </span>
 
@@ -550,12 +550,6 @@ export default defineComponent({
       });
     };
 
-    const formatRelativeTime = (ts: number | undefined): string => {
-      if (ts === undefined || !fightSummary.startTime) return "0:00";
-      const relativeSeconds = ts - fightSummary.startTime;
-      return formatDuration(relativeSeconds);
-    };
-
     const menuMaxHeight = ref(400);
 
     const calculateMaxHeight = () => {
@@ -626,7 +620,6 @@ export default defineComponent({
       formatNumber,
       formatDuration,
       formatTime,
-      formatRelativeTime,
       menuMaxHeight,
       handleMenuUpdate,
       selectedTargetConditions: computed(() => {
@@ -859,7 +852,7 @@ export default defineComponent({
 
 .target-item-grid {
   display: grid;
-  grid-template-columns: 36px minmax(100px, 1fr) 140px 110px; /* Precise matching columns, name constrained to wrap */
+  grid-template-columns: 36px minmax(100px, 1fr) 60px 110px; /* Precise matching columns, name constrained to wrap */
   align-items: center;
   width: 100%;
   gap: 12px;
