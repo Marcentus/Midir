@@ -195,6 +195,7 @@ export function toggleLiveConditionPref(id: number, type: "fav" | "hide") {
 
 // --- SETTINGS ---
 export const showClassColorsForVisiblePlayers = ref(false);
+export const dpsMeterFillMode = ref<"column" | "full">("column");
 export const nameColorSaturation = ref<[number, number]>([50, 90]); // [Min, Max]
 export const nameColorLightness = ref<[number, number]>([30, 50]); // [Min, Max]
 export const nameColorSeed = ref<string>("T0F89V"); // Default seed
@@ -228,6 +229,9 @@ try {
     if (typeof parsed.showClassColorsForVisiblePlayers === 'boolean') {
       showClassColorsForVisiblePlayers.value = parsed.showClassColorsForVisiblePlayers;
     }
+    if (typeof parsed.dpsMeterFillMode === 'string') {
+      dpsMeterFillMode.value = parsed.dpsMeterFillMode as "column" | "full";
+    }
     if (parsed.nameColorSeed) {
         nameColorSeed.value = parsed.nameColorSeed;
     }
@@ -255,6 +259,7 @@ export function saveSettings() {
   try {
     const data = {
       showClassColorsForVisiblePlayers: showClassColorsForVisiblePlayers.value,
+      dpsMeterFillMode: dpsMeterFillMode.value,
       nameColorSaturation: nameColorSaturation.value,
       nameColorLightness: nameColorLightness.value,
       nameColorSeed: nameColorSeed.value,
@@ -267,7 +272,7 @@ export function saveSettings() {
   }
 }
 
-watch([showClassColorsForVisiblePlayers, nameColorSaturation, nameColorLightness, nameColorSeed, listSkillMetrics, cardSkillMetrics], () => {
+watch([showClassColorsForVisiblePlayers, dpsMeterFillMode, nameColorSaturation, nameColorLightness, nameColorSeed, listSkillMetrics, cardSkillMetrics], () => {
   saveSettings();
 }, { deep: true });
 

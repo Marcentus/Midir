@@ -72,7 +72,24 @@
     </template>
 
     <template v-slot:[`item.totalDamage`]="{ item }">
-      <div class="text-no-wrap">
+      <div v-if="dpsMeterFillMode === 'column'" class="damage-bar-cell">
+        <span class="damage-bar-pct">
+          {{ totalDamageForView > 0 ? ((item.totalDamage / totalDamageForView) * 100).toFixed(1) : '0.0' }}%
+        </span>
+        <div class="damage-bar-wrapper">
+          <div
+            class="damage-bar-fill"
+            :style="{
+              width: (playerDisplayData[0]?.totalDamage ? (item.totalDamage / playerDisplayData[0].totalDamage) * 100 : 0) + '%',
+              backgroundColor: getPlayerColor(item)
+            }"
+          ></div>
+        </div>
+        <span class="damage-bar-val">
+          {{ formatAbbreviated(item.totalDamage) }}
+        </span>
+      </div>
+      <div v-else class="text-no-wrap">
         <span class="font-weight-bold text-h6">{{ formatAbbreviated(item.totalDamage) }}</span>
         <span class="ml-1 text-white font-weight-medium" v-if="totalDamageForView > 0">
           ({{ ((item.totalDamage / totalDamageForView) * 100).toFixed(1) }}%)
@@ -140,18 +157,37 @@
             </template>
 
             <template v-slot:[`item.totalDamage`]="{ item: skillItem }">
-              <span>{{ formatNumber(skillItem.totalDamage) }}</span>
-              <span
-                class="ml-2 text-white"
-                v-if="item.totalDamage > 0"
-              >
-                ({{
-                  (
-                    (skillItem.totalDamage / item.totalDamage) *
-                    100
-                  ).toFixed(1)
-                }}%)
-              </span>
+              <div v-if="dpsMeterFillMode === 'column'" class="damage-bar-cell skill-bar-cell">
+                <span class="damage-bar-pct">
+                  {{ item.totalDamage > 0 ? ((skillItem.totalDamage / item.totalDamage) * 100).toFixed(1) : '0.0' }}%
+                </span>
+                <div class="damage-bar-wrapper">
+                  <div
+                    class="damage-bar-fill"
+                    :style="{
+                      width: (getSkillBreakdown(item)[0]?.totalDamage ? (skillItem.totalDamage / getSkillBreakdown(item)[0].totalDamage) * 100 : 0) + '%',
+                      backgroundColor: getPlayerColor(item)
+                    }"
+                  ></div>
+                </div>
+                <span class="damage-bar-val">
+                  {{ formatNumber(skillItem.totalDamage) }}
+                </span>
+              </div>
+              <div v-else class="text-no-wrap">
+                <span>{{ formatNumber(skillItem.totalDamage) }}</span>
+                <span
+                  class="ml-2 text-white font-weight-medium"
+                  v-if="item.totalDamage > 0"
+                >
+                  ({{
+                    (
+                      (skillItem.totalDamage / item.totalDamage) *
+                      100
+                    ).toFixed(1)
+                  }}%)
+                </span>
+              </div>
             </template>
 
             <template v-slot:[`item.dps`]="{ item: skillItem }">
@@ -627,6 +663,49 @@
   border-top-right-radius: 4px !important;
   border-bottom-right-radius: 4px !important;
 }
+
+.damage-bar-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.damage-bar-pct {
+  width: 50px;
+  text-align: right;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.damage-bar-wrapper {
+  flex-grow: 1;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.damage-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.damage-bar-val {
+  width: 80px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+  flex-shrink: 0;
+}
+.skill-bar-cell .damage-bar-val {
+  width: 95px;
+}
 </style>
 
 <script lang="ts" setup>
@@ -639,11 +718,17 @@ import {
 } from "@/store";
 import { SkillStats, DamageBreakdown } from "@/protocols";
 import TargetConditionView from "./TargetConditionView.vue";
-import { hiddenPlayers, toggleHiddenPlayer, setAllHiddenPlayers, globalHideMode, showClassColorsForVisiblePlayers, listSkillMetrics, cardSkillMetrics } from "@/store";
+import { hiddenPlayers, toggleHiddenPlayer, setAllHiddenPlayers, globalHideMode, showClassColorsForVisiblePlayers, listSkillMetrics, cardSkillMetrics, dpsMeterFillMode } from "@/store";
 
 const props = defineProps<{
   attackerNameMap?: { [id: string]: string };
 }>();
+
+const getPlayerColor = (item: any) => {
+  const isHidden = globalHideMode.value || hiddenPlayers.has(item.id);
+  const shouldUseClassColor = isHidden || showClassColorsForVisiblePlayers.value;
+  return shouldUseClassColor ? (item.talentColor || 'hsl(0, 0%, 50%)') : getMabiNameColor(item.name);
+};
 
 // --- STATE ---
 const skillNameMap = inject("skillNameMap") as any;
@@ -689,26 +774,71 @@ const moveMetricDown = (index: number) => {
 };
 
 const computedSkillTableHeaders = computed(() => {
-  return [
-    { title: "Skill", key: "skillName", sortable: true, cellProps: { class: "border-e" } },
-    
-    // Totals Group
-    { title: "Total Dmg", key: "totalDamage", sortable: true },
-    { title: "DPS", key: "dps", sortable: true, cellProps: { class: "border-e" } },
-    
-    // Frequency Group
-    { title: "Crit %", key: "critRate", sortable: true },
-    { title: "Hits", key: "count", sortable: true },
-    { title: "HPM", key: "hpm", sortable: true, cellProps: { class: "border-e" } },
+  if (dpsMeterFillMode.value === "column") {
+    return [
+      { title: "Skill", key: "skillName", sortable: true, cellProps: { class: "border-e" }, width: "200px" },
+      
+      // Totals Group
+      { title: "Damage Contribution", key: "totalDamage", sortable: true, width: "350px" },
+      { title: "DPS", key: "dps", sortable: true, cellProps: { class: "border-e" } },
+      
+      // Frequency Group
+      { title: "Crit %", key: "critRate", sortable: true },
+      { title: "Hits", key: "count", sortable: true },
+      { title: "HPM", key: "hpm", sortable: true, cellProps: { class: "border-e" } },
 
-    // Damage Metrics Group
-    { title: "NonCrit Avg", key: "avgNonCrit", sortable: true },
-    { title: "NonCrit Max", key: "maxDamageNonCrit", sortable: true },
-    { title: "Avg Dmg", key: "avgDamage", sortable: true },
-    { title: "Crit Avg", key: "avgCrit", sortable: true },
-    { title: "Crit Max", key: "maxDamageCrit", sortable: true },
-    { title: "Max Dmg", key: "maxDamage", sortable: true }
-  ];
+      // Damage Metrics Group
+      { title: "NonCrit Avg", key: "avgNonCrit", sortable: true },
+      { title: "NonCrit Max", key: "maxDamageNonCrit", sortable: true },
+      { title: "Avg Dmg", key: "avgDamage", sortable: true },
+      { title: "Crit Avg", key: "avgCrit", sortable: true },
+      { title: "Crit Max", key: "maxDamageCrit", sortable: true },
+      { title: "Max Dmg", key: "maxDamage", sortable: true }
+    ];
+  } else {
+    return [
+      { title: "Skill", key: "skillName", sortable: true, cellProps: { class: "border-e" } },
+      
+      // Totals Group
+      { title: "Total Dmg", key: "totalDamage", sortable: true },
+      { title: "DPS", key: "dps", sortable: true, cellProps: { class: "border-e" } },
+      
+      // Frequency Group
+      { title: "Crit %", key: "critRate", sortable: true },
+      { title: "Hits", key: "count", sortable: true },
+      { title: "HPM", key: "hpm", sortable: true, cellProps: { class: "border-e" } },
+
+      // Damage Metrics Group
+      { title: "NonCrit Avg", key: "avgNonCrit", sortable: true },
+      { title: "NonCrit Max", key: "maxDamageNonCrit", sortable: true },
+      { title: "Avg Dmg", key: "avgDamage", sortable: true },
+      { title: "Crit Avg", key: "avgCrit", sortable: true },
+      { title: "Crit Max", key: "maxDamageCrit", sortable: true },
+      { title: "Max Dmg", key: "maxDamage", sortable: true }
+    ];
+  }
+});
+
+const mainTableHeaders = computed(() => {
+  if (dpsMeterFillMode.value === "column") {
+    return [
+      { title: "Hide", key: "isHidden", sortable: false, width: "1%" },
+      { title: "Character", key: "name", sortable: true, width: "20%" },
+      { title: "Damage Contribution", key: "totalDamage", sortable: true, align: "center", width: "45%" },
+      { title: "DPS", key: "dps", sortable: true, align: "center", width: "15%" },
+      { title: "Crit %", key: "critRate", sortable: true, align: "center", width: "15%" },
+      { title: "", key: "data-table-expand", width: "4%" },
+    ] as const;
+  } else {
+    return [
+      { title: "Hide", key: "isHidden", sortable: false, width: "1%" },
+      { title: "Character", key: "name", sortable: true },
+      { title: "DPS", key: "dps", sortable: true, align: "center", width: "15%" },
+      { title: "Total Damage", key: "totalDamage", sortable: true, align: "center", width: "20%" },
+      { title: "Crit %", key: "critRate", sortable: true, align: "center", width: "15%" },
+      { title: "", key: "data-table-expand" },
+    ] as const;
+  }
 });
 
 const computedCardSkillTableHeaders = computed(() => {
@@ -841,28 +971,23 @@ const getSkillBreakdown = (playerData: DamageBreakdown): SkillStats[] => {
 };
 
  const getRowProps = ({ item }: { item: any }) => {
-  const topDamage = playerDisplayData.value[0]?.totalDamage;
-  if (!topDamage || !item.totalDamage) return { style: {} };
-  const percentage = (item.totalDamage / topDamage) * 100;
-  
-  const isHidden = globalHideMode.value || hiddenPlayers.has(item.id);
-  
-  // Color Logic:
-  // 1. If Hidden -> Use Class Color (talentColor)
-  // 2. If Not Hidden AND 'Use Class Colors' Setting ON -> Use Class Color (talentColor)
-  // 3. Else -> Use Auto-Generated Name Color
-  const shouldUseClassColor = isHidden || showClassColorsForVisiblePlayers.value;
-  const color = shouldUseClassColor ? (item.talentColor || 'hsl(0, 0%, 50%)') : getMabiNameColor(item.name);
-  
-  // Use solid color without alpha blending for clearer visibility
-  const bgColor = color;
+  if (dpsMeterFillMode.value === "full") {
+    const topDamage = playerDisplayData.value[0]?.totalDamage;
+    if (!topDamage || !item.totalDamage) return { style: {} };
+    const percentage = (item.totalDamage / topDamage) * 100;
+    const bgColor = getPlayerColor(item);
 
+    return {
+      class: "character-row",
+      style: {
+        background: `linear-gradient(to right, ${bgColor} ${percentage}%, transparent ${percentage}%)`,
+        backgroundClip: 'padding-box',
+      },
+    };
+  }
+  
   return {
     class: "character-row",
-    style: {
-      background: `linear-gradient(to right, ${bgColor} ${percentage}%, transparent ${percentage}%)`,
-      backgroundClip: 'padding-box',
-    },
   };
 };
 
@@ -870,37 +995,32 @@ const getSkillRowProps = (
   skillItem: any,
   topSkillDamage: number,
   playerName: string,
-  playerItem?: any, // Pass the whole player item to access hidden state/colors
-  index?: number // Optional index for alternating colors
+  playerItem?: any,
+  index?: number
 ) => {
-  if (!topSkillDamage || !skillItem.totalDamage) return { style: {} };
-  const percentage = (skillItem.totalDamage / topSkillDamage) * 100;
-  
-  // Re-derive hidden state/color if playerItem is passed, otherwise fall back to name color
-  let color = getMabiNameColor(playerName);
-  
-  if (playerItem) {
-      const isHidden = globalHideMode.value || hiddenPlayers.has(playerItem.id);
-      
-      const shouldUseClassColor = isHidden || showClassColorsForVisiblePlayers.value;
-      color = shouldUseClassColor ? (playerItem.talentColor || 'hsl(0, 0%, 50%)') : getMabiNameColor(playerName);
-  }
+  if (dpsMeterFillMode.value === "full") {
+    if (!topSkillDamage || !skillItem.totalDamage) return { style: {} };
+    const percentage = (skillItem.totalDamage / topSkillDamage) * 100;
+    
+    let color = getMabiNameColor(playerName);
+    if (playerItem) {
+      color = getPlayerColor(playerItem);
+    }
 
-  // Use solid color without alpha blending for clearer visibility
-  let bgColor = color;
-  
-  // If alternating row (odd index), mix with black to darken it slightly
-  // This helps visually distinguish rows in the breakdown
-  if (index !== undefined && index % 2 !== 0) {
+    let bgColor = color;
+    if (index !== undefined && index % 2 !== 0) {
       bgColor = `color-mix(in srgb, ${color}, black 10%)`;
-  }
+    }
 
-  return {
-    style: {
-      background: `linear-gradient(to right, ${bgColor} ${percentage}%, transparent ${percentage}%)`,
-      backgroundClip: 'padding-box',
-    },
-  };
+    return {
+      style: {
+        background: `linear-gradient(to right, ${bgColor} ${percentage}%, transparent ${percentage}%)`,
+        backgroundClip: 'padding-box',
+      },
+    };
+  }
+  
+  return {};
 };
 
 // Helper for Hex -> RGBA
@@ -938,15 +1058,7 @@ const toggleAllPlayersVisibility = () => {
     }
 };
 
-// --- TABLE HEADERS ---
-const mainTableHeaders = [
-  { title: "Hide", key: "isHidden", sortable: false, width: "1%" },
-  { title: "Character", key: "name", sortable: true },
-  { title: "DPS", key: "dps", sortable: true, align: "center", width: "15%" },
-  { title: "Total Damage", key: "totalDamage", sortable: true, align: "center", width: "20%" },
-  { title: "Crit %", key: "critRate", sortable: true, align: "center", width: "15%" },
-  { title: "", key: "data-table-expand" },
-  ] as const;
+
 
 // (Old static headers removed, using computed headers now)
 </script>
