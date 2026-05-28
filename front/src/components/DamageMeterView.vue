@@ -9,64 +9,85 @@
             <!-- Left: Target Selector -->
             <div class="header-section target-section">
               <div class="header-label d-flex align-center">
-                <v-icon icon="mdi-target" class="mr-1 text-grey" size="small"></v-icon>
                 COMBAT TARGET
               </div>
-              <v-select
-                v-model="selectedTargetId"
-                :items="targetList"
-                item-value="id"
-                variant="solo-filled"
-                flat
-                density="compact"
-                hide-details
-                class="target-select-refined"
-                placeholder="All Targets"
-                :menu-props="{ minWidth: '520px', maxWidth: '520px', maxHeight: menuMaxHeight, location: 'bottom', offset: 4 }"
-                @update:menu="handleMenuUpdate"
+              <v-menu
+                v-model="isTargetMenuOpen"
+                :close-on-content-click="false"
+                location="bottom start"
+                :offset="4"
               >
-                <!-- Selection Display (when closed) -->
-                <template v-slot:selection="{ item }">
-                  <div class="d-flex align-center w-100 justify-space-between text-body-2 font-weight-medium">
-                    <span class="d-flex align-center">
-                      <span>{{ item.raw.rawName || item.raw.name }}</span>
+                <template v-slot:activator="{ props }">
+                  <div
+                    v-bind="props"
+                    class="target-select-custom-trigger d-flex align-center justify-space-between px-3 py-2 cursor-pointer"
+                  >
+                    <div class="d-flex align-center font-weight-medium text-body-2" style="min-width: 0; flex: 1;">
+                      <span class="text-truncate">{{ selectedTargetName }}</span>
                       <v-tooltip
-                        v-if="item.raw.id && item.raw.seenAppear === false"
+                        v-if="selectedTargetSeenAppear === false"
                         location="top"
                         text="Spawn not captured by parser."
                       >
-                        <template v-slot:activator="{ props }">
+                        <template v-slot:activator="{ props: tooltipProps }">
                           <v-icon
-                            v-bind="props"
+                            v-bind="tooltipProps"
                             icon="mdi-alert-circle-outline"
                             color="warning"
                             size="small"
-                            class="ml-1"
+                            class="ml-1 flex-shrink-0"
                           ></v-icon>
                         </template>
                       </v-tooltip>
-                    </span>
-                    <span class="text-caption text-grey ml-2" v-if="item.raw.id">({{ formatNumber(item.raw.damage) }})</span>
+                    </div>
+                    <div class="d-flex align-center flex-shrink-0 ml-2">
+                      <span class="text-caption text-grey mr-2" v-if="selectedTargetId">
+                        ({{ formatCompact(selectedTargetDamage) }})
+                      </span>
+                      <v-icon icon="mdi-menu-down" color="grey"></v-icon>
+                    </div>
                   </div>
                 </template>
-
-                <!-- Item Display (when open in dropdown list) -->
-                <template v-slot:item="{ props, item }">
-                  <v-list-item v-bind="props" :class="getTargetClass(item.raw.raceId)" class="target-list-item-refined">
-                    <template v-slot:title>
-                      <div class="target-item-container d-flex flex-column">
-                        <!-- Row 1: Name and HP Details (with horizontal/vertical padding) -->
-                        <div class="d-flex justify-space-between align-center px-4 pt-3 pb-2">
+                
+                <div
+                  class="target-menu-container d-flex animate-all"
+                  :style="{
+                    width: expandedGroup ? '768px' : '380px',
+                    height: menuHeight + 'px',
+                    transition: 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    background: 'transparent'
+                  }"
+                >
+                  <!-- Left Column: Target List -->
+                  <div
+                    class="target-menu-card d-flex flex-column"
+                    style="width: 380px; height: 100%; flex-shrink: 0;"
+                  >
+                    <div class="flex-grow-1 overflow-y-auto pa-0 custom-scrollbar">
+                      <div
+                        v-for="item in targetList"
+                        :key="item.id"
+                        class="target-menu-item cursor-pointer position-relative overflow-hidden"
+                        :class="[
+                          getTargetClass(item.raceId),
+                          selectedTargetId === item.id ? 'active-item' : '',
+                          expandedGroup && expandedGroup.id === item.id ? 'expanded-group-item' : ''
+                        ]"
+                        @click="handleItemClick(item)"
+                      >
+                        <div class="target-item-content d-flex justify-space-between align-center px-4 pt-3 pb-2">
                           <span class="target-col-name font-weight-bold d-flex align-center text-white">
-                            <span>{{ item.raw.rawName || item.raw.name }}</span>
+                            <span>{{ item.rawName || item.name }}</span>
                             <v-tooltip
-                              v-if="item.raw.id && item.raw.seenAppear === false"
+                              v-if="item.id && item.seenAppear === false"
                               location="top"
                               text="Spawn not captured by parser."
                             >
-                              <template v-slot:activator="{ props }">
+                              <template v-slot:activator="{ props: tooltipProps }">
                                 <v-icon
-                                  v-bind="props"
+                                  v-bind="tooltipProps"
                                   icon="mdi-alert-circle-outline"
                                   color="warning"
                                   size="small"
@@ -76,28 +97,97 @@
                             </v-tooltip>
                           </span>
                           
-                          <!-- Right side of Row 1 -->
-                          <span v-if="item.raw.id" class="hp-text text-caption text-grey-lighten-1 font-weight-medium text-right">
-                            {{ formatNumber(item.raw.currentHp) }} / {{ formatNumber(item.raw.maxHp) }}
-                            <span class="text-grey ml-1">({{ item.raw.hpPercent.toFixed(1) }}%)</span>
-                          </span>
-                          <span v-else class="target-col-damage font-weight-bold text-amber text-right">
-                            {{ formatNumber(item.raw.damage) }}
-                          </span>
+                          <div class="d-flex align-center ga-2">
+                            <span v-if="item.id" class="hp-text text-caption text-grey-lighten-1 font-weight-medium text-right">
+                              {{ formatCompact(item.currentHp) }} / {{ formatCompact(item.maxHp) }}
+                              <span class="text-grey ml-1">({{ item.hpPercent.toFixed(1) }}%)</span>
+                            </span>
+                            <span v-else class="target-col-damage font-weight-bold text-amber text-right">
+                              {{ formatCompact(item.damage) }}
+                            </span>
+                            <v-icon
+                              v-if="item.isGroup"
+                              icon="mdi-chevron-right"
+                              size="small"
+                              class="group-arrow-icon"
+                              :class="{ 'rotated': expandedGroup && expandedGroup.id === item.id }"
+                            ></v-icon>
+                          </div>
                         </div>
 
-                        <!-- Row 2: Full-Width HP Bar Separator (Only if specific target) -->
-                        <div v-if="item.raw.id" class="hp-bar-separator w-100">
+                        <!-- HP Bar Separator -->
+                        <div v-if="item.id" class="hp-bar-separator w-100">
                           <div
                             class="hp-bar-separator-fill hp-enemy"
-                            :style="{ width: item.raw.hpPercent + '%' }"
+                            :style="{ width: item.hpPercent + '%' }"
                           ></div>
                         </div>
                       </div>
-                    </template>
-                  </v-list-item>
-                </template>
-              </v-select>
+                    </div>
+                  </div>
+                  
+                  <!-- Right Column: Group Targets -->
+                   <div
+                    v-if="expandedGroup"
+                    class="target-menu-card d-flex flex-column"
+                    :style="{
+                      width: '380px',
+                      position: 'absolute',
+                      left: '388px',
+                      top: 0,
+                      height: '100%',
+                      flexShrink: 0
+                    }"
+                  >
+                    <div class="flex-grow-1 overflow-y-auto pa-0 custom-scrollbar">
+                      <div
+                        v-for="subItem in expandedGroup.targets"
+                        :key="subItem.id"
+                        class="target-menu-item cursor-pointer position-relative overflow-hidden"
+                        :class="[
+                          getTargetClass(subItem.raceId),
+                          selectedTargetId === subItem.id ? 'active-item' : ''
+                        ]"
+                        @click="selectGroupTarget(subItem)"
+                      >
+                        <div class="target-item-content d-flex justify-space-between align-center px-4 pt-3 pb-2">
+                          <span class="target-col-name font-weight-bold d-flex align-center text-white">
+                            <span>{{ subItem.rawName || subItem.name }}</span>
+                            <v-tooltip
+                              v-if="subItem.seenAppear === false"
+                              location="top"
+                              text="Spawn not captured by parser."
+                            >
+                              <template v-slot:activator="{ props: tooltipProps }">
+                                <v-icon
+                                  v-bind="tooltipProps"
+                                  icon="mdi-alert-circle-outline"
+                                  color="warning"
+                                  size="small"
+                                  class="ml-1 flex-shrink-0"
+                                ></v-icon>
+                              </template>
+                            </v-tooltip>
+                          </span>
+                          
+                          <span class="hp-text text-caption text-grey-lighten-1 font-weight-medium text-right">
+                            {{ formatCompact(subItem.currentHp) }} / {{ formatCompact(subItem.maxHp) }}
+                            <span class="text-grey ml-1">({{ subItem.hpPercent.toFixed(1) }}%)</span>
+                          </span>
+                        </div>
+
+                        <!-- HP Bar Separator -->
+                        <div class="hp-bar-separator w-100">
+                          <div
+                            class="hp-bar-separator-fill hp-enemy"
+                            :style="{ width: subItem.hpPercent + '%' }"
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </v-menu>
             </div>
 
             <!-- Right: Vital Stats -->
@@ -359,7 +449,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, inject, nextTick, onMounted, onBeforeUnmount } from "vue";
+import { defineComponent, ref, computed, inject, nextTick, onMounted, onBeforeUnmount, watch } from "vue";
 import { fightSummary, selectedTargetId, isNavDrawerOpen, activeSessionId } from "@/store";
 import SessionPanel from "@/components/SessionPanel.vue";
 import ApplyDamageBySkillComponent from "@/components/applyDamageBySkill.vue";
@@ -395,6 +485,15 @@ export default defineComponent({
     const formatNumber = (num: number | undefined | null): string => {
       if (num === undefined || num === null) return "0";
       return Math.round(num).toLocaleString("en-US");
+    };
+
+    const formatCompact = (num: number | undefined | null): string => {
+      if (num === undefined || num === null) return "0";
+      return new Intl.NumberFormat("en-US", {
+        notation: "compact",
+        compactDisplay: "short",
+        maximumFractionDigits: 1,
+      }).format(num).toLowerCase();
     };
 
     const formatDuration = (totalSeconds: number) => {
@@ -460,6 +559,16 @@ export default defineComponent({
       }
       return "0";
     });
+
+    // Target grouping state
+    const isTargetMenuOpen = ref(false);
+    const expandedGroup = ref<any>(null);
+
+    const GROUPED_ENCOUNTERS = [
+      { bossRaceId: 7615, groupName: "Bri Leith: Gate 4" },
+      { bossRaceId: 7603, groupName: "Bri Leith: Gate 3" },
+      { bossRaceId: 7600, partnerRaceId: 7601, groupName: "Bri Leith: Gate 1" }
+    ];
 
     const targetList = computed(() => {
       const totalDamageByTarget: Record<string, number> = {};
@@ -551,7 +660,128 @@ export default defineComponent({
           };
         }
       );
-      targets.sort((a, b) => {
+
+      // Check if parse contains any entity deaths (seenDead)
+      const hasAnyEntityDeath = targets.some(t => t.seenDead);
+
+      if (!hasAnyEntityDeath) {
+        // Return normal sorted flat list
+        targets.sort((a, b) => {
+          const startA = a.startTime || 0;
+          const startB = b.startTime || 0;
+          if (startB !== startA) {
+            return startB - startA;
+          }
+          return b.damage - a.damage;
+        });
+        targets.unshift({
+          id: "",
+          name: "All Targets",
+          rawName: "All Targets",
+          damage: grandTotalDamage,
+          damagePercent: 100,
+          currentHp: 0,
+          maxHp: 0,
+          hpPercent: 0,
+          seenAppear: undefined,
+          seenDead: undefined,
+          disappeared: undefined,
+          startTime: undefined,
+          endTime: undefined,
+          raceId: undefined,
+        });
+        return targets;
+      }
+
+      // Grouping Logic
+      const groupedList: any[] = [];
+      const groupedTargetIds = new Set<string>();
+
+      for (const bossDef of GROUPED_ENCOUNTERS) {
+        // Find all boss targets of this bossRaceId
+        const bosses = targets.filter(t => t.raceId === bossDef.bossRaceId);
+
+        for (const bossTarget of bosses) {
+          // Special reset detection check for Phase 1 boss despawning without reaching 50% HP
+          if (bossDef.bossRaceId === 7600) {
+            const rawStats = fightSummary.targets[bossTarget.id];
+            const round3 = (num: number) => Math.round(num * 1000) / 1000;
+            let reached50 = round3(bossTarget.hpPercent) <= 50;
+            if (!reached50 && rawStats && rawStats.hpHistory) {
+              reached50 = rawStats.hpHistory.some(pt => pt.maxHp > 0 && round3((pt.currentHp / pt.maxHp) * 100) <= 50);
+            }
+
+            const ended = bossTarget.seenDead || bossTarget.disappeared;
+            if (ended && !reached50) {
+              // Run reset! Skip grouping this bossTarget
+              continue;
+            }
+          }
+
+          const bossStartTime = bossTarget.startTime || 0;
+          let bossEndTime = (bossTarget.seenDead || bossTarget.disappeared) ? (bossTarget.endTime || 0) : Infinity;
+
+          let partnerTarget: any = null;
+          if (bossDef.partnerRaceId) {
+            // Look for partner spawning after bossStartTime
+            partnerTarget = targets.find(t => t.raceId === bossDef.partnerRaceId && (t.startTime || 0) >= bossStartTime);
+            if (partnerTarget) {
+              // The encounter ends when the partner dies or disappears
+              bossEndTime = (partnerTarget.seenDead || partnerTarget.disappeared) ? (partnerTarget.endTime || 0) : Infinity;
+            }
+          }
+
+          // Find all targets that appeared during the boss's lifetime
+          const members = targets.filter(t => {
+            const tStartTime = t.startTime || 0;
+            return tStartTime >= bossStartTime && (bossEndTime === Infinity || tStartTime <= bossEndTime);
+          });
+
+          if (members.length > 0) {
+            const groupTotalDamage = members.reduce((sum, m) => sum + m.damage, 0);
+            const groupDamagePercent = grandTotalDamage > 0 ? (groupTotalDamage / grandTotalDamage) * 100 : 0;
+
+            // Determine active HP details (use partner's HP if active, else boss's HP)
+            const activeBoss = (partnerTarget && !partnerTarget.seenDead && !partnerTarget.disappeared) ? partnerTarget : bossTarget;
+
+            const groupItem = {
+              id: `group_${bossTarget.id}`,
+              name: bossDef.groupName,
+              rawName: bossDef.groupName,
+              isGroup: true,
+              damage: groupTotalDamage,
+              damagePercent: groupDamagePercent,
+              currentHp: activeBoss.currentHp,
+              maxHp: activeBoss.maxHp,
+              hpPercent: activeBoss.hpPercent,
+              seenAppear: activeBoss.seenAppear,
+              seenDead: activeBoss.seenDead,
+              disappeared: activeBoss.disappeared,
+              startTime: bossTarget.startTime,
+              endTime: partnerTarget ? partnerTarget.endTime : bossTarget.endTime,
+              raceId: activeBoss.raceId,
+              targets: [...members].sort((a, b) => {
+                const startA = a.startTime || 0;
+                const startB = b.startTime || 0;
+                if (startA !== startB) {
+                  return startA - startB; // Chronological ascending order
+                }
+                return b.damage - a.damage; // Tie-breaker: highest damage first
+              }),
+            };
+
+            groupedList.push(groupItem);
+            members.forEach(m => groupedTargetIds.add(m.id));
+          }
+        }
+      }
+
+      // Filter out all targets that have been grouped from the top level
+      const ungroupedTargets = targets.filter(t => !groupedTargetIds.has(t.id));
+
+      const combined = [...ungroupedTargets, ...groupedList];
+
+      combined.sort((a, b) => {
         const startA = a.startTime || 0;
         const startB = b.startTime || 0;
         if (startB !== startA) {
@@ -559,7 +789,8 @@ export default defineComponent({
         }
         return b.damage - a.damage;
       });
-      targets.unshift({
+
+      combined.unshift({
         id: "",
         name: "All Targets",
         rawName: "All Targets",
@@ -575,8 +806,71 @@ export default defineComponent({
         endTime: undefined,
         raceId: undefined,
       });
-      return targets;
+
+      return combined;
     });
+
+    const selectedTargetName = computed(() => {
+      if (!selectedTargetId.value) return "All Targets";
+      for (const item of targetList.value) {
+        if (item.id === selectedTargetId.value) {
+          return item.rawName || item.name;
+        }
+        if (item.isGroup && item.targets) {
+          const sub = item.targets.find((t: any) => t.id === selectedTargetId.value);
+          if (sub) {
+            return sub.rawName || sub.name;
+          }
+        }
+      }
+      return fightSummary.targets[selectedTargetId.value]?.name || "Unknown Target";
+    });
+
+    const selectedTargetSeenAppear = computed(() => {
+      if (!selectedTargetId.value) return undefined;
+      for (const item of targetList.value) {
+        if (item.id === selectedTargetId.value) return item.seenAppear;
+        if (item.isGroup && item.targets) {
+          const sub = item.targets.find((t: any) => t.id === selectedTargetId.value);
+          if (sub) return sub.seenAppear;
+        }
+      }
+      return fightSummary.targets[selectedTargetId.value]?.seenAppear;
+    });
+
+    const selectedTargetDamage = computed(() => {
+      if (!selectedTargetId.value) {
+        return targetList.value[0]?.damage || 0;
+      }
+      for (const item of targetList.value) {
+        if (item.id === selectedTargetId.value) return item.damage;
+        if (item.isGroup && item.targets) {
+          const sub = item.targets.find((t: any) => t.id === selectedTargetId.value);
+          if (sub) return sub.damage;
+        }
+      }
+      return 0;
+    });
+
+    const handleItemClick = (item: any) => {
+      if (item.isGroup) {
+        if (expandedGroup.value && expandedGroup.value.id === item.id) {
+          expandedGroup.value = null;
+        } else {
+          expandedGroup.value = item;
+        }
+      } else {
+        selectedTargetId.value = item.id;
+        isTargetMenuOpen.value = false;
+        expandedGroup.value = null;
+      }
+    };
+
+    const selectGroupTarget = (subItem: any) => {
+      selectedTargetId.value = subItem.id;
+      isTargetMenuOpen.value = false;
+    };
+
 
     const attackerNameMap = computed(() => {
       const map: { [id: string]: string } = {};
@@ -586,6 +880,51 @@ export default defineComponent({
         }
       }
       return map;
+    });
+
+    const menuHeight = ref(400);
+
+    const calculateMaxHeight = () => {
+      nextTick(() => {
+        const el = document.querySelector(".target-select-custom-trigger");
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          // Calculate available space from activator bottom to viewport bottom (with 24px safe padding)
+          const spaceBelow = window.innerHeight - rect.bottom - 24;
+          menuHeight.value = Math.max(200, spaceBelow);
+        }
+      });
+    };
+
+    watch(isTargetMenuOpen, (isOpen) => {
+      if (isOpen) {
+        calculateMaxHeight();
+        if (selectedTargetId.value) {
+          const groupContainingTarget = targetList.value.find(
+            item => item.isGroup && item.targets && item.targets.some((sub: any) => sub.id === selectedTargetId.value)
+          );
+          if (groupContainingTarget) {
+            expandedGroup.value = groupContainingTarget;
+          } else {
+            expandedGroup.value = null;
+          }
+        } else {
+          expandedGroup.value = null;
+        }
+      }
+    });
+
+    watch(activeSessionId, () => {
+      expandedGroup.value = null;
+      isTargetMenuOpen.value = false;
+    });
+
+    onMounted(() => {
+      window.addEventListener("resize", calculateMaxHeight);
+    });
+
+    onBeforeUnmount(() => {
+      window.removeEventListener("resize", calculateMaxHeight);
     });
 
     const formatTime = (ts: number | undefined): string => {
@@ -598,34 +937,6 @@ export default defineComponent({
         second: '2-digit' 
       });
     };
-
-    const menuMaxHeight = ref(400);
-
-    const calculateMaxHeight = () => {
-      nextTick(() => {
-        const el = document.querySelector(".target-select-refined");
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          // Calculate available vertical space below select activator to viewport bottom
-          const spaceBelow = window.innerHeight - rect.bottom - 24; // 24px safe padding
-          menuMaxHeight.value = Math.max(200, spaceBelow);
-        }
-      });
-    };
-
-    const handleMenuUpdate = (isOpen: boolean) => {
-      if (isOpen) {
-        calculateMaxHeight();
-      }
-    };
-
-    onMounted(() => {
-      window.addEventListener("resize", calculateMaxHeight);
-    });
-
-    onBeforeUnmount(() => {
-      window.removeEventListener("resize", calculateMaxHeight);
-    });
 
     const getTargetClass = (raceId: number | undefined): string => {
       if (!raceId) return "";
@@ -641,10 +952,18 @@ export default defineComponent({
       formattedPartyDPS,
       attackerNameMap,
       formatNumber,
+      formatCompact,
       formatDuration,
       formatTime,
-      menuMaxHeight,
-      handleMenuUpdate,
+      isTargetMenuOpen,
+      expandedGroup,
+      selectedTargetName,
+      selectedTargetSeenAppear,
+      selectedTargetDamage,
+      handleItemClick,
+      selectGroupTarget,
+
+      menuHeight,
       selectedTargetConditions: computed(() => {
         if (!selectedTargetId.value) return undefined;
         return fightSummary.targets[selectedTargetId.value]?.conditions;
@@ -759,7 +1078,7 @@ export default defineComponent({
 }
 
 .target-section {
-  width: 400px;
+  width: 380px;
 }
 
 .header-label {
@@ -771,15 +1090,74 @@ export default defineComponent({
   margin-bottom: 8px;
 }
 
-.target-select-refined :deep(.v-field) {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+.target-select-custom-trigger {
+  background: #171b24 !important;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  height: 40px;
   transition: all 0.2s ease;
+  user-select: none;
 }
 
-.target-select-refined :deep(.v-field--focused) {
-  border-color: rgba(var(--v-theme-primary), 0.4);
+.target-select-custom-trigger:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.target-menu-card {
+  background: #171b24 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+  overflow: hidden !important;
+}
+
+.target-menu-column {
+  background: #171b24 !important;
+}
+
+.target-menu-item {
+  transition: background-color 0.15s ease !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  background: transparent;
+  border-left: 3px solid transparent !important;
+}
+
+.target-menu-item:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.active-item {
+  background: rgba(129, 138, 248, 0.12) !important;
+  border-left: 3px solid #818cf8 !important;
+}
+
+.expanded-group-item {
+  background: rgba(129, 138, 248, 0.12) !important;
+  border-left: 3px solid #818cf8 !important;
+}
+
+.group-arrow-icon {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.group-arrow-icon.rotated {
+  transform: rotate(90deg);
+}
+
+/* Custom Scrollbar for dropdown lists */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .stats-section {
@@ -931,49 +1309,61 @@ export default defineComponent({
   border-radius: 0 !important;
 }
 
-/* Beautiful target-specific backgrounds & gradients for the dropdown list items */
+/* Subtle target-specific left border markers & elegant hover backgrounds */
 .target-blue {
-  background: linear-gradient(90deg, rgba(37, 99, 235, 0.28) 0%, rgba(29, 78, 216, 0.5) 100%) !important;
-  border-left: 5px solid #3b82f6 !important;
-  box-shadow: inset 5px 0 10px rgba(59, 130, 246, 0.25) !important;
+  border-left: 3px solid #3b82f6 !important;
 }
 .target-blue:hover {
-  background: linear-gradient(90deg, rgba(37, 99, 235, 0.42) 0%, rgba(29, 78, 216, 0.65) 100%) !important;
-  border-left: 5px solid #60a5fa !important;
-  box-shadow: inset 6px 0 15px rgba(96, 165, 250, 0.45) !important;
+  background: rgba(59, 130, 246, 0.08) !important;
+}
+.target-blue.active-item {
+  background: rgba(59, 130, 246, 0.12) !important;
+}
+.target-blue.expanded-group-item {
+  background: rgba(59, 130, 246, 0.12) !important;
+  border-left: 3px solid #3b82f6 !important;
 }
 
 .target-green {
-  background: linear-gradient(90deg, rgba(16, 185, 129, 0.28) 0%, rgba(4, 120, 87, 0.5) 100%) !important;
-  border-left: 5px solid #10b981 !important;
-  box-shadow: inset 5px 0 10px rgba(16, 185, 129, 0.25) !important;
+  border-left: 3px solid #10b981 !important;
 }
 .target-green:hover {
-  background: linear-gradient(90deg, rgba(16, 185, 129, 0.42) 0%, rgba(4, 120, 87, 0.65) 100%) !important;
-  border-left: 5px solid #34d399 !important;
-  box-shadow: inset 6px 0 15px rgba(52, 211, 153, 0.45) !important;
+  background: rgba(16, 185, 129, 0.08) !important;
+}
+.target-green.active-item {
+  background: rgba(16, 185, 129, 0.12) !important;
+}
+.target-green.expanded-group-item {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-left: 3px solid #10b981 !important;
 }
 
 .target-gold {
-  background: linear-gradient(90deg, rgba(245, 158, 11, 0.28) 0%, rgba(180, 83, 9, 0.5) 100%) !important;
-  border-left: 5px solid #f59e0b !important;
-  box-shadow: inset 5px 0 10px rgba(245, 158, 11, 0.25) !important;
+  border-left: 3px solid #f59e0b !important;
 }
 .target-gold:hover {
-  background: linear-gradient(90deg, rgba(245, 158, 11, 0.42) 0%, rgba(180, 83, 9, 0.65) 100%) !important;
-  border-left: 5px solid #fbbf24 !important;
-  box-shadow: inset 6px 0 15px rgba(251, 191, 36, 0.45) !important;
+  background: rgba(245, 158, 11, 0.08) !important;
+}
+.target-gold.active-item {
+  background: rgba(245, 158, 11, 0.12) !important;
+}
+.target-gold.expanded-group-item {
+  background: rgba(245, 158, 11, 0.12) !important;
+  border-left: 3px solid #f59e0b !important;
 }
 
 .target-pearl {
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.15) 0%, rgba(241, 245, 249, 0.3) 100%) !important;
-  border-left: 5px solid #f8fafc !important;
-  box-shadow: inset 5px 0 15px rgba(255, 255, 255, 0.15), 0 0 10px rgba(255, 255, 255, 0.05) !important;
+  border-left: 3px solid #f8fafc !important;
 }
 .target-pearl:hover {
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.25) 0%, rgba(241, 245, 249, 0.45) 100%) !important;
-  border-left: 5px solid #ffffff !important;
-  box-shadow: inset 6px 0 20px rgba(255, 255, 255, 0.25), 0 0 15px rgba(255, 255, 255, 0.1) !important;
+  background: rgba(248, 250, 252, 0.08) !important;
+}
+.target-pearl.active-item {
+  background: rgba(248, 250, 252, 0.12) !important;
+}
+.target-pearl.expanded-group-item {
+  background: rgba(248, 250, 252, 0.12) !important;
+  border-left: 3px solid #f8fafc !important;
 }
 
 /* --- ENTITY VIEWER FLOATING PANEL & BUTTON STYLES --- */
