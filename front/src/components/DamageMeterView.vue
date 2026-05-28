@@ -9,7 +9,7 @@
             <!-- Left: Target Selector -->
             <div class="header-section target-section">
               <div class="header-label d-flex align-center">
-                <knot-indicator legend class="mr-1" />
+                <v-icon icon="mdi-target" class="mr-1 text-grey" size="small"></v-icon>
                 COMBAT TARGET
               </div>
               <v-select
@@ -29,15 +29,6 @@
                 <template v-slot:selection="{ item }">
                   <div class="d-flex align-center w-100 justify-space-between text-body-2 font-weight-medium">
                     <span class="d-flex align-center">
-                      <span class="mr-2 d-flex align-center">
-                        <knot-indicator
-                          v-if="item.raw.id"
-                          :left="getKnotColors(item.raw).left"
-                          :right="getKnotColors(item.raw).right"
-                          :border="getKnotColors(item.raw).border"
-                          :tooltip="getKnotColors(item.raw).tooltip"
-                        />
-                      </span>
                       <span>{{ item.raw.rawName || item.raw.name }}</span>
                       <v-tooltip
                         v-if="item.raw.id && item.raw.seenAppear === false"
@@ -61,49 +52,47 @@
 
                 <!-- Item Display (when open in dropdown list) -->
                 <template v-slot:item="{ props, item }">
-                  <v-list-item v-bind="props" :class="getTargetClass(item.raw.raceId)">
+                  <v-list-item v-bind="props" :class="getTargetClass(item.raw.raceId)" class="target-list-item-refined">
                     <template v-slot:title>
-                      <div class="target-item-grid py-1">
-                        <!-- Column 1: Status Icons -->
-                        <span class="target-col-icons d-flex align-center justify-center">
-                          <knot-indicator
-                            v-if="item.raw.id"
-                            :left="getKnotColors(item.raw).left"
-                            :right="getKnotColors(item.raw).right"
-                            :border="getKnotColors(item.raw).border"
-                            :tooltip="getKnotColors(item.raw).tooltip"
-                          />
-                        </span>
+                      <div class="target-item-container d-flex flex-column">
+                        <!-- Row 1: Name and HP Details (with horizontal/vertical padding) -->
+                        <div class="d-flex justify-space-between align-center px-4 pt-3 pb-2">
+                          <span class="target-col-name font-weight-bold d-flex align-center text-white">
+                            <span>{{ item.raw.rawName || item.raw.name }}</span>
+                            <v-tooltip
+                              v-if="item.raw.id && item.raw.seenAppear === false"
+                              location="top"
+                              text="Spawn not captured by parser."
+                            >
+                              <template v-slot:activator="{ props }">
+                                <v-icon
+                                  v-bind="props"
+                                  icon="mdi-alert-circle-outline"
+                                  color="warning"
+                                  size="small"
+                                  class="ml-1 flex-shrink-0"
+                                ></v-icon>
+                              </template>
+                            </v-tooltip>
+                          </span>
+                          
+                          <!-- Right side of Row 1 -->
+                          <span v-if="item.raw.id" class="hp-text text-caption text-grey-lighten-1 font-weight-medium text-right">
+                            {{ formatNumber(item.raw.currentHp) }} / {{ formatNumber(item.raw.maxHp) }}
+                            <span class="text-grey ml-1">({{ item.raw.hpPercent.toFixed(1) }}%)</span>
+                          </span>
+                          <span v-else class="target-col-damage font-weight-bold text-amber text-right">
+                            {{ formatNumber(item.raw.damage) }}
+                          </span>
+                        </div>
 
-                        <!-- Column 2: Name -->
-                        <span class="target-col-name font-weight-bold d-flex align-center">
-                          <span>{{ item.raw.rawName || item.raw.name }}</span>
-                          <v-tooltip
-                            v-if="item.raw.id && item.raw.seenAppear === false"
-                            location="top"
-                            text="Spawn not captured by parser."
-                          >
-                            <template v-slot:activator="{ props }">
-                              <v-icon
-                                v-bind="props"
-                                icon="mdi-alert-circle-outline"
-                                color="warning"
-                                size="small"
-                                class="ml-1 flex-shrink-0"
-                              ></v-icon>
-                            </template>
-                          </v-tooltip>
-                        </span>
-                        
-                        <!-- Column 3: Duration -->
-                        <span class="target-col-duration text-grey text-caption">
-                          <template v-if="item.raw.id && item.raw.startTime !== undefined && item.raw.endTime !== undefined">
-                            {{ formatDuration(item.raw.endTime - item.raw.startTime) }}
-                          </template>
-                        </span>
-
-                        <!-- Column 4: Damage Dealt -->
-                        <span class="target-col-damage font-weight-bold text-amber text-right">{{ formatNumber(item.raw.damage) }}</span>
+                        <!-- Row 2: Full-Width HP Bar Separator (Only if specific target) -->
+                        <div v-if="item.raw.id" class="hp-bar-separator w-100">
+                          <div
+                            class="hp-bar-separator-fill hp-enemy"
+                            :style="{ width: item.raw.hpPercent + '%' }"
+                          ></div>
+                        </div>
                       </div>
                     </template>
                   </v-list-item>
@@ -371,20 +360,19 @@
 
 <script lang="ts">
 import { defineComponent, ref, computed, inject, nextTick, onMounted, onBeforeUnmount } from "vue";
-import { fightSummary, selectedTargetId, isNavDrawerOpen } from "@/store";
+import { fightSummary, selectedTargetId, isNavDrawerOpen, activeSessionId } from "@/store";
 import SessionPanel from "@/components/SessionPanel.vue";
 import ApplyDamageBySkillComponent from "@/components/applyDamageBySkill.vue";
 import DamageTakenBySourceComponent from "@/components/DamageTakenBySource.vue";
 import DamageGraph from "@/components/DamageGraph.vue";
 import TargetConditionView from "@/components/TargetConditionView.vue";
-import KnotIndicator from "@/components/KnotIndicator.vue";
 
 const SPECIAL_TARGET_CLASSES: Record<number, string> = {
   7600: "target-blue",
   7601: "target-blue",
   7602: "target-green",
   7615: "target-gold",
-  7603: "target-red",
+  7603: "target-pearl",
 };
 
 export default defineComponent({
@@ -395,7 +383,6 @@ export default defineComponent({
     DamageTakenBySource: DamageTakenBySourceComponent,
     DamageGraph,
     TargetConditionView,
-    KnotIndicator,
   },
   setup() {
     const tab = ref("damageDealt");
@@ -485,14 +472,76 @@ export default defineComponent({
             player.damageByTarget[targetId].totalDamage;
         }
       }
+      const grandTotalDamage = Object.values(totalDamageByTarget).reduce(
+        (sum, dmg) => sum + dmg,
+        0
+      );
       const targets = Object.entries(fightSummary.targets).map(
         ([id, stats]) => {
           const damage = totalDamageByTarget[id] || 0;
+          const damagePercent = grandTotalDamage > 0 ? (damage / grandTotalDamage) * 100 : 0;
+
+          // Determine current and max HP
+          let currentHp = 0;
+          let maxHp = 0;
+
+          // 1. Live sessions: try to find entity in currentEntities
+          if (activeSessionId.value === "live" && fightSummary.currentEntities) {
+            const entity = fightSummary.currentEntities.find(e => e.id === id);
+            if (entity) {
+              currentHp = entity.currentHp;
+              maxHp = entity.maxHp;
+            }
+          }
+
+          // 2. Fallback to lowest HP percentage recorded in hpHistory
+          if (maxHp === 0 && stats.hpHistory && stats.hpHistory.length > 0) {
+            let lowestPct = Infinity;
+            let correspondingCurrentHp = 0;
+            let correspondingMaxHp = 0;
+            for (const pt of stats.hpHistory) {
+              if (pt.maxHp > 0) {
+                const pct = pt.currentHp / pt.maxHp;
+                if (pct < lowestPct) {
+                  lowestPct = pct;
+                  correspondingCurrentHp = pt.currentHp;
+                  correspondingMaxHp = pt.maxHp;
+                }
+              }
+            }
+            if (lowestPct !== Infinity) {
+              currentHp = correspondingCurrentHp;
+              maxHp = correspondingMaxHp;
+            }
+          }
+
+          // 3. Last resort fallbacks
+          if (maxHp === 0) {
+            if (stats.seenDead) {
+              currentHp = 0;
+              maxHp = 100;
+            } else {
+              currentHp = 100;
+              maxHp = 100;
+            }
+          }
+
+          // If the target is dead, override current HP to 0
+          if (stats.seenDead) {
+            currentHp = 0;
+          }
+
+          const hpPercent = maxHp > 0 ? Math.max(0, Math.min(100, (currentHp / maxHp) * 100)) : 0;
+
           return {
             id,
-            name: `${stats.name} (${formatNumber(damage)})`,
+            name: stats.name,
             rawName: stats.name,
             damage,
+            damagePercent,
+            currentHp,
+            maxHp,
+            hpPercent,
             seenAppear: stats.seenAppear,
             seenDead: stats.seenDead,
             disappeared: stats.disappeared,
@@ -510,15 +559,15 @@ export default defineComponent({
         }
         return b.damage - a.damage;
       });
-      const grandTotalDamage = Object.values(totalDamageByTarget).reduce(
-        (sum, dmg) => sum + dmg,
-        0
-      );
       targets.unshift({
         id: "",
-        name: `All Targets (${formatNumber(grandTotalDamage)})`,
+        name: "All Targets",
         rawName: "All Targets",
         damage: grandTotalDamage,
+        damagePercent: 100,
+        currentHp: 0,
+        maxHp: 0,
+        hpPercent: 0,
         seenAppear: undefined,
         seenDead: undefined,
         disappeared: undefined,
@@ -578,38 +627,12 @@ export default defineComponent({
       window.removeEventListener("resize", calculateMaxHeight);
     });
 
-    const getKnotColors = (target: any) => {
-      if (!target) return { left: '#81c784', right: '#81c784', border: '#043916', tooltip: '' };
-      
-      let centerColor = '#81c784'; // Default Green (still alive)
-      let border = '#043916'; // Default Dark Green border
-      let statusName = 'Active';
-      
-      if (target.seenDead) {
-        centerColor = '#e97269'; // Red (died)
-        border = '#460101'; // Dark Red border
-        statusName = 'Died';
-      } else if (target.disappeared) {
-        centerColor = '#ffb74d'; // Orange (despawned before death)
-        border = '#4d320c'; // Dark Orange border
-        statusName = 'Despawned';
-      }
-      
-      return {
-        left: centerColor,
-        right: centerColor,
-        border,
-        tooltip: statusName
-      };
-    };
-
     const getTargetClass = (raceId: number | undefined): string => {
       if (!raceId) return "";
       return SPECIAL_TARGET_CLASSES[raceId] || "";
     };
 
     return {
-      getKnotColors,
       getTargetClass,
       tab,
       selectedTargetId,
@@ -850,34 +873,62 @@ export default defineComponent({
   bottom: 0 !important;
 }
 
-.target-item-grid {
-  display: grid;
-  grid-template-columns: 36px minmax(100px, 1fr) 60px 110px; /* Precise matching columns, name constrained to wrap */
-  align-items: center;
+.target-item-container {
   width: 100%;
-  gap: 12px;
 }
 
 .target-col-name {
   white-space: normal;
   overflow-wrap: break-word;
   word-break: break-word;
-}
-
-.target-col-duration {
-  white-space: nowrap;
-  text-align: left;
-}
-
-.target-col-icons {
-  white-space: nowrap;
-  text-align: center;
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 .target-col-damage {
   white-space: nowrap;
   text-align: right;
+  font-size: 0.9rem;
+}
+
+.target-list-item-refined {
+  padding: 0 !important;
+  min-height: 0 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease !important;
+}
+
+.target-list-item-refined:hover {
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* Override default list item padding to enable edge-to-edge content */
+.target-list-item-refined :deep(.v-list-item__content) {
+  padding: 0 !important;
+}
+
+.target-list-item-refined :deep(.v-list-item-title) {
+  white-space: normal !important;
+}
+
+.hp-text {
+  font-size: 0.75rem !important;
+}
+
+/* Premium full-width borderless HP bar separator stuck flush to the bottom */
+.hp-bar-separator {
+  height: 4px;
+  background: rgba(0, 0, 0, 0.4);
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  border-radius: 0 !important;
+}
+
+.hp-bar-separator-fill {
+  height: 100%;
+  position: relative;
+  transition: width 0.3s ease;
+  border-radius: 0 !important;
 }
 
 /* Beautiful target-specific backgrounds & gradients for the dropdown list items */
@@ -914,15 +965,15 @@ export default defineComponent({
   box-shadow: inset 6px 0 15px rgba(251, 191, 36, 0.45) !important;
 }
 
-.target-red {
-  background: linear-gradient(90deg, rgba(239, 68, 68, 0.28) 0%, rgba(185, 28, 28, 0.5) 100%) !important;
-  border-left: 5px solid #ef4444 !important;
-  box-shadow: inset 5px 0 10px rgba(239, 68, 68, 0.25) !important;
+.target-pearl {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.15) 0%, rgba(241, 245, 249, 0.3) 100%) !important;
+  border-left: 5px solid #f8fafc !important;
+  box-shadow: inset 5px 0 15px rgba(255, 255, 255, 0.15), 0 0 10px rgba(255, 255, 255, 0.05) !important;
 }
-.target-red:hover {
-  background: linear-gradient(90deg, rgba(239, 68, 68, 0.42) 0%, rgba(185, 28, 28, 0.65) 100%) !important;
-  border-left: 5px solid #f87171 !important;
-  box-shadow: inset 6px 0 15px rgba(248, 113, 113, 0.45) !important;
+.target-pearl:hover {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.25) 0%, rgba(241, 245, 249, 0.45) 100%) !important;
+  border-left: 5px solid #ffffff !important;
+  box-shadow: inset 6px 0 20px rgba(255, 255, 255, 0.25), 0 0 15px rgba(255, 255, 255, 0.1) !important;
 }
 
 /* --- ENTITY VIEWER FLOATING PANEL & BUTTON STYLES --- */
