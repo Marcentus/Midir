@@ -291,6 +291,9 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 	if p.Op == opcodeCombatAction {
 		a.processCombatAction(p)
 	}
+	if p.Op == opcodeEffect {
+		a.processEffect(p)
+	}
 	if p.Op == opcodeEffectDelayed {
 		a.processEffectDelayed(p)
 	}
@@ -328,6 +331,114 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 	}
 	if p.Op == opcodePublicStatUpdate {
 		a.processPublicStatUpdate(p)
+	}
+}
+
+func (a *Aggregator) processEffect(p *packet.GamePacket) {
+	if len(p.Msg) < 7 ||
+		p.Msg[0].Type() != packet.MessageElemTypeInt ||
+		p.Msg[0].Data().(uint32) != 352 ||
+		p.Msg[1].Type() != packet.MessageElemTypeByte ||
+		p.Msg[2].Type() != packet.MessageElemTypeInt ||
+		p.Msg[3].Type() != packet.MessageElemTypeInt ||
+		p.Msg[4].Type() != packet.MessageElemTypeLong ||
+		p.Msg[5].Type() != packet.MessageElemTypeShort ||
+		p.Msg[6].Type() != packet.MessageElemTypeByte {
+		return
+	}
+	damage := float32(p.Msg[2].Data().(uint32))
+	attackerId := p.Msg[4].Data().(uint64)
+	skillId := p.Msg[5].Data().(uint16)
+	targetId := p.Id
+
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	if a.isInvincible(targetId) {
+		damage = 0
+	}
+
+	// Update the shared timers for this target
+	a.updateTimestamps(targetId, p.At)
+
+	if attackerInfo, isPlayer := playerCache.Get(attackerId); isPlayer {
+		// Check if we have identified the talent color yet.
+		if _, known := a.playerTalentColors[attackerId]; !known {
+			if iconPath, found := skillToArcanaIcon[skillId]; found {
+				a.playerTalents[attackerId] = iconPath
+				if name, ok := skillToArcanaName[skillId]; ok {
+					a.playerTalentNames[attackerId] = name
+				}
+				if color, ok := skillToArcanaColor[skillId]; ok {
+					a.playerTalentColors[attackerId] = color
+				}
+			}
+		}
+		stats := a.getOrCreatePlayerStats(attackerInfo)
+		targetIdStr := strconv.FormatUint(targetId, 10)
+		tempHitPacket := &packet.CombatActionPacket{Hit: &packet.CombatActionPacketHitInfo{Damage: damage}}
+		a.updateBreakdown(&stats.OverallStats, tempHitPacket, skillId, true)
+		a.updatePerTargetBreakdown(stats, targetIdStr, tempHitPacket, skillId, true)
+	}
+
+	if targetInfo, isPlayerTarget := playerCache.Get(targetId); isPlayerTarget {
+		a.updateDamageTaken(targetInfo, attackerId, skillId, damage, 0)
+	}
+}
+
+func (a *Aggregator) processEffectDelayed(p *packet.GamePacket) {
+	if len(p.Msg) < 7 ||
+		p.Msg[1].Type() != packet.MessageElemTypeInt ||
+		p.Msg[1].Data().(uint32) != 317 ||
+		p.Msg[2].Type() != packet.MessageElemTypeInt ||
+		p.Msg[5].Type() != packet.MessageElemTypeLong ||
+		p.Msg[6].Type() != packet.MessageElemTypeShort {
+		return
+	}
+	damage := float32(p.Msg[2].Data().(uint32))
+	attackerId := p.Msg[5].Data().(uint64)
+	skillId := p.Msg[6].Data().(uint16)
+	targetId := p.Id
+
+	// logger.Println("[Locking] Aggregator.EffectDelayed attempting to lock...")
+	a.mu.Lock()
+	// logger.Println("...[Locked] Aggregator.EffectDelayed acquired lock.")
+	defer func() {
+		// logger.Println("[Unlocking] Aggregator.EffectDelayed attempting to unlock.")
+		a.mu.Unlock()
+		// logger.Println("...[Unlocked] Aggregator.EffectDelayed released lock.")
+	}()
+
+	if a.isInvincible(targetId) {
+		damage = 0
+	}
+
+	// Update the shared timers for this target
+	a.updateTimestamps(targetId, p.At)
+
+	if attackerInfo, isPlayer := playerCache.Get(attackerId); isPlayer {
+		// Check if we have identified the talent color yet.
+		if _, known := a.playerTalentColors[attackerId]; !known {
+			if iconPath, found := skillToArcanaIcon[skillId]; found {
+				a.playerTalents[attackerId] = iconPath
+				if name, ok := skillToArcanaName[skillId]; ok {
+					a.playerTalentNames[attackerId] = name
+				}
+				if color, ok := skillToArcanaColor[skillId]; ok {
+					a.playerTalentColors[attackerId] = color
+					// logger.Printf("Assigned color %s to attacker %d based on delayed skill %d", color, attackerId, skillId)
+				}
+			}
+		}
+		stats := a.getOrCreatePlayerStats(attackerInfo)
+		targetIdStr := strconv.FormatUint(targetId, 10)
+		tempHitPacket := &packet.CombatActionPacket{Hit: &packet.CombatActionPacketHitInfo{Damage: damage}}
+		a.updateBreakdown(&stats.OverallStats, tempHitPacket, skillId, true)
+		a.updatePerTargetBreakdown(stats, targetIdStr, tempHitPacket, skillId, true)
+	}
+
+	if targetInfo, isPlayerTarget := playerCache.Get(targetId); isPlayerTarget {
+		a.updateDamageTaken(targetInfo, attackerId, skillId, damage, 0)
 	}
 }
 
@@ -504,62 +615,6 @@ func (a *Aggregator) processCombatAction(p *packet.GamePacket) {
 		if targetInfo, isPlayerTarget := playerCache.Get(sub.EntityId); isPlayerTarget {
 			a.updateDamageTaken(targetInfo, attackerId, attackSkillId, sub.Hit.Damage, float32(sub.Hit.ManaDamage))
 		}
-	}
-}
-
-func (a *Aggregator) processEffectDelayed(p *packet.GamePacket) {
-	if len(p.Msg) < 7 ||
-		p.Msg[1].Type() != packet.MessageElemTypeInt ||
-		p.Msg[1].Data().(uint32) != 317 ||
-		p.Msg[2].Type() != packet.MessageElemTypeInt ||
-		p.Msg[5].Type() != packet.MessageElemTypeLong ||
-		p.Msg[6].Type() != packet.MessageElemTypeShort {
-		return
-	}
-	damage := float32(p.Msg[2].Data().(uint32))
-	attackerId := p.Msg[5].Data().(uint64)
-	skillId := p.Msg[6].Data().(uint16)
-	targetId := p.Id
-
-	// logger.Println("[Locking] Aggregator.EffectDelayed attempting to lock...")
-	a.mu.Lock()
-	// logger.Println("...[Locked] Aggregator.EffectDelayed acquired lock.")
-	defer func() {
-		// logger.Println("[Unlocking] Aggregator.EffectDelayed attempting to unlock.")
-		a.mu.Unlock()
-		// logger.Println("...[Unlocked] Aggregator.EffectDelayed released lock.")
-	}()
-
-	if a.isInvincible(targetId) {
-		damage = 0
-	}
-
-	// Update the shared timers for this target
-	a.updateTimestamps(targetId, p.At)
-
-	if attackerInfo, isPlayer := playerCache.Get(attackerId); isPlayer {
-		// Check if we have identified the talent color yet.
-		if _, known := a.playerTalentColors[attackerId]; !known {
-			if iconPath, found := skillToArcanaIcon[skillId]; found {
-				a.playerTalents[attackerId] = iconPath
-				if name, ok := skillToArcanaName[skillId]; ok {
-					a.playerTalentNames[attackerId] = name
-				}
-				if color, ok := skillToArcanaColor[skillId]; ok {
-					a.playerTalentColors[attackerId] = color
-					// logger.Printf("Assigned color %s to attacker %d based on delayed skill %d", color, attackerId, skillId)
-				}
-			}
-		}
-		stats := a.getOrCreatePlayerStats(attackerInfo)
-		targetIdStr := strconv.FormatUint(targetId, 10)
-		tempHitPacket := &packet.CombatActionPacket{Hit: &packet.CombatActionPacketHitInfo{Damage: damage}}
-		a.updateBreakdown(&stats.OverallStats, tempHitPacket, skillId, true)
-		a.updatePerTargetBreakdown(stats, targetIdStr, tempHitPacket, skillId, true)
-	}
-
-	if targetInfo, isPlayerTarget := playerCache.Get(targetId); isPlayerTarget {
-		a.updateDamageTaken(targetInfo, attackerId, skillId, damage, 0)
 	}
 }
 

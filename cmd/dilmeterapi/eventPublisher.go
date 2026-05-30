@@ -71,6 +71,7 @@ const (
 	opcodeEntitiesAppear          = 0x5334
 	opcodeCombatAction            = 0x7926
 	opcodeEffectDelayed           = 0x9095
+	opcodeEffect                  = 0x9093
 	opcodeCharacterCondition      = 0xa028
 	opcodeEntityDisappear         = 0x520d
 	opcodeEntitiesDisappear       = 0x5335
@@ -427,6 +428,42 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 				events = append(events, e)
 			}
 		}
+
+	case opcodeEffect:
+		// Check against the structure of: Int, Byte, Int, Int, Long, Short, Byte
+		if len(p.Msg) < 7 ||
+			p.Msg[0].Type() != packet.MessageElemTypeInt ||
+			p.Msg[0].Data().(uint32) != 352 || // Type 352 check
+			p.Msg[1].Type() != packet.MessageElemTypeByte ||
+			p.Msg[2].Type() != packet.MessageElemTypeInt ||
+			p.Msg[3].Type() != packet.MessageElemTypeInt ||
+			p.Msg[4].Type() != packet.MessageElemTypeLong ||
+			p.Msg[5].Type() != packet.MessageElemTypeShort ||
+			p.Msg[6].Type() != packet.MessageElemTypeByte {
+			break
+		}
+
+		damage := float32(p.Msg[2].Data().(uint32))
+		attackerId := p.Msg[4].Data().(uint64)
+		skillId := p.Msg[5].Data().(uint16)
+		targetId := p.Id
+
+		t.lastCombatAt[attackerId] = p.At
+		t.lastCombatAt[targetId] = p.At
+
+		e := &eventDamage{
+			eventBase: eventBase{
+				EventId: eventIdDamage,
+				At:      p.At.Unix(),
+				Id:      strconv.FormatUint(attackerId, 10),
+			},
+			TargetId:   strconv.FormatUint(targetId, 10),
+			SkillId:    skillId,
+			Damage:     damage,
+			IsCritical: false,
+			IsDelayed:  true,
+		}
+		events = append(events, e)
 
 	case opcodeEffectDelayed:
 		// NEW: Check against the full, correct packet structure.

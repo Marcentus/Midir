@@ -463,3 +463,125 @@ func TestAggregator_InvincibilityFilter(t *testing.T) {
 		t.Errorf("Expected 0 aggregated damage due to invincibility, got %f", stats.OverallStats.TotalDamage)
 	}
 }
+
+func TestAggregator_EffectPacket(t *testing.T) {
+	var err error
+	db, err = sql.Open("sqlite", ":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		db.Close()
+		db = nil
+	}()
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS players (
+		id INTEGER PRIMARY KEY,
+		name TEXT,
+		race_id INTEGER
+	);`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	playerID := uint64(5555)
+	enemyID := uint64(7777)
+
+	// Insert mock player into DB
+	_, err = db.Exec("INSERT INTO players (id, name, race_id) VALUES (?, ?, ?)", playerID, "Alice", 8001)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	agg := NewAggregator()
+	agg.SetLive(true)
+
+	// Mock player and enemy in cache
+	agg.entityCache[playerID] = &packet.EntityInfo{Id: playerID, Name: "Alice", RaceId: 8001}
+	agg.entityCache[enemyID] = &packet.EntityInfo{Id: enemyID, Name: "7777", RaceId: 2000} // numeric name = enemy
+
+	// 1. Process valid Effect packet (opcodeEffect = 0x9093, Type = 352)
+	pEffect := &packet.GamePacket{
+		Op: opcodeEffect,
+		Id: enemyID, // target ID
+		At: time.Now(),
+		Msg: []packet.IMessageElem{
+			packet.NewMessageElemInt(352),       // type = 352
+			packet.NewMessageElemByte(0),        // skip byte
+			packet.NewMessageElemInt(2500),      // damage = 2500
+			packet.NewMessageElemInt(0),         // skip int
+			packet.NewMessageElemLong(playerID), // attacker ID
+			packet.NewMessageElemShort(888),     // skill ID
+			packet.NewMessageElemByte(0),        // skip byte
+		},
+	}
+	agg.ProcessPacket(pEffect)
+
+	// Verify Alice's damage stats recorded the 2500 damage
+	stats := agg.playerStats[playerID]
+	if stats == nil {
+		t.Fatalf("Expected stats for player Alice, got nil")
+	}
+	if stats.OverallStats.TotalDamage != 2500 {
+		t.Errorf("Expected 2500 damage, got %f", stats.OverallStats.TotalDamage)
+	}
+
+	// 2. Process invalid Effect packet (type != 352)
+	pInvalidType := &packet.GamePacket{
+		Op: opcodeEffect,
+		Id: enemyID,
+		At: time.Now(),
+		Msg: []packet.IMessageElem{
+			packet.NewMessageElemInt(999),       // type = 999 (ignored)
+			packet.NewMessageElemByte(0),
+			packet.NewMessageElemInt(5000),      // damage
+			packet.NewMessageElemInt(0),
+			packet.NewMessageElemLong(playerID),
+			packet.NewMessageElemShort(888),
+			packet.NewMessageElemByte(0),
+		},
+	}
+	agg.ProcessPacket(pInvalidType)
+
+	// Total damage should still be 2500 (the 5000 is ignored)
+	if stats.OverallStats.TotalDamage != 2500 {
+		t.Errorf("Expected damage to remain 2500, got %f", stats.OverallStats.TotalDamage)
+	}
+
+	// 3. Process Effect packet during target invincibility
+	// Enable invincibility on enemy
+	pEnableInvincible := &packet.GamePacket{
+		Op: opcodeCharacterCondition,
+		Id: enemyID,
+		At: time.Now(),
+		Msg: []packet.IMessageElem{
+			packet.NewMessageElemByte(1),                     // isEnable = true
+			packet.NewMessageElemInt(494),                    // ccId = 494
+			packet.NewMessageElemLong(0),                     // disableAt
+			packet.NewMessageElemString("Invincible Shield"), // metadata
+			packet.NewMessageElemLong(0),                     // attackerId
+		},
+	}
+	agg.ProcessPacket(pEnableInvincible)
+
+	pEffectInvincible := &packet.GamePacket{
+		Op: opcodeEffect,
+		Id: enemyID,
+		At: time.Now(),
+		Msg: []packet.IMessageElem{
+			packet.NewMessageElemInt(352),
+			packet.NewMessageElemByte(0),
+			packet.NewMessageElemInt(4000), // damage = 4000 (should be zeroed)
+			packet.NewMessageElemInt(0),
+			packet.NewMessageElemLong(playerID),
+			packet.NewMessageElemShort(888),
+			packet.NewMessageElemByte(0),
+		},
+	}
+	agg.ProcessPacket(pEffectInvincible)
+
+	// Total damage should still be 2500 (the 4000 is ignored/zeroed out)
+	if stats.OverallStats.TotalDamage != 2500 {
+		t.Errorf("Expected damage to remain 2500 under invincibility, got %f", stats.OverallStats.TotalDamage)
+	}
+}
