@@ -656,47 +656,8 @@ func finalizeBreakdownFromLog(
 
 	// --- CONDITION TRACKING LOGIC (Mirrors Aggregator) ---
 	breakdown.Conditions = calculateConditionsFromLog(playerID, duration, windowStart, windowEnd, conditionHistory, activeConditions)
-
-	// --- SKILL USES COUNTING LOGIC (Mirrors Aggregator) ---
-	skillUsesCount := make(map[uint16]int)
-	for _, use := range skillUses {
-		if isOverall {
-			skillUsesCount[use.SkillID]++
-		} else {
-			resolvedTargetID := use.TargetID
-			if resolvedTargetID != 0 {
-				targetIDStr := strconv.FormatUint(resolvedTargetID, 10)
-				_, isTracked := targetTimestamps[targetIDStr]
-				_, isPlayer := playerCache.Get(resolvedTargetID)
-				if !isTracked && !isPlayer {
-					resolvedTargetID = 0
-				}
-			}
-
-			if resolvedTargetID == targetID || resolvedTargetID == 0 {
-				targetIDStr := strconv.FormatUint(targetID, 10)
-				if times, ok := targetTimestamps[targetIDStr]; ok && times.StartTime > 0 {
-					end := times.EndTime
-					if end == 0 || end < times.StartTime {
-						end = use.Timestamp
-					}
-					if use.Timestamp >= times.StartTime && use.Timestamp <= end {
-						skillUsesCount[use.SkillID]++
-					}
-				}
-			}
-		}
-	}
-
 	if breakdown.Skills == nil {
 		breakdown.Skills = make(map[uint16]SkillStats)
-	}
-
-	for skillID, uses := range skillUsesCount {
-		skillStats := breakdown.Skills[skillID]
-		skillStats.ID = skillID
-		skillStats.Uses = uses
-		breakdown.Skills[skillID] = skillStats
 	}
 
 	return breakdown

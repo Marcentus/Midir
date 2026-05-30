@@ -297,9 +297,7 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 	if p.Op == opcodeEffectDelayed {
 		a.processEffectDelayed(p)
 	}
-	if p.Op == opcodeSkillUse || p.Op == opcodeSkillStart {
-		a.processSkillUse(p)
-	}
+
 	if p.Op == opcodeCharacterCondition {
 		// Handle condition add/remove updates
 		if cond, err := packet.ParseCharacterConditionPacket(p); err == nil {
@@ -618,61 +616,7 @@ func (a *Aggregator) processCombatAction(p *packet.GamePacket) {
 	}
 }
 
-func (a *Aggregator) processSkillUse(p *packet.GamePacket) {
-	if len(p.Msg) < 1 {
-		return
-	}
 
-	// Element 0: short (skill ID)
-	if p.Msg[0].Type() != packet.MessageElemTypeShort {
-		return
-	}
-	skillID := p.Msg[0].Data().(uint16)
-
-	var targetID uint64
-	// Element 1: long (enemy ID)
-	if len(p.Msg) > 1 && p.Msg[1].Type() == packet.MessageElemTypeLong {
-		rawTargetID := p.Msg[1].Data().(uint64)
-
-		a.mu.RLock()
-		_, inEntityCache := a.entityCache[rawTargetID]
-		_, inTargetNames := a.targetNames[rawTargetID]
-		a.mu.RUnlock()
-
-		_, inPlayerCache := playerCache.Get(rawTargetID)
-
-		if inEntityCache || inTargetNames || inPlayerCache {
-			targetID = rawTargetID
-		} else {
-			targetID = 0 // Untracked target
-		}
-	} else {
-		targetID = 0 // Omitted or not a long target
-	}
-
-	casterID := p.Id
-	eventTime := p.At.Unix()
-
-	// If the target ID equals the caster ID, consider it a self-cast (untargeted / 0)
-	if targetID == casterID {
-		targetID = 0
-	}
-
-	// Only track skill uses for players that we are tracking
-	if playerInfo, isPlayer := playerCache.Get(casterID); isPlayer {
-		a.mu.Lock()
-		stats := a.getOrCreatePlayerStats(playerInfo)
-		stats.SkillUses = append(stats.SkillUses, SkillUseEvent{
-			SkillID:   skillID,
-			TargetID:  targetID,
-			Timestamp: eventTime,
-		})
-		if targetID != 0 && !a.deadEntities[targetID] {
-			a.startPresenceInterval(targetID, eventTime)
-		}
-		a.mu.Unlock()
-	}
-}
 
 func (a *Aggregator) getOrCreatePlayerStats(playerInfo *PlayerInfo) *PlayerStats {
 	stats, exists := a.playerStats[playerInfo.ID]
@@ -983,40 +927,6 @@ func (a *Aggregator) finalizeBreakdown(breakdown DamageBreakdown, duration float
 
 	if breakdown.Skills == nil {
 		breakdown.Skills = make(map[uint16]SkillStats)
-	}
-
-	// Count uses for each skill
-	skillUsesCount := make(map[uint16]int)
-	if stats, exists := a.playerStats[playerID]; exists {
-		for _, use := range stats.SkillUses {
-			if isOverall {
-				skillUsesCount[use.SkillID]++
-			} else {
-				resolvedTargetID := use.TargetID
-				if resolvedTargetID != 0 {
-					// If the target ID is not on our tracked entity list (and not a player), consider it blank (0)
-					_, isTracked := a.targetNames[resolvedTargetID]
-					if !isTracked && !a.isPlayer(resolvedTargetID) {
-						resolvedTargetID = 0
-					}
-				}
-
-				if resolvedTargetID == targetID || resolvedTargetID == 0 {
-					if a.isTimestampInPresenceIntervals(targetID, use.Timestamp) {
-						skillUsesCount[use.SkillID]++
-					}
-				}
-			}
-		}
-	}
-
-	// Ensure all used skills have their Uses count updated.
-	// If a skill was used but did no damage, initialize it!
-	for skillID, uses := range skillUsesCount {
-		skillStats := breakdown.Skills[skillID]
-		skillStats.ID = skillID
-		skillStats.Uses = uses
-		breakdown.Skills[skillID] = skillStats
 	}
 
 	return breakdown

@@ -2,7 +2,7 @@ package main
 
 import (
 	"database/sql"
-	"strconv"
+
 	"testing"
 	"time"
 
@@ -296,75 +296,6 @@ func TestAggregator_TargetIconStateTracking(t *testing.T) {
 	}
 }
 
-func TestAggregator_SkillUses(t *testing.T) {
-	var err error
-	db, err = sql.Open("sqlite", ":memory:")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		db.Close()
-		db = nil
-	}()
-
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS players (
-		id INTEGER PRIMARY KEY,
-		name TEXT,
-		race_id INTEGER
-	);`)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Insert mock player
-	playerID := uint64(5555)
-	_, err = db.Exec("INSERT INTO players (id, name, race_id) VALUES (?, ?, ?)", playerID, "Alice", 8001)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	agg := NewAggregator()
-	agg.SetLive(true)
-
-	// 1. Process standard skill use (opcodeSkillUse = 0x6988)
-	p1 := &packet.GamePacket{
-		Op: opcodeSkillUse,
-		Id: playerID,
-		At: time.Now(),
-		Msg: []packet.IMessageElem{
-			packet.NewMessageElemShort(123), // Skill ID 123
-		},
-	}
-	agg.ProcessPacket(p1)
-
-	// 2. Process new skill use (opcodeSkillStart = 0x698c)
-	p2 := &packet.GamePacket{
-		Op: opcodeSkillStart,
-		Id: playerID,
-		At: time.Now(),
-		Msg: []packet.IMessageElem{
-			packet.NewMessageElemShort(456), // Skill ID 456
-		},
-	}
-	agg.ProcessPacket(p2)
-
-	// 3. Get summary and verify counts
-	summary := agg.GetSummary()
-	playerStats, exists := summary.Players[strconv.FormatUint(playerID, 10)]
-	if !exists {
-		t.Fatalf("Expected stats for player %d", playerID)
-	}
-
-	skill1Stats, ok1 := playerStats.OverallStats.Skills[123]
-	if !ok1 || skill1Stats.Uses != 1 {
-		t.Errorf("Expected skill 123 to have 1 use, got ok=%v, uses=%d", ok1, skill1Stats.Uses)
-	}
-
-	skill2Stats, ok2 := playerStats.OverallStats.Skills[456]
-	if !ok2 || skill2Stats.Uses != 1 {
-		t.Errorf("Expected skill 456 to have 1 use, got ok=%v, uses=%d", ok2, skill2Stats.Uses)
-	}
-}
 
 func TestAggregator_InvincibilityFilter(t *testing.T) {
 	agg := NewAggregator()
