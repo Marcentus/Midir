@@ -88,6 +88,25 @@ func (a *Aggregator) SetLive(live bool) {
 	a.isLive = live
 }
 
+const (
+	conditionInvincibleFethFiada = 494
+	conditionInvincibleGeneral   = 277
+)
+
+// isInvincible checks if the given entity currently has an invincibility condition active.
+// Note: This method assumes a.mu is held (either RLock or Lock) or is called within a locked context.
+func (a *Aggregator) isInvincible(entityID uint64) bool {
+	if active, ok := a.playerConditionActive[entityID]; ok {
+		if _, has494 := active[conditionInvincibleFethFiada]; has494 {
+			return true
+		}
+		if _, has277 := active[conditionInvincibleGeneral]; has277 {
+			return true
+		}
+	}
+	return false
+}
+
 // startPresenceInterval starts a presence interval for the target at the given timestamp.
 // Note: This method assumes a.mu is held or is called within a locked context.
 func (a *Aggregator) startPresenceInterval(targetID uint64, ts int64) {
@@ -460,6 +479,11 @@ func (a *Aggregator) processCombatAction(p *packet.GamePacket) {
 	}
 
 	for _, sub := range pack.SubPackets {
+		if sub.Hit != nil && a.isInvincible(sub.EntityId) {
+			sub.Hit.Damage = 0
+			sub.Hit.ManaDamage = 0
+		}
+
 		if sub.Hit == nil || (sub.Hit.Damage <= 0 && sub.Hit.ManaDamage <= 0) {
 			continue
 		}
@@ -505,6 +529,10 @@ func (a *Aggregator) processEffectDelayed(p *packet.GamePacket) {
 		a.mu.Unlock()
 		// logger.Println("...[Unlocked] Aggregator.EffectDelayed released lock.")
 	}()
+
+	if a.isInvincible(targetId) {
+		damage = 0
+	}
 
 	// Update the shared timers for this target
 	a.updateTimestamps(targetId, p.At)

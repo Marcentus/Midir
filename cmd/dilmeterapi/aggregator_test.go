@@ -365,3 +365,101 @@ func TestAggregator_SkillUses(t *testing.T) {
 		t.Errorf("Expected skill 456 to have 1 use, got ok=%v, uses=%d", ok2, skill2Stats.Uses)
 	}
 }
+
+func TestAggregator_InvincibilityFilter(t *testing.T) {
+	agg := NewAggregator()
+	agg.SetLive(true)
+
+	playerID := uint64(5555)
+	enemyID := uint64(7777)
+
+	// Mock player and enemy in cache
+	agg.entityCache[playerID] = &packet.EntityInfo{Id: playerID, Name: "Alice", RaceId: 8001}
+	agg.entityCache[enemyID] = &packet.EntityInfo{Id: enemyID, Name: "7777", RaceId: 2000} // numeric name = enemy
+
+	// 1. Target is NOT invincible initially
+	if agg.isInvincible(enemyID) {
+		t.Errorf("Expected enemy to not be invincible initially")
+	}
+
+	// 2. Enable invincibility condition 494 on enemy
+	pEnable := &packet.GamePacket{
+		Op: opcodeCharacterCondition,
+		Id: enemyID,
+		At: time.Now(),
+		Msg: []packet.IMessageElem{
+			packet.NewMessageElemByte(1),                     // isEnable = true
+			packet.NewMessageElemInt(494),                    // ccId = 494
+			packet.NewMessageElemLong(0),                     // disableAt
+			packet.NewMessageElemString("Invincible Shield"), // metadata
+			packet.NewMessageElemLong(0),                     // attackerId
+		},
+	}
+	agg.ProcessPacket(pEnable)
+
+	// Verify target is now invincible
+	if !agg.isInvincible(enemyID) {
+		t.Errorf("Expected enemy to be invincible after enabling condition 494")
+	}
+
+	// 3. Disable condition 494
+	pDisable := &packet.GamePacket{
+		Op: opcodeCharacterCondition,
+		Id: enemyID,
+		At: time.Now(),
+		Msg: []packet.IMessageElem{
+			packet.NewMessageElemByte(0),  // isEnable = false
+			packet.NewMessageElemInt(494), // ccId = 494
+		},
+	}
+	agg.ProcessPacket(pDisable)
+
+	// Verify target is no longer invincible
+	if agg.isInvincible(enemyID) {
+		t.Errorf("Expected enemy to not be invincible after disabling condition 494")
+	}
+
+	// 4. Test delayed effect filtering
+	// Re-enable invincibility condition 277 this time
+	pEnable277 := &packet.GamePacket{
+		Op: opcodeCharacterCondition,
+		Id: enemyID,
+		At: time.Now(),
+		Msg: []packet.IMessageElem{
+			packet.NewMessageElemByte(1),
+			packet.NewMessageElemInt(277),
+			packet.NewMessageElemLong(0),
+			packet.NewMessageElemString("Shield"),
+			packet.NewMessageElemLong(0),
+		},
+	}
+	agg.ProcessPacket(pEnable277)
+
+	if !agg.isInvincible(enemyID) {
+		t.Errorf("Expected enemy to be invincible with condition 277")
+	}
+
+	// Process effect delayed packet (opcodeEffectDelayed = 0x9095)
+	// Expected to set damage to 0 because target is invincible
+	pDelayed := &packet.GamePacket{
+		Op: opcodeEffectDelayed,
+		Id: enemyID, // target ID
+		At: time.Now(),
+		Msg: []packet.IMessageElem{
+			packet.NewMessageElemByte(0),
+			packet.NewMessageElemInt(317),       // sub-ID
+			packet.NewMessageElemInt(5000),      // damage = 5000
+			packet.NewMessageElemInt(0),
+			packet.NewMessageElemInt(0),
+			packet.NewMessageElemLong(playerID), // attacker
+			packet.NewMessageElemShort(999),     // skill ID
+		},
+	}
+	agg.ProcessPacket(pDelayed)
+
+	// Verify that player Alice stats did NOT record the 5000 damage
+	stats := agg.playerStats[playerID]
+	if stats != nil && stats.OverallStats.TotalDamage > 0 {
+		t.Errorf("Expected 0 aggregated damage due to invincibility, got %f", stats.OverallStats.TotalDamage)
+	}
+}

@@ -193,10 +193,28 @@
             <!-- Right: Vital Stats -->
             <div class="header-section stats-section">
               <div class="stat-item">
+                <div class="header-label text-right">TARGET HP</div>
+                <div class="stat-value">
+                  <template v-if="selectedTargetHp">
+                    <span style="color: #ff6e6d;">{{ formatNumber(selectedTargetHp.current) }}/{{ formatNumber(selectedTargetHp.max) }}</span>
+                    <span class="text-grey text-caption ml-1">({{ selectedTargetHp.percent.toFixed(1) }}%)</span>
+                  </template>
+                  <template v-else>
+                    N/A
+                  </template>
+                </div>
+              </div>
+              <div class="stat-divider mx-5"></div>
+              <div class="stat-item">
+                <div class="header-label text-right">DAMAGE</div>
+                <div class="stat-value">{{ formatNumber(selectedTargetDamage) }}</div>
+              </div>
+              <div class="stat-divider mx-5"></div>
+              <div class="stat-item">
                 <div class="header-label text-right">PARTY DPS</div>
                 <div class="stat-value amber-text">{{ formattedPartyDPS }}</div>
               </div>
-              <div class="stat-divider mx-8"></div>
+              <div class="stat-divider mx-5"></div>
               <div class="stat-item">
                 <div class="header-label text-right">DURATION</div>
                 <div class="stat-value">{{ formattedEncounterDuration }}</div>
@@ -852,6 +870,22 @@ export default defineComponent({
       return 0;
     });
 
+    const selectedTargetHp = computed(() => {
+      if (!selectedTargetId.value) return null;
+      for (const item of targetList.value) {
+        if (item.id === selectedTargetId.value) {
+          return { current: item.currentHp, max: item.maxHp, percent: item.hpPercent };
+        }
+        if (item.isGroup && item.targets) {
+          const sub = item.targets.find((t: any) => t.id === selectedTargetId.value);
+          if (sub) {
+            return { current: sub.currentHp, max: sub.maxHp, percent: sub.hpPercent };
+          }
+        }
+      }
+      return null;
+    });
+
     const handleItemClick = (item: any) => {
       if (item.isGroup) {
         if (expandedGroup.value && expandedGroup.value.id === item.id) {
@@ -960,6 +994,7 @@ export default defineComponent({
       selectedTargetName,
       selectedTargetSeenAppear,
       selectedTargetDamage,
+      selectedTargetHp,
       handleItemClick,
       selectGroupTarget,
 

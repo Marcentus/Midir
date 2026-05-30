@@ -155,9 +155,10 @@ func handleMigrateAllSessions(sm *SessionManager) http.HandlerFunc {
 			return
 		}
 
+		force := r.URL.Query().Get("force") == "true"
 		migratedCount := 0
 		for _, sess := range sessions {
-			if sess.Summary == nil {
+			if force || sess.Summary == nil {
 				if err := sm.MigrateSession(sess.ID); err == nil {
 					migratedCount++
 				}
@@ -225,6 +226,16 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 		case eventIdDamage:
 			var damageEvent eventDamage
 			if err := json.Unmarshal(line, &damageEvent); err == nil {
+				// Zero-out damage if the target has active invincibility conditions (494 or 277)
+				if active, exists := activeConditions[damageEvent.TargetId]; exists {
+					if _, has494 := active[494]; has494 {
+						damageEvent.Damage = 0
+						damageEvent.ManaDamage = 0
+					} else if _, has277 := active[277]; has277 {
+						damageEvent.Damage = 0
+						damageEvent.ManaDamage = 0
+					}
+				}
 				allDamageEvents = append(allDamageEvents, damageEvent)
 			}
 
