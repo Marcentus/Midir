@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Marcentus/Midir/packet"
 	"github.com/gopacket/gopacket"
 	"github.com/gopacket/gopacket/layers"
 	"github.com/gopacket/gopacket/pcapgo"
@@ -433,6 +434,16 @@ func (sm *SessionManager) WriteEventToLog(e iEvent) error {
 	b = append(b, '\n')
 	_, err = s.ndjsonFile.Write(b)
 	return err
+}
+
+// WriteEntityAppearEvents generates and writes appearance events for currently cached entities.
+func (sm *SessionManager) WriteEntityAppearEvents(entities []*packet.EntityInfo) {
+	for _, entity := range entities {
+		e := newEventFromEntity(entity, time.Now())
+		if err := sm.WriteEventToLog(e); err != nil {
+			logger.Println("Failed to write cached entity appear event to log:", err)
+		}
+	}
 }
 
 // WritePacketToLog remains unchanged.

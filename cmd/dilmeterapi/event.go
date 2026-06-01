@@ -8,11 +8,36 @@ const (
 	eventIdDamage
 	eventIdCharacterConditionEnable
 	eventIdCharacterConditionDisable
+	eventIdEntityDeath
+	eventIdEntityRevive
+	eventIdSkillUse
+	eventIdSkillStart
+	eventIdEntityHPUpdate
 	eventIdSessionSummary eventId = 9999
 )
 
 type iEvent interface {
 	GetEventId() eventId
+}
+
+type eventSkillUse struct {
+	eventBase
+	SkillId  uint16 `json:"skillId"`
+	TargetId string `json:"targetId"`
+}
+
+type eventSkillStart struct {
+	eventBase
+	SkillId  uint16 `json:"skillId"`
+	TargetId string `json:"targetId"`
+}
+
+type eventEntityDeath struct {
+	eventBase
+}
+
+type eventEntityRevive struct {
+	eventBase
 }
 
 type eventBase struct {
@@ -80,4 +105,12 @@ type eventSessionSummary struct {
 	eventBase
 	Type    string      `json:"type"`
 	Summary interface{} `json:"summary"` // Will hold SessionSummaryData
+}
+
+type eventEntityHPUpdate struct {
+	eventBase
+	CurrentHP    float32 `json:"currentHp"`
+	BaseHP       float32 `json:"baseHp"`
+	AdditionalHP float32 `json:"additionalHp"`
+	MaxHP        float32 `json:"maxHp"`
 }

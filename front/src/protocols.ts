@@ -10,6 +10,7 @@ export interface SkillStats {
   maxDamage: number;
   maxDamageCrit: number;
   maxDamageNonCrit: number;
+  uses?: number; // New field
 }
 
 // NEW: Interface for condition statistics
@@ -57,6 +58,7 @@ export interface PlayerStats {
   missingAppearPacket: boolean; // NEW: Cache warning flag
   overallStats: DamageBreakdown;
   damageByTarget: { [targetId: string]: DamageBreakdown };
+  deaths?: number[];
 }
 
 // --- START: NEW INTERFACES FOR DAMAGE TAKEN ---
@@ -83,9 +85,22 @@ export interface PlayerDamageTakenStats {
 
 // --- END: NEW INTERFACES FOR DAMAGE TAKEN ---
 
+export interface TargetHPPoint {
+  time: number;
+  currentHp: number;
+  maxHp: number;
+}
+
 export interface TargetStats {
   name: string;
+  raceId?: number;
   conditions?: { [id: number]: ConditionStats };
+  seenDead?: boolean;
+  seenAppear?: boolean;
+  disappeared?: boolean;
+  startTime?: number;
+  endTime?: number;
+  hpHistory?: TargetHPPoint[];
 }
 
 // NEW: ActiveCondition matches the backend struct for currently active conditions
@@ -104,6 +119,7 @@ export interface EntityState {
   conditions?: { [id: number]: ActiveCondition };
   currentHp: number;
   maxHp: number;
+  category: string;
 }
 
 export interface FightSummary {

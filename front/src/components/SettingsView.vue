@@ -175,6 +175,28 @@
                   ></v-switch>
                 </template>
               </v-list-item>
+
+              <v-list-item class="mt-2">
+                <template v-slot:prepend>
+                  <v-icon icon="mdi-chart-bar"></v-icon>
+                </template>
+                <v-list-item-title>DPS Meter Bar Style</v-list-item-title>
+                <v-list-item-subtitle class="mt-1">
+                  Choose how the damage contribution percentage is displayed. Either as a dedicated column or filling the entire row.
+                </v-list-item-subtitle>
+                <template v-slot:append>
+                  <v-btn-toggle
+                    v-model="dpsMeterFillMode"
+                    mandatory
+                    density="compact"
+                    color="primary"
+                    variant="outlined"
+                  >
+                    <v-btn value="column" size="small">Column</v-btn>
+                    <v-btn value="full" size="small">Full Row</v-btn>
+                  </v-btn-toggle>
+                </template>
+              </v-list-item>
             </v-list>
             
             <v-divider class="my-4"></v-divider>
@@ -189,7 +211,7 @@
 
 <script lang="ts">
 import { defineComponent, computed, ref, onMounted, onUnmounted } from "vue";
-import { showClassColorsForVisiblePlayers, socket } from "@/store";
+import { showClassColorsForVisiblePlayers, dpsMeterFillMode, socket } from "@/store";
 import ColorSettings from "./ColorSettings.vue";
 
 export default defineComponent({
@@ -389,6 +411,7 @@ export default defineComponent({
     return {
       activeTab,
       showClassColorsForVisiblePlayers,
+      dpsMeterFillMode,
       
       // Capture
       nics,
@@ -413,10 +436,14 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.v-list-item-title {
-    white-space: normal;
+:deep(.v-list-item-title) {
+    white-space: normal !important;
 }
-.v-list-item-subtitle {
-    white-space: normal;
+:deep(.v-list-item-subtitle) {
+    white-space: normal !important;
+    overflow: visible !important;
+    display: block !important;
+    line-clamp: unset !important;
+    -webkit-line-clamp: unset !important;
 }
 </style>

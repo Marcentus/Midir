@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/Marcentus/Midir/packet"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -58,6 +59,15 @@ func handleSaveSession(sm *SessionManager) http.HandlerFunc {
 		if _, err := sm.StartLiveSession(); err != nil {
 			respondWithError(w, http.StatusInternalServerError, "Failed to start new live session after saving: "+err.Error())
 			return
+		}
+		if globalPub != nil {
+			globalPub.aggregator.mu.RLock()
+			var activeEntities []*packet.EntityInfo
+			for _, entity := range globalPub.aggregator.entityCache {
+				activeEntities = append(activeEntities, entity)
+			}
+			globalPub.aggregator.mu.RUnlock()
+			sm.WriteEntityAppearEvents(activeEntities)
 		}
 		w.WriteHeader(http.StatusCreated)
 	}
@@ -145,9 +155,10 @@ func handleMigrateAllSessions(sm *SessionManager) http.HandlerFunc {
 			return
 		}
 
+		force := r.URL.Query().Get("force") == "true"
 		migratedCount := 0
 		for _, sess := range sessions {
-			if sess.Summary == nil {
+			if force || sess.Summary == nil {
 				if err := sm.MigrateSession(sess.ID); err == nil {
 					migratedCount++
 				}
@@ -194,6 +205,15 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 	conditionHistory := make(map[string]map[uint32][]ConditionInterval)
 	activeConditions := make(map[string]map[uint32]ActiveCondition)
 	seenAppear := make(map[string]bool)
+	targetSeenAppear := make(map[string]bool)
+	targetDisappeared := make(map[string]bool)
+	targetSeenDead := make(map[string]bool)
+	// Skill Uses Data Structure
+	skillUsesByPlayer := make(map[string][]SkillUseEvent)
+	// HP history tracking by Target/Entity ID
+	hpHistoryByTarget := make(map[string][]TargetHPPoint)
+	// Player deaths history by Player ID
+	playerDeaths := make(map[string][]int64)
 
 	for scanner.Scan() {
 		line := scanner.Bytes()
@@ -206,6 +226,16 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 		case eventIdDamage:
 			var damageEvent eventDamage
 			if err := json.Unmarshal(line, &damageEvent); err == nil {
+				// Zero-out damage if the target has active invincibility conditions (494 or 277)
+				if active, exists := activeConditions[damageEvent.TargetId]; exists {
+					if _, has494 := active[494]; has494 {
+						damageEvent.Damage = 0
+						damageEvent.ManaDamage = 0
+					} else if _, has277 := active[277]; has277 {
+						damageEvent.Damage = 0
+						damageEvent.ManaDamage = 0
+					}
+				}
 				allDamageEvents = append(allDamageEvents, damageEvent)
 			}
 
@@ -213,6 +243,8 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 			var appear eventEntityAppear
 			if err := json.Unmarshal(line, &appear); err == nil {
 				seenAppear[appear.Id] = true
+				targetSeenAppear[appear.Id] = true
+				targetDisappeared[appear.Id] = false
 
 				// Initialize conditions present on appearance
 				if activeConditions[appear.Id] == nil {
@@ -227,6 +259,37 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 						}
 					}
 				}
+
+				// Capture initial HP if available
+				if appear.MaxHP > 0 {
+					hpHistoryByTarget[appear.Id] = append(hpHistoryByTarget[appear.Id], TargetHPPoint{
+						Time:      baseEvent.At,
+						CurrentHP: appear.CurrentHP,
+						MaxHP:     appear.MaxHP,
+					})
+				}
+			}
+
+		case eventIdEntityDisappear:
+			var disappear eventEntityDisappear
+			if err := json.Unmarshal(line, &disappear); err == nil {
+				if !targetSeenDead[disappear.Id] {
+					targetDisappeared[disappear.Id] = true
+				}
+			}
+
+		case eventIdEntityDeath:
+			var death eventEntityDeath
+			if err := json.Unmarshal(line, &death); err == nil {
+				targetSeenDead[death.Id] = true
+				targetDisappeared[death.Id] = false
+				playerDeaths[death.Id] = append(playerDeaths[death.Id], baseEvent.At)
+			}
+
+		case eventIdEntityRevive:
+			var revive eventEntityRevive
+			if err := json.Unmarshal(line, &revive); err == nil {
+				targetSeenDead[revive.Id] = false
 			}
 
 		case eventIdCharacterConditionEnable:
@@ -263,11 +326,38 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 					delete(activeConditions[cond.Id], cond.CCId)
 				}
 			}
+
+
+
+		case eventIdEntityHPUpdate:
+			var hpUpdate eventEntityHPUpdate
+			if err := json.Unmarshal(line, &hpUpdate); err == nil {
+				hpHistoryByTarget[hpUpdate.Id] = append(hpHistoryByTarget[hpUpdate.Id], TargetHPPoint{
+					Time:      baseEvent.At,
+					CurrentHP: hpUpdate.CurrentHP,
+					MaxHP:     hpUpdate.MaxHP,
+				})
+			}
 		}
 	}
 
 	// STEP 1: Process the collected events to generate the main summary tables.
 	playerStats, damageTaken, talents, talentNames, talentColors, targets, startTime, endTime, targetTimestamps := processEventsForSummary(allDamageEvents, entitiesInLog)
+
+	// Ensure players who only used skills but did no damage are in playerStats
+	for playerIDStr := range skillUsesByPlayer {
+		if _, exists := playerStats[playerIDStr]; !exists {
+			playerID := parseUint64(playerIDStr)
+			if playerInfo, isPlayer := playerCache.Get(playerID); isPlayer {
+				playerStats[playerIDStr] = &PlayerStats{
+					ID:             playerIDStr,
+					Name:           playerInfo.Name,
+					OverallStats:   newDamageBreakdown(),
+					DamageByTarget: make(map[string]DamageBreakdown),
+				}
+			}
+		}
+	}
 
 	// STEP 2: Generate graph data
 	graphDataByTarget := make(map[string]map[string][]GraphDataPoint)
@@ -288,7 +378,7 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 		}
 	}
 
-	// STEP 3: Finalize the summary object, attaching conditions
+	// STEP 3: Finalize the summary object, attaching conditions and skill uses
 	summary := finalizeSummaryFromLog(
 		playerStats,
 		damageTaken,
@@ -303,6 +393,12 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 		conditionHistory,
 		activeConditions,
 		seenAppear,
+		targetSeenAppear,
+		targetDisappeared,
+		targetSeenDead,
+		skillUsesByPlayer,
+		hpHistoryByTarget,
+		playerDeaths,
 	)
 	summary.GraphData = graphDataByTarget
 
@@ -445,7 +541,7 @@ func generateGraphDataFromEvents(allDamageEvents []eventDamage, startTime, endTi
 	}
 
 	const graphInterval int64 = 2 // seconds - our sampling rate
-	const dpsWindow int64 = 180   // seconds - for the rolling DPS calculation
+	const dpsWindow int64 = 15   // seconds - for the rolling DPS calculation
 
 	graphData := make(map[string][]GraphDataPoint)
 
@@ -533,7 +629,7 @@ func updateBreakdownFromLog(breakdown *DamageBreakdown, damageEvent *eventDamage
 	breakdown.Skills[damageEvent.SkillId] = skillStats
 }
 
-// Updated finalizeBreakdownFromLog to include condition tracking
+// Updated finalizeBreakdownFromLog to include condition tracking and skill uses
 func finalizeBreakdownFromLog(
 	breakdown DamageBreakdown,
 	duration float64,
@@ -541,6 +637,13 @@ func finalizeBreakdownFromLog(
 	playerID string,
 	conditionHistory map[string]map[uint32][]ConditionInterval,
 	activeConditions map[string]map[uint32]ActiveCondition,
+	skillUses []SkillUseEvent,
+	isOverall bool,
+	targetID uint64,
+	targetTimestamps map[string]struct {
+		StartTime int64
+		EndTime   int64
+	},
 ) DamageBreakdown {
 	if duration > 1 {
 		breakdown.DPS = breakdown.TotalDamage / float32(duration)
@@ -553,6 +656,9 @@ func finalizeBreakdownFromLog(
 
 	// --- CONDITION TRACKING LOGIC (Mirrors Aggregator) ---
 	breakdown.Conditions = calculateConditionsFromLog(playerID, duration, windowStart, windowEnd, conditionHistory, activeConditions)
+	if breakdown.Skills == nil {
+		breakdown.Skills = make(map[uint16]SkillStats)
+	}
 
 	return breakdown
 }
@@ -737,6 +843,12 @@ func finalizeSummaryFromLog(
 	conditionHistory map[string]map[uint32][]ConditionInterval,
 	activeConditions map[string]map[uint32]ActiveCondition,
 	seenAppear map[string]bool,
+	targetSeenAppear map[string]bool,
+	targetDisappeared map[string]bool,
+	targetSeenDead map[string]bool,
+	skillUsesByPlayer map[string][]SkillUseEvent,
+	hpHistoryByTarget map[string][]TargetHPPoint, // NEW
+	playerDeaths map[string][]int64, // NEW
 ) FightSummary {
 	summary := FightSummary{
 		Players:     make(map[string]PlayerStats),
@@ -753,11 +865,14 @@ func finalizeSummaryFromLog(
 	for _, pStats := range playerStats {
 		finalizedPstats := *pStats
 		finalizedPstats.MissingAppearPacket = !seenAppear[pStats.ID]
+		finalizedPstats.Deaths = playerDeaths[pStats.ID]
+
+		playerSkillUses := skillUsesByPlayer[pStats.ID]
 
 		overallDuration := float64(encounterEndTime - encounterStartTime)
-		// Pass overall window and condition data
+		// Pass overall window and condition/skill data
 		finalizedPstats.OverallStats = finalizeBreakdownFromLog(
-			pStats.OverallStats, overallDuration, encounterStartTime, encounterEndTime, pStats.ID, conditionHistory, activeConditions)
+			pStats.OverallStats, overallDuration, encounterStartTime, encounterEndTime, pStats.ID, conditionHistory, activeConditions, playerSkillUses, true, 0, targetTimestamps)
 		finalizedPstats.OverallStats.StartTime = encounterStartTime
 		finalizedPstats.OverallStats.EndTime = encounterEndTime
 
@@ -765,9 +880,10 @@ func finalizeSummaryFromLog(
 		for targetId, breakdown := range pStats.DamageByTarget {
 			targetTimes := targetTimestamps[targetId]
 			targetDuration := float64(targetTimes.EndTime - targetTimes.StartTime)
-			// Pass specific target window and condition data
+			targetIdUint, _ := strconv.ParseUint(targetId, 10, 64)
+			// Pass specific target window and condition/skill data
 			finalizedBreakdown := finalizeBreakdownFromLog(
-				breakdown, targetDuration, targetTimes.StartTime, targetTimes.EndTime, pStats.ID, conditionHistory, activeConditions)
+				breakdown, targetDuration, targetTimes.StartTime, targetTimes.EndTime, pStats.ID, conditionHistory, activeConditions, playerSkillUses, false, targetIdUint, targetTimestamps)
 			finalizedBreakdown.StartTime = targetTimes.StartTime
 			finalizedBreakdown.EndTime = targetTimes.EndTime
 			finalizedPstats.DamageByTarget[targetId] = finalizedBreakdown
@@ -805,10 +921,26 @@ func finalizeSummaryFromLog(
 		targetDuration := float64(targetTimes.EndTime - targetTimes.StartTime)
 		conditions := calculateConditionsFromLog(targetIdStr, targetDuration, targetTimes.StartTime, targetTimes.EndTime, conditionHistory, activeConditions)
 
+		// Process HP history for this target (convert to relative time)
+		var hpHistory []TargetHPPoint
+		for _, hpPt := range hpHistoryByTarget[targetIdStr] {
+			hpHistory = append(hpHistory, TargetHPPoint{
+				Time:      hpPt.Time - targetTimes.StartTime,
+				CurrentHP: hpPt.CurrentHP,
+				MaxHP:     hpPt.MaxHP,
+			})
+		}
+
 		summary.Targets[targetIdStr] = TargetStats{
-			Name:       name,
-			RaceID:     raceId,
-			Conditions: conditions,
+			Name:        name,
+			RaceID:      raceId,
+			Conditions:  conditions,
+			SeenDead:    targetSeenDead[targetIdStr],
+			SeenAppear:  targetSeenAppear[targetIdStr],
+			Disappeared: targetDisappeared[targetIdStr],
+			StartTime:   targetTimes.StartTime,
+			EndTime:     targetTimes.EndTime,
+			HPHistory:   hpHistory,
 		}
 	}
 

@@ -1,11 +1,46 @@
 <template>
-  <div v-if="chartData.datasets.length > 0">
+  <div v-if="chartData.datasets.length > 0" class="graph-container">
     <div class="pa-4">
-      <div class="d-flex ga-2 mb-2">
-        <v-btn @click="toggleTotalDmg" size="small">Toggle Total Damage</v-btn>
-        <v-btn @click="toggleRollingDps" size="small">Toggle 180s DPS</v-btn>
+      <div class="d-flex ga-4 align-center mb-4 flex-wrap">
+        <div v-if="conditionItems.length > 0" style="max-width: 320px; flex-grow: 1;">
+          <v-select
+            v-model="selectedConditionId"
+            :items="conditionItems"
+            label="Highlight Condition on Timeline"
+            density="compact"
+            hide-details
+            clearable
+            variant="outlined"
+            color="primary"
+          >
+            <template v-slot:item="{ props, item }">
+              <v-list-item v-bind="props" :title="item.raw.title">
+                <template v-slot:prepend>
+                  <v-avatar size="24" class="mr-2" rounded="sm" v-if="item.raw.icon">
+                    <v-img :src="item.raw.icon" />
+                  </v-avatar>
+                </template>
+              </v-list-item>
+            </template>
+            <template v-slot:selection="{ item }">
+              <div class="d-flex align-center">
+                <v-avatar size="20" class="mr-2" rounded="sm" v-if="item.raw.icon">
+                  <v-img :src="item.raw.icon" />
+                </v-avatar>
+                <span>{{ item.raw.title }}</span>
+              </div>
+            </template>
+          </v-select>
+        </div>
+        <v-checkbox
+          v-model="showDeaths"
+          label="Highlight Player Deaths"
+          density="compact"
+          hide-details
+          color="error"
+        />
       </div>
-      <div style="height: 500px">
+      <div style="height: 500px" class="chart-wrapper">
         <LineChart :data="chartData" :options="chartOptions" />
       </div>
       <div v-if="selectedTargetConditions" class="mt-4">
@@ -17,15 +52,15 @@
       </div>
     </div>
   </div>
-  <v-sheet v-else class="d-flex align-center justify-center" height="400">
-    <div class="text-h6 text-grey">
+  <v-sheet v-else class="d-flex align-center justify-center rounded-lg" height="400" style="background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.08)">
+    <div class="text-h6 text-grey-darken-1">
       Graph data is only available for saved sessions.
     </div>
   </v-sheet>
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref } from "vue";
+import { defineComponent, computed, inject, ref, watch } from "vue";
 import { Line as LineChart } from "vue-chartjs";
 import ConditionTimeline from "./ConditionTimeline.vue";
 import {
@@ -40,10 +75,13 @@ import {
   Scale,
   CoreScaleOptions,
   TooltipItem,
+  Filler,
 } from "chart.js";
 // Import selectedTargetId from the store
 import { fightSummary, selectedTargetId, hiddenPlayers, showClassColorsForVisiblePlayers, globalHideMode } from "@/store";
 import { getMabiNameColor } from "@/util";
+import zoomPlugin from "chartjs-plugin-zoom";
+import annotationPlugin from "chartjs-plugin-annotation";
 
 ChartJS.register(
   Title,
@@ -52,19 +90,83 @@ ChartJS.register(
   LineElement,
   LinearScale,
   PointElement,
-  CategoryScale
+  CategoryScale,
+  Filler,
+  zoomPlugin,
+  annotationPlugin
 );
+
+// Register a custom tooltip positioner to place tooltips cleanly to the left or right of the cursor/hover line
+(Tooltip.positioners as any).leftRight = function (this: any, elements: any[]) {
+  if (elements.length === 0) {
+    return false;
+  }
+  const tooltip = this;
+  const chart = tooltip.chart;
+  const x = elements[0].element.x;
+  const chartWidth = chart.width;
+  const offset = 20; // safe offset from cursor/vertical line
+
+  let xAlign: "left" | "right" = "left";
+  let targetX = x;
+
+  if (x > chartWidth / 2) {
+    xAlign = "right"; // renders tooltip to the LEFT of the coordinate
+    targetX = x - offset;
+  } else {
+    xAlign = "left";  // renders tooltip to the RIGHT of the coordinate
+    targetX = x + offset;
+  }
+
+  // Stable vertical centering within the chart area
+  const chartArea = chart.chartArea;
+  const y = chartArea.top + (chartArea.bottom - chartArea.top) / 2;
+
+  return {
+    x: targetX,
+    y,
+    xAlign,
+    yAlign: "center",
+  };
+};
 
 export default defineComponent({
   name: "DamageGraph",
   components: { LineChart, ConditionTimeline },
   setup() {
-    const showTotalDmg = ref(true);
-    const showRollingDps = ref(true);
+    const condNameMap = inject("condNameMap") as any;
+    const getTargetHPAtTime = (t: number, hpHistory: any[]) => {
+      if (!hpHistory || hpHistory.length === 0) return 100;
+      let lastPt = hpHistory[0];
+      for (const pt of hpHistory) {
+        if (pt.time <= t) {
+          lastPt = pt;
+        } else {
+          break;
+        }
+      }
+      return lastPt.maxHp > 0 ? (lastPt.currentHp / lastPt.maxHp) * 100 : 0;
+    };
+    const selectedConditionId = ref<number | null>(null);
+    const conditionImage = ref<HTMLImageElement | null>(null);
 
-    const toggleTotalDmg = () => (showTotalDmg.value = !showTotalDmg.value);
-    const toggleRollingDps = () =>
-      (showRollingDps.value = !showRollingDps.value);
+    // Watcher to pre-load the condition icon image reactively
+    watch(selectedConditionId, (newId) => {
+      if (!newId) {
+        conditionImage.value = null;
+        return;
+      }
+      const iconUrl = condNameMap.value[newId]?.iconUrl;
+      if (!iconUrl) {
+        conditionImage.value = null;
+        return;
+      }
+      const img = new Image();
+      img.src = iconUrl;
+      img.onload = () => {
+        conditionImage.value = img;
+      };
+    });
 
     const formatTimeLabel = (seconds: number) => {
       if (isNaN(seconds)) return "0:00";
@@ -72,6 +174,83 @@ export default defineComponent({
       const remainingSeconds = Math.round(seconds % 60);
       return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
     };
+
+    const encounterStartTime = computed(() => {
+      if (!selectedTargetId.value) {
+        return fightSummary.startTime || 0;
+      }
+      for (const player of Object.values(fightSummary.players)) {
+        const breakdown = player.damageByTarget[selectedTargetId.value];
+        if (breakdown && breakdown.startTime) {
+          return breakdown.startTime;
+        }
+      }
+      return fightSummary.startTime || 0;
+    });
+
+    const conditionItems = computed(() => {
+      if (!selectedTargetId.value) return [];
+      const targetStats = fightSummary.targets[selectedTargetId.value];
+      if (!targetStats || !targetStats.conditions) return [];
+
+      return Object.keys(targetStats.conditions)
+        .map((idStr) => {
+          const id = parseInt(idStr, 10);
+          const name = condNameMap.value[id]?.name || `Unknown Condition ${id}`;
+          const icon = condNameMap.value[id]?.iconUrl || "";
+          return {
+            title: name,
+            value: id,
+            icon,
+          };
+        })
+        .sort((a, b) => a.title.localeCompare(b.title));
+    });
+
+    const activeIntervals = computed(() => {
+      if (!selectedTargetId.value || !selectedConditionId.value) return [];
+      const targetStats = fightSummary.targets[selectedTargetId.value];
+      if (!targetStats || !targetStats.conditions) return [];
+      const cond = targetStats.conditions[selectedConditionId.value];
+      if (!cond || !cond.intervals) return [];
+
+      return cond.intervals.map((iv, index) => {
+        let start = iv.start - encounterStartTime.value;
+        let end = iv.end - encounterStartTime.value;
+        if (start < 0) start = 0;
+        if (end < start) end = start;
+        if (end - start < 0.5) {
+          end = start + 0.5; // guarantee minimum thickness
+        }
+        return {
+          id: `ann-${index}`,
+          start,
+          end,
+        };
+      });
+    });
+
+    const showDeaths = ref(false);
+
+    const playerDeaths = computed(() => {
+      const deathsList: { time: number; playerName: string }[] = [];
+      for (const playerId in fightSummary.players) {
+        const player = fightSummary.players[playerId];
+        if (player.deaths && player.deaths.length > 0) {
+          player.deaths.forEach((deathTime) => {
+            // Convert to relative time
+            const relativeTime = deathTime - encounterStartTime.value;
+            if (relativeTime >= 0) {
+              deathsList.push({
+                time: relativeTime,
+                playerName: player.name,
+              });
+            }
+          });
+        }
+      }
+      return deathsList;
+    });
 
     // START: NEW LOGIC FOR DYNAMIC X-AXIS
     const fightDuration = computed(() => {
@@ -116,6 +295,56 @@ export default defineComponent({
     // END: NEW LOGIC FOR DYNAMIC X-AXIS
 
     const chartOptions = computed(() => {
+      const annotations: Record<string, any> = {};
+
+      if (selectedConditionId.value) {
+        activeIntervals.value.forEach((iv) => {
+          annotations[iv.id] = {
+            type: "box" as const,
+            xMin: iv.start,
+            xMax: iv.end,
+            backgroundColor: "rgba(6, 182, 212, 0.06)", // subtle vibrant transparent cyan overlay
+            borderColor: "rgba(6, 182, 212, 0.35)",     // subtle cyan dashed border
+            borderWidth: 1,
+            borderDash: [4, 4],
+            label: conditionImage.value ? {
+              display: true,
+              content: conditionImage.value,
+              width: 20,
+              height: 20,
+              position: {
+                x: "center" as const,
+                y: "start" as const,
+              },
+              yAdjust: 12,
+            } : undefined
+          };
+        });
+      }
+
+      if (showDeaths.value) {
+        playerDeaths.value.forEach((death, index) => {
+          annotations[`death-${index}`] = {
+            type: "line" as const,
+            scaleID: "x",
+            value: death.time,
+            borderColor: "rgba(239, 68, 68, 0.6)",
+            borderWidth: 1.5,
+            borderDash: [6, 4],
+            label: {
+              display: true,
+              content: `☠️ ${death.playerName}`,
+              position: "start" as const,
+              yAdjust: 35,
+              backgroundColor: "rgba(15, 23, 42, 0.85)",
+              color: "#fca5a5",
+              font: { family: "Outfit, Inter, sans-serif", size: 10, weight: "bold" as const },
+              padding: 4,
+            }
+          };
+        });
+      }
+
       return {
         responsive: true,
         maintainAspectRatio: false,
@@ -123,12 +352,19 @@ export default defineComponent({
         scales: {
           x: {
             type: "linear" as const,
-            title: { display: true, text: "Time (minutes:seconds)" },
+            title: { 
+              display: true, 
+              text: "Time (minutes:seconds)", 
+              color: "#ffffff",
+              font: { family: "Outfit, Inter, sans-serif", size: 13, weight: "bold" as const }
+            },
             // Set the max value of the axis to our calculated nice, round number
             max: xAxisConfig.value.max,
             ticks: {
               // Set the explicit step size for our ticks
               stepSize: xAxisConfig.value.stepSize,
+              color: "#cbd5e1", // bright slate gray
+              font: { family: "Outfit, Inter, sans-serif", size: 11 },
               callback: function (
                 this: Scale<CoreScaleOptions>,
                 tickValue: string | number
@@ -136,41 +372,104 @@ export default defineComponent({
                 return formatTimeLabel(Number(tickValue));
               },
             },
+            grid: {
+              color: "rgba(255, 255, 255, 0.08)", // high-contrast subtle grid line
+            },
           },
           y: {
             type: "linear" as const,
             display: true,
             position: "left" as const,
-            title: { display: true, text: "Total Damage" },
+            title: { 
+              display: true, 
+              text: "15s Rolling DPS", 
+              color: "#ffffff",
+              font: { family: "Outfit, Inter, sans-serif", size: 13, weight: "bold" as const }
+            },
+            ticks: {
+              color: "#cbd5e1",
+              font: { family: "Outfit, Inter, sans-serif", size: 11 },
+            },
+            grid: {
+              color: "rgba(255, 255, 255, 0.08)",
+            },
           },
-          y1: {
+          yHp: {
             type: "linear" as const,
-            display: true,
-            position: "right" as const,
-            title: { display: true, text: "180s Rolling DPS" },
+            display: false,
+            min: 0,
+            max: 100,
             grid: { drawOnChartArea: false },
           },
         },
         plugins: {
+          annotation: {
+            annotations,
+          },
+          zoom: {
+            zoom: {
+              wheel: {
+                enabled: true,
+                modifierKey: "ctrl" as const,
+              },
+              pinch: {
+                enabled: true,
+              },
+              mode: "x" as const,
+            },
+            pan: {
+              enabled: true,
+              mode: "x" as const,
+            },
+          },
+          legend: {
+            labels: {
+              color: "#ffffff",
+              font: { family: "Outfit, Inter, sans-serif", size: 12, weight: "bold" as const },
+              padding: 15,
+            },
+          },
           tooltip: {
+            position: "leftRight" as any,
+            backgroundColor: "rgba(15, 23, 42, 0.95)", // dark premium slate tooltip
+            titleColor: "#ffffff",
+            bodyColor: "#cbd5e1",
+            footerColor: "#38bdf8", // bright sky blue footer
+            borderColor: "rgba(255, 255, 255, 0.1)",
+            borderWidth: 1,
+            padding: 12,
+            titleFont: { family: "Outfit, Inter, sans-serif", weight: "bold" as const },
+            bodyFont: { family: "Outfit, Inter, sans-serif" },
+            footerFont: { family: "Outfit, Inter, sans-serif", weight: "bold" as const },
+            // Filter out the HP dataset from standard player listing
+            filter: (tooltipItem: any) => {
+              return tooltipItem.dataset.yAxisID !== "yHp";
+            },
             itemSort: (a: TooltipItem<"line">, b: TooltipItem<"line">) => {
-              const aIsTotalDmg = a.dataset.yAxisID === "y";
-              const bIsTotalDmg = b.dataset.yAxisID === "y";
-              if (aIsTotalDmg && !bIsTotalDmg) return -1;
-              if (!aIsTotalDmg && bIsTotalDmg) return 1;
               return (b.raw as number) - (a.raw as number);
             },
             callbacks: {
               title: (tooltipItems: any) =>
                 `Time: ${formatTimeLabel(parseFloat(tooltipItems[0].label))}`,
+              beforeBody: (tooltipItems: any) => {
+                if (selectedTargetId.value) {
+                  const targetStats = fightSummary.targets[selectedTargetId.value];
+                  if (targetStats && targetStats.hpHistory && targetStats.hpHistory.length > 0) {
+                    const t = parseFloat(tooltipItems[0].label);
+                    const hp = getTargetHPAtTime(t, targetStats.hpHistory);
+                    return `🎯 ${targetStats.name} HP: ${hp.toFixed(1)}%\n──────────────────`;
+                  }
+                }
+                return "";
+              },
               footer: (tooltipItems: any) => {
-                let totalDamage = 0;
+                let totalDps = 0;
                 tooltipItems.forEach((item: any) => {
                   if (item.dataset.yAxisID === "y") {
-                    totalDamage += item.raw;
+                    totalDps += item.raw;
                   }
                 });
-                return `Total Raid Damage: ${totalDamage.toLocaleString()}`;
+                return `Total Raid DPS: ${Math.round(totalDps).toLocaleString()}`;
               },
             },
           },
@@ -189,12 +488,47 @@ export default defineComponent({
       const labels = graphDataForView[firstPlayerId]?.map((p) => p.time) ?? [];
       const datasets: any[] = [];
 
+      // Add Enemy HP dataset if a target is selected and has hpHistory
+      if (selectedTargetId.value) {
+        const targetStats = fightSummary.targets[selectedTargetId.value];
+        if (targetStats && targetStats.hpHistory && targetStats.hpHistory.length > 0) {
+          const getHPDataPoints = (hpHistory: any[], maxTime: number) => {
+            if (!hpHistory || hpHistory.length === 0) return [];
+            
+            const points: { x: number; y: number }[] = [];
+            for (const pt of hpHistory) {
+              const relTime = Math.max(0, pt.time);
+              const pct = pt.maxHp > 0 ? (pt.currentHp / pt.maxHp) * 100 : 0;
+              points.push({ x: relTime, y: pct });
+            }
+
+            // Extend the line flatly to the end of the fight
+            if (points.length > 0 && maxTime > points[points.length - 1].x) {
+              points.push({
+                x: maxTime,
+                y: points[points.length - 1].y,
+              });
+            }
+            return points;
+          };
+
+          datasets.push({
+            label: `${targetStats.name} HP %`,
+            backgroundColor: "rgba(244, 63, 94, 0.05)", // smooth rose/red transparent area
+            borderColor: "rgba(244, 63, 94, 0.25)",     // more defined boundary line
+            data: getHPDataPoints(targetStats.hpHistory!, labels[labels.length - 1] || 0),
+            yAxisID: "yHp",
+            pointRadius: 0,
+            borderWidth: 1.5,
+            fill: true,
+            stepped: true, // vertical drop and horizontal flat lines
+            order: 99, // drawn behind DPS lines
+          });
+        }
+      }
+
       for (const playerId in graphDataForView) {
         const playerData = graphDataForView[playerId];
-        
-        // Debugging Reactivity
-        // console.log(`[DamageGraph] Processing ${playerId}. GlobalHide: ${globalHideMode.value}, Hidden: ${hiddenPlayers.has(playerId)}`);
-        
         const isHidden = globalHideMode.value || hiddenPlayers.has(playerId);
         const player = fightSummary.players[playerId];
 
@@ -202,38 +536,24 @@ export default defineComponent({
         let displayColor = getMabiNameColor(displayLabel);
 
         if (isHidden) {
-          // Hidden Mode: Use Talent Name and Talent Color
-          // If no talent info, fallback to "Hidden" and Grey
           displayLabel = player?.talentName || "Hidden";
           displayColor = player?.talentColor || "#808080";
         } else {
-          // Visible Mode: Use Real Name
-          // Color depends on preference
           if (showClassColorsForVisiblePlayers.value && player?.talentColor) {
             displayColor = player.talentColor;
           }
         }
 
         datasets.push({
-          label: `${displayLabel} - Total Dmg`,
-          backgroundColor: displayColor,
-          borderColor: displayColor,
-          data: playerData.map((p) => p.totalDamage),
-          yAxisID: "y",
-          pointRadius: 0,
-          borderWidth: 2.5,
-          hidden: !showTotalDmg.value,
-        });
-
-        datasets.push({
-          label: `${displayLabel} - 180s DPS`,
+          label: `${displayLabel} - 15s DPS`,
           backgroundColor: displayColor,
           borderColor: displayColor,
           data: playerData.map((p) => p.rollingDPS),
-          yAxisID: "y1",
+          yAxisID: "y",
           pointRadius: 0,
-          borderWidth: 1.5,
-          hidden: !showRollingDps.value,
+          borderWidth: 3, // Thicker, bold lines that stand out wonderfully
+          tension: 0.3,   // Curved lines for modern flowing aesthetic
+          order: 1, // drawn in front of HP area
         });
       }
 
@@ -245,47 +565,33 @@ export default defineComponent({
         return fightSummary.targets[selectedTargetId.value]?.conditions;
     });
 
-    const encounterStartTime = computed(() => {
-        if (!selectedTargetId.value) {
-            return fightSummary.startTime || 0;
-        }
-        // If sorting by target, ideally we use the target's start time for relative sync.
-        // However, the graph X-axis is "Time since Encounter Start" (0-based) for general view,
-        // BUT specific target graph data is typically relative to that target's engagement?
-        // Let's check how graph data is generated. 
-        // In aggregator.go: `Time: t - startTime` where startTime is targetStartTime if filtered.
-        // So graph X=0 corresponds to targetStartTime.
-        
-        // However, condition intervals are ABSOLUTE timestamps (Unix).
-        // So we need to pass the reference "Zero Point" to the timeline component.
-        
-        // If selectedTargetId present:
-        // We need to find the start time used for that target's graph generation.
-        // The backend `processEventsForSummary` & `generateGraphDataFromEvents` uses `targetTimes.StartTime`.
-        // The issue is `FightSummary` struct doesn't strictly expose per-target StartTime cleanly in a map,
-        // but `DamageBreakdown` has `startTime`.
-        
-        // Let's look up the start time from a player's breakdown against this target.
-        // Use the first available player which engaged this target.
-        
-        for (const player of Object.values(fightSummary.players)) {
-            const breakdown = player.damageByTarget[selectedTargetId.value];
-            if (breakdown && breakdown.startTime) {
-                return breakdown.startTime;
-            }
-        }
-        return fightSummary.startTime || 0;
-    });
-
     return {
       chartData,
       chartOptions,
-      toggleTotalDmg,
-      toggleRollingDps,
       selectedTargetConditions,
       encounterStartTime,
-      xAxisConfig
+      xAxisConfig,
+      selectedConditionId,
+      conditionItems,
+      showDeaths
     };
   },
 });
 </script>
+
+<style scoped>
+.graph-container {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.chart-wrapper {
+  background: rgba(255, 255, 255, 0.02); /* extremely subtle gray backdrop overlay */
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+</style>
