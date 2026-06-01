@@ -98,7 +98,7 @@
                           </span>
                           
                           <div class="d-flex align-center ga-2">
-                            <span v-if="item.id" class="hp-text text-caption text-grey-lighten-1 font-weight-medium text-right">
+                            <span v-if="item.id && item.hasHpUpdates" class="hp-text text-caption text-grey-lighten-1 font-weight-medium text-right">
                               {{ formatCompact(item.currentHp) }} / {{ formatCompact(item.maxHp) }}
                               <span class="text-grey ml-1">({{ item.hpPercent.toFixed(1) }}%)</span>
                             </span>
@@ -116,7 +116,7 @@
                         </div>
 
                         <!-- HP Bar Separator -->
-                        <div v-if="item.id" class="hp-bar-separator w-100">
+                        <div v-if="item.id && item.hasHpUpdates" class="hp-bar-separator w-100">
                           <div
                             class="hp-bar-separator-fill hp-enemy"
                             :style="{ width: item.hpPercent + '%' }"
@@ -170,14 +170,17 @@
                             </v-tooltip>
                           </span>
                           
-                          <span class="hp-text text-caption text-grey-lighten-1 font-weight-medium text-right">
+                          <span v-if="subItem.hasHpUpdates" class="hp-text text-caption text-grey-lighten-1 font-weight-medium text-right">
                             {{ formatCompact(subItem.currentHp) }} / {{ formatCompact(subItem.maxHp) }}
                             <span class="text-grey ml-1">({{ subItem.hpPercent.toFixed(1) }}%)</span>
+                          </span>
+                          <span v-else class="target-col-damage font-weight-bold text-amber text-right">
+                            {{ formatCompact(subItem.damage) }}
                           </span>
                         </div>
 
                         <!-- HP Bar Separator -->
-                        <div class="hp-bar-separator w-100">
+                        <div v-if="subItem.hasHpUpdates" class="hp-bar-separator w-100">
                           <div
                             class="hp-bar-separator-fill hp-enemy"
                             :style="{ width: subItem.hpPercent + '%' }"
@@ -541,6 +544,9 @@ export default defineComponent({
             }
           }
 
+          // Determine if we actually found real HP updates
+          const hasHpUpdates = maxHp > 0;
+
           // 3. Last resort fallbacks
           if (maxHp === 0) {
             if (stats.seenDead) {
@@ -574,6 +580,7 @@ export default defineComponent({
             startTime: stats.startTime,
             endTime: stats.endTime,
             raceId: stats.raceId,
+            hasHpUpdates,
           };
         }
       );
@@ -606,6 +613,7 @@ export default defineComponent({
           startTime: undefined,
           endTime: undefined,
           raceId: undefined,
+          hasHpUpdates: false,
         });
         return targets;
       }
@@ -677,6 +685,7 @@ export default defineComponent({
               startTime: bossTarget.startTime,
               endTime: partnerTarget ? partnerTarget.endTime : bossTarget.endTime,
               raceId: activeBoss.raceId,
+              hasHpUpdates: activeBoss.hasHpUpdates,
               targets: [...members].sort((a, b) => {
                 const startA = a.startTime || 0;
                 const startB = b.startTime || 0;
@@ -722,6 +731,7 @@ export default defineComponent({
         startTime: undefined,
         endTime: undefined,
         raceId: undefined,
+        hasHpUpdates: false,
       });
 
       return combined;
@@ -773,11 +783,13 @@ export default defineComponent({
       if (!selectedTargetId.value) return null;
       for (const item of targetList.value) {
         if (item.id === selectedTargetId.value) {
+          if (!item.hasHpUpdates) return null;
           return { current: item.currentHp, max: item.maxHp, percent: item.hpPercent };
         }
         if (item.isGroup && item.targets) {
           const sub = item.targets.find((t: any) => t.id === selectedTargetId.value);
           if (sub) {
+            if (!sub.hasHpUpdates) return null;
             return { current: sub.currentHp, max: sub.maxHp, percent: sub.hpPercent };
           }
         }
