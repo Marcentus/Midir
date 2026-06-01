@@ -195,7 +195,7 @@ export function toggleLiveConditionPref(id: number, type: "fav" | "hide") {
 
 // --- SETTINGS ---
 export const showClassColorsForVisiblePlayers = ref(false);
-export const dpsMeterFillMode = ref<"column" | "full">("column");
+export const dpsMeterFillMode = ref<"column" | "full">("full");
 export const nameColorSaturation = ref<[number, number]>([50, 90]); // [Min, Max]
 export const nameColorLightness = ref<[number, number]>([30, 50]); // [Min, Max]
 export const nameColorSeed = ref<string>("T0F89V"); // Default seed
