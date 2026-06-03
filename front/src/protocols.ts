@@ -61,6 +61,14 @@ export interface DamageTimelineEvent {
   overkill?: number;
 }
 
+export interface PetStats {
+  id: string;
+  name: string;
+  raceId: number;
+  overallStats: DamageBreakdown;
+  damageByTarget: { [targetId: string]: DamageBreakdown };
+}
+
 export interface PlayerStats {
   id: string;
   name: string;
@@ -72,6 +80,7 @@ export interface PlayerStats {
   damageByTarget: { [targetId: string]: DamageBreakdown };
   deaths?: number[];
   damageTimeline?: DamageTimelineEvent[];
+  pets?: { [petId: string]: PetStats };
 }
 
 // --- START: NEW INTERFACES FOR DAMAGE TAKEN ---

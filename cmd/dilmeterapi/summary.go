@@ -97,6 +97,14 @@ type DamageTimelineEvent struct {
 	Overkill   float32 `json:"overkill,omitempty"`
 }
 
+type PetStats struct {
+	ID             string                     `json:"id"`
+	Name           string                     `json:"name"`
+	RaceID         uint32                     `json:"raceId"`
+	OverallStats   DamageBreakdown            `json:"overallStats"`
+	DamageByTarget map[string]DamageBreakdown `json:"damageByTarget"` // Key is Target ID
+}
+
 // PlayerStats is now more detailed.
 type PlayerStats struct {
 	ID                  string                     `json:"id"`
@@ -110,6 +118,7 @@ type PlayerStats struct {
 	SkillUses           []SkillUseEvent            `json:"-"`
 	Deaths              []int64                    `json:"deaths,omitempty"`
 	DamageTimeline      []DamageTimelineEvent      `json:"damageTimeline,omitempty"`
+	Pets                map[string]*PetStats       `json:"pets,omitempty"`
 }
 
 // --- (Structs for Damage Taken remain the same) ---

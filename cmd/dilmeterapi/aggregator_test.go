@@ -673,3 +673,87 @@ func TestEventPublisher_HPVerification_Overkill(t *testing.T) {
 		}
 	}
 }
+
+func TestAggregator_PetDamageAttribution(t *testing.T) {
+	var err error
+	db, err = sql.Open("sqlite", ":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		db.Close()
+		db = nil
+	}()
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS players (
+		id INTEGER PRIMARY KEY,
+		name TEXT,
+		race_id INTEGER
+	);`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	playerID := uint64(1111)
+	petID := uint64(2222)
+	enemyID := uint64(3333)
+
+	// Mock DB player info and register in playerCache
+	_, err = db.Exec("INSERT INTO players (id, name, race_id) VALUES (?, ?, ?)", playerID, "Alice", 8001)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	agg := NewAggregator()
+
+	// Mock entities in cache
+	agg.entityCache[playerID] = &packet.EntityInfo{Id: playerID, Name: "Alice", RaceId: 8001}
+	agg.entityCache[petID] = &packet.EntityInfo{Id: petID, Name: "NimbusPet", RaceId: 500, OwnerId: playerID}
+	agg.entityCache[enemyID] = &packet.EntityInfo{Id: enemyID, Name: "7777", RaceId: 2000} // enemy
+
+	// Process Effect packet where attacker is petID
+	pEffect := &packet.GamePacket{
+		Op: opcodeEffect,
+		Id: enemyID, // target ID
+		At: time.Now(),
+		Msg: []packet.IMessageElem{
+			packet.NewMessageElemInt(352),       // type = 352
+			packet.NewMessageElemByte(0),        // skip byte
+			packet.NewMessageElemInt(1500),      // damage = 1500
+			packet.NewMessageElemInt(0),         // skip int
+			packet.NewMessageElemLong(petID),    // attacker ID is the pet!
+			packet.NewMessageElemShort(888),     // skill ID
+			packet.NewMessageElemByte(0),        // skip byte
+		},
+	}
+	agg.ProcessPacket(pEffect)
+
+	// Verify Alice's (owner) damage stats recorded the 1500 damage
+	stats := agg.playerStats[playerID]
+	if stats == nil {
+		t.Fatalf("Expected stats for player Alice, got nil")
+	}
+	if stats.OverallStats.TotalDamage != 1500 {
+		t.Errorf("Expected owner Alice to have 1500 damage, got %f", stats.OverallStats.TotalDamage)
+	}
+
+	// Verify that the owner's Skills list does NOT contain skill 888 (since it was the pet's hit)
+	if _, exists := stats.OverallStats.Skills[888]; exists {
+		t.Errorf("Expected owner's skills list to not contain the pet's skill 888")
+	}
+
+	// Verify pet stats under owner
+	petStats, exists := stats.Pets["2222"]
+	if !exists {
+		t.Fatalf("Expected pet stats for pet ID '2222', got nil")
+	}
+	if petStats.Name != "NimbusPet" {
+		t.Errorf("Expected pet name to be 'NimbusPet', got '%s'", petStats.Name)
+	}
+	if petStats.OverallStats.TotalDamage != 1500 {
+		t.Errorf("Expected pet stats to record 1500 damage, got %f", petStats.OverallStats.TotalDamage)
+	}
+	if petStats.OverallStats.Skills[888].TotalDamage != 1500 {
+		t.Errorf("Expected pet skill 888 to record 1500 damage, got %f", petStats.OverallStats.Skills[888].TotalDamage)
+	}
+}

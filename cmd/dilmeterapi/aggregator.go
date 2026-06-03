@@ -416,6 +416,64 @@ func (a *Aggregator) processEffect(p *packet.GamePacket) {
 		if len(stats.DamageTimeline) > 200 {
 			stats.DamageTimeline = stats.DamageTimeline[len(stats.DamageTimeline)-200:]
 		}
+	} else if ownerInfo, petEntity, isPet := a.resolvePlayerOwner(attackerId); isPet {
+		stats := a.getOrCreatePlayerStats(ownerInfo)
+		targetIdStr := strconv.FormatUint(targetId, 10)
+		tempHitPacket := &packet.CombatActionPacket{Hit: &packet.CombatActionPacketHitInfo{Damage: damage}}
+
+		// Update owner overall and per-target breakdown (overall totals only, no skills)
+		a.updateBreakdownOnly(&stats.OverallStats, damage, false, true)
+		targetBreakdown, targetExists := stats.DamageByTarget[targetIdStr]
+		if !targetExists {
+			targetBreakdown = newDamageBreakdown()
+		}
+		a.updateBreakdownOnly(&targetBreakdown, damage, false, true)
+		stats.DamageByTarget[targetIdStr] = targetBreakdown
+
+		// Update pet stats
+		petIDStr := strconv.FormatUint(attackerId, 10)
+		petStats, exists := stats.Pets[petIDStr]
+		if !exists {
+			petStats = &PetStats{
+				ID:             petIDStr,
+				Name:           petEntity.Name,
+				RaceID:         petEntity.RaceId,
+				OverallStats:   newDamageBreakdown(),
+				DamageByTarget: make(map[string]DamageBreakdown),
+			}
+			stats.Pets[petIDStr] = petStats
+		}
+		a.updateBreakdown(&petStats.OverallStats, tempHitPacket, skillId, true)
+		petTargetBreakdown, petTargetExists := petStats.DamageByTarget[targetIdStr]
+		if !petTargetExists {
+			petTargetBreakdown = newDamageBreakdown()
+		}
+		a.updateBreakdown(&petTargetBreakdown, tempHitPacket, skillId, true)
+		petStats.DamageByTarget[targetIdStr] = petTargetBreakdown
+
+		// Append to owner's timeline
+		var currentHP, maxHP float32
+		if entity, ok := a.entityCache[targetId]; ok {
+			currentHP = entity.CurrentHP
+			maxHP = entity.MaxHP
+		} else if hpPt, ok := a.targetHP[targetId]; ok {
+			currentHP = hpPt.CurrentHP
+			maxHP = hpPt.MaxHP
+		}
+		targetName := a.getEntityName(targetId)
+		stats.DamageTimeline = append(stats.DamageTimeline, DamageTimelineEvent{
+			Timestamp:  p.At.Unix(),
+			SkillID:    skillId,
+			TargetID:   targetIdStr,
+			TargetName: targetName,
+			Damage:     damage,
+			CurrentHP:  currentHP,
+			MaxHP:      maxHP,
+			IsCritical: false,
+		})
+		if len(stats.DamageTimeline) > 200 {
+			stats.DamageTimeline = stats.DamageTimeline[len(stats.DamageTimeline)-200:]
+		}
 	}
 
 	if targetInfo, isPlayerTarget := playerCache.Get(targetId); isPlayerTarget {
@@ -473,6 +531,64 @@ func (a *Aggregator) processEffectDelayed(p *packet.GamePacket) {
 		a.updateBreakdown(&stats.OverallStats, tempHitPacket, skillId, true)
 		a.updatePerTargetBreakdown(stats, targetIdStr, tempHitPacket, skillId, true)
 
+		var currentHP, maxHP float32
+		if entity, ok := a.entityCache[targetId]; ok {
+			currentHP = entity.CurrentHP
+			maxHP = entity.MaxHP
+		} else if hpPt, ok := a.targetHP[targetId]; ok {
+			currentHP = hpPt.CurrentHP
+			maxHP = hpPt.MaxHP
+		}
+		targetName := a.getEntityName(targetId)
+		stats.DamageTimeline = append(stats.DamageTimeline, DamageTimelineEvent{
+			Timestamp:  p.At.Unix(),
+			SkillID:    skillId,
+			TargetID:   targetIdStr,
+			TargetName: targetName,
+			Damage:     damage,
+			CurrentHP:  currentHP,
+			MaxHP:      maxHP,
+			IsCritical: false,
+		})
+		if len(stats.DamageTimeline) > 200 {
+			stats.DamageTimeline = stats.DamageTimeline[len(stats.DamageTimeline)-200:]
+		}
+	} else if ownerInfo, petEntity, isPet := a.resolvePlayerOwner(attackerId); isPet {
+		stats := a.getOrCreatePlayerStats(ownerInfo)
+		targetIdStr := strconv.FormatUint(targetId, 10)
+		tempHitPacket := &packet.CombatActionPacket{Hit: &packet.CombatActionPacketHitInfo{Damage: damage}}
+
+		// Update owner overall and per-target breakdown (overall totals only, no skills)
+		a.updateBreakdownOnly(&stats.OverallStats, damage, false, true)
+		targetBreakdown, targetExists := stats.DamageByTarget[targetIdStr]
+		if !targetExists {
+			targetBreakdown = newDamageBreakdown()
+		}
+		a.updateBreakdownOnly(&targetBreakdown, damage, false, true)
+		stats.DamageByTarget[targetIdStr] = targetBreakdown
+
+		// Update pet stats
+		petIDStr := strconv.FormatUint(attackerId, 10)
+		petStats, exists := stats.Pets[petIDStr]
+		if !exists {
+			petStats = &PetStats{
+				ID:             petIDStr,
+				Name:           petEntity.Name,
+				RaceID:         petEntity.RaceId,
+				OverallStats:   newDamageBreakdown(),
+				DamageByTarget: make(map[string]DamageBreakdown),
+			}
+			stats.Pets[petIDStr] = petStats
+		}
+		a.updateBreakdown(&petStats.OverallStats, tempHitPacket, skillId, true)
+		petTargetBreakdown, petTargetExists := petStats.DamageByTarget[targetIdStr]
+		if !petTargetExists {
+			petTargetBreakdown = newDamageBreakdown()
+		}
+		a.updateBreakdown(&petTargetBreakdown, tempHitPacket, skillId, true)
+		petStats.DamageByTarget[targetIdStr] = petTargetBreakdown
+
+		// Append to owner's timeline
 		var currentHP, maxHP float32
 		if entity, ok := a.entityCache[targetId]; ok {
 			currentHP = entity.CurrentHP
@@ -671,7 +787,7 @@ func (a *Aggregator) processCombatAction(p *packet.GamePacket) {
 		// Update the shared timers for this target, regardless of who hit it
 		a.updateTimestamps(sub.EntityId, p.At)
 
-		// If the attacker is a player, update their damage dealt stats
+		// If the attacker is a player or pet, update their damage dealt stats
 		if sub.Hit.Damage > 0 {
 			if playerInfo, isPlayer := playerCache.Get(attackerId); isPlayer {
 				stats := a.getOrCreatePlayerStats(playerInfo)
@@ -689,6 +805,64 @@ func (a *Aggregator) processCombatAction(p *packet.GamePacket) {
 				}
 				targetName := a.getEntityName(sub.EntityId)
 				isCrit := (sub.Hit.Options & packet.CombatActionHitOptionsCritical) != 0
+				stats.DamageTimeline = append(stats.DamageTimeline, DamageTimelineEvent{
+					Timestamp:  p.At.Unix(),
+					SkillID:    attackSkillId,
+					TargetID:   targetIdStr,
+					TargetName: targetName,
+					Damage:     sub.Hit.Damage,
+					CurrentHP:  currentHP,
+					MaxHP:      maxHP,
+					IsCritical: isCrit,
+				})
+				if len(stats.DamageTimeline) > 200 {
+					stats.DamageTimeline = stats.DamageTimeline[len(stats.DamageTimeline)-200:]
+				}
+			} else if ownerInfo, petEntity, isPet := a.resolvePlayerOwner(attackerId); isPet {
+				stats := a.getOrCreatePlayerStats(ownerInfo)
+				targetIdStr := strconv.FormatUint(sub.EntityId, 10)
+				isCrit := (sub.Hit.Options & packet.CombatActionHitOptionsCritical) != 0
+
+				// Update owner overall and per-target breakdown (overall totals only, no skills)
+				a.updateBreakdownOnly(&stats.OverallStats, sub.Hit.Damage, isCrit, false)
+				targetBreakdown, targetExists := stats.DamageByTarget[targetIdStr]
+				if !targetExists {
+					targetBreakdown = newDamageBreakdown()
+				}
+				a.updateBreakdownOnly(&targetBreakdown, sub.Hit.Damage, isCrit, false)
+				stats.DamageByTarget[targetIdStr] = targetBreakdown
+
+				// Update pet stats under owner
+				petIDStr := strconv.FormatUint(attackerId, 10)
+				petStats, exists := stats.Pets[petIDStr]
+				if !exists {
+					petStats = &PetStats{
+						ID:             petIDStr,
+						Name:           petEntity.Name,
+						RaceID:         petEntity.RaceId,
+						OverallStats:   newDamageBreakdown(),
+						DamageByTarget: make(map[string]DamageBreakdown),
+					}
+					stats.Pets[petIDStr] = petStats
+				}
+				a.updateBreakdown(&petStats.OverallStats, sub, attackSkillId, false)
+				petTargetBreakdown, petTargetExists := petStats.DamageByTarget[targetIdStr]
+				if !petTargetExists {
+					petTargetBreakdown = newDamageBreakdown()
+				}
+				a.updateBreakdown(&petTargetBreakdown, sub, attackSkillId, false)
+				petStats.DamageByTarget[targetIdStr] = petTargetBreakdown
+
+				// Append to owner's timeline
+				var currentHP, maxHP float32
+				if entity, ok := a.entityCache[sub.EntityId]; ok {
+					currentHP = entity.CurrentHP
+					maxHP = entity.MaxHP
+				} else if hpPt, ok := a.targetHP[sub.EntityId]; ok {
+					currentHP = hpPt.CurrentHP
+					maxHP = hpPt.MaxHP
+				}
+				targetName := a.getEntityName(sub.EntityId)
 				stats.DamageTimeline = append(stats.DamageTimeline, DamageTimelineEvent{
 					Timestamp:  p.At.Unix(),
 					SkillID:    attackSkillId,
@@ -722,10 +896,36 @@ func (a *Aggregator) getOrCreatePlayerStats(playerInfo *PlayerInfo) *PlayerStats
 			Name:           playerInfo.Name,
 			OverallStats:   newDamageBreakdown(),
 			DamageByTarget: make(map[string]DamageBreakdown),
+			Pets:           make(map[string]*PetStats),
 		}
 		a.playerStats[playerInfo.ID] = stats
 	}
+	if stats.Pets == nil {
+		stats.Pets = make(map[string]*PetStats)
+	}
 	return stats
+}
+
+func (a *Aggregator) resolvePlayerOwner(attackerID uint64) (*PlayerInfo, *packet.EntityInfo, bool) {
+	entity, ok := a.entityCache[attackerID]
+	if !ok || entity.OwnerId == 0 {
+		return nil, nil, false
+	}
+	ownerInfo, isPlayer := playerCache.Get(entity.OwnerId)
+	if !isPlayer {
+		return nil, nil, false
+	}
+	return ownerInfo, entity, true
+}
+
+func (a *Aggregator) updateBreakdownOnly(breakdown *DamageBreakdown, damage float32, isCrit bool, isDelayed bool) {
+	breakdown.TotalDamage += damage
+	if !isDelayed {
+		breakdown.HitCount++
+		if isCrit {
+			breakdown.CritCount++
+		}
+	}
 }
 
 func (a *Aggregator) updatePerTargetBreakdown(stats *PlayerStats, targetIdStr string, hitPacket *packet.CombatActionPacket, skillId uint16, isDelayed bool) {
@@ -875,6 +1075,31 @@ func (a *Aggregator) GetSummary() FightSummary {
 			finalizedBreakdown.EndTime = targetTimes.EndTime
 			playerCopy.DamageByTarget[targetIdStr] = finalizedBreakdown
 			uniqueTargets[targetIdUint] = true
+		}
+
+		playerCopy.Pets = make(map[string]*PetStats)
+		for petIDStr, petStats := range pStats.Pets {
+			petCopy := &PetStats{
+				ID:             petStats.ID,
+				Name:           petStats.Name,
+				RaceID:         petStats.RaceID,
+				OverallStats:   a.finalizeBreakdown(petStats.OverallStats, summary.EncounterDuration, a.encounterStartTime, a.encounterEndTime, playerID, true, 0),
+				DamageByTarget: make(map[string]DamageBreakdown),
+			}
+			petCopy.OverallStats.StartTime = a.encounterStartTime
+			petCopy.OverallStats.EndTime = a.encounterEndTime
+
+			for targetIdStr, breakdown := range petStats.DamageByTarget {
+				targetIdUint, _ := strconv.ParseUint(targetIdStr, 10, 64)
+				targetTimes := a.targetTimestamps[targetIdUint]
+				targetDuration := float64(targetTimes.EndTime - targetTimes.StartTime)
+
+				finalizedBreakdown := a.finalizeBreakdown(breakdown, targetDuration, targetTimes.StartTime, targetTimes.EndTime, playerID, false, targetIdUint)
+				finalizedBreakdown.StartTime = targetTimes.StartTime
+				finalizedBreakdown.EndTime = targetTimes.EndTime
+				petCopy.DamageByTarget[targetIdStr] = finalizedBreakdown
+			}
+			playerCopy.Pets[petIDStr] = petCopy
 		}
 
 		summary.Players[pStats.ID] = playerCopy

@@ -138,17 +138,25 @@
           >
             <template v-slot:[`item.skillName`]="{ item: skillItem }">
               <div class="d-flex align-center">
-                <img
-                  width="24"
-                  height="24"
-                  :src="getSkillImageSrc(skillItem.id)"
-                  class="mr-2"
-                  @error="
-                    ($event.target as HTMLImageElement).style.display =
-                      'none'
-                  "
-                />
-                <span>{{ getSkillName(skillItem.id) }}</span>
+                <template v-if="skillItem.isPet">
+                  <v-icon icon="mdi-dog-side" class="mr-2" color="amber"></v-icon>
+                  <span class="font-weight-bold text-amber">
+                    {{ getPetRaceName(skillItem.raceId) || skillItem.name || 'Pet' }}
+                  </span>
+                </template>
+                <template v-else>
+                  <img
+                    width="24"
+                    height="24"
+                    :src="getSkillImageSrc(skillItem.id)"
+                    class="mr-2"
+                    @error="
+                      ($event.target as HTMLImageElement).style.display =
+                        'none'
+                    "
+                  />
+                  <span>{{ getSkillName(skillItem.id) }}</span>
+                </template>
               </div>
             </template>
 
@@ -240,6 +248,7 @@
                   : "0.0"
               }}%
             </template>
+
           </v-data-table>
 
           <!-- Damage Timeline Section -->
@@ -416,19 +425,30 @@
                 >
                     <!-- Icon + Tooltip (No Name Text) -->
                     <template v-slot:item.skillIcon="{ item: skillItem }">
-                         <v-tooltip location="top" open-delay="200">
-                             <template v-slot:activator="{ props }">
-                                 <img
-                                    v-bind="props"
-                                    width="28"
-                                    height="28"
-                                    :src="getSkillImageSrc(skillItem.id)"
-                                    style="vertical-align: middle; border-radius: 4px;"
-                                    @error="($event.target as HTMLImageElement).style.display = 'none'"
-                                  />
-                             </template>
-                             <span>{{ getSkillName(skillItem.id) }}</span>
-                         </v-tooltip>
+                          <v-tooltip location="top" open-delay="200">
+                              <template v-slot:activator="{ props }">
+                                 <template v-if="skillItem.isPet">
+                                     <v-icon
+                                        v-bind="props"
+                                        icon="mdi-dog-side"
+                                        color="amber"
+                                        size="large"
+                                        class="mr-2"
+                                     ></v-icon>
+                                 </template>
+                                 <template v-else>
+                                  <img
+                                     v-bind="props"
+                                     width="28"
+                                     height="28"
+                                     :src="getSkillImageSrc(skillItem.id)"
+                                     style="vertical-align: middle; border-radius: 4px;"
+                                     @error="($event.target as HTMLImageElement).style.display = 'none'"
+                                   />
+                                 </template>
+                              </template>
+                              <span>{{ skillItem.isPet ? (getPetRaceName(skillItem.raceId) || skillItem.name || 'Pet') : getSkillName(skillItem.id) }}</span>
+                          </v-tooltip>
                     </template>
 
                     <template v-slot:item.uses="{ item: skillItem }">
@@ -866,6 +886,19 @@
 .text-xxs {
   font-size: 0.7rem !important;
 }
+.pet-row {
+  border-left: 4px solid #ffd740 !important;
+}
+.pet-skills-table {
+  background: rgba(0, 0, 0, 0.2) !important;
+}
+.pet-skills-table :deep(table) {
+  border-spacing: 0 2px !important;
+}
+.pet-skills-table :deep(tr td) {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+  border-bottom: none !important;
+}
 </style>
 
 <script lang="ts" setup>
@@ -876,7 +909,7 @@ import {
   activeSessionId,
   selectedTargetId,
 } from "@/store";
-import { SkillStats, DamageBreakdown, DamageTimelineEvent } from "@/protocols";
+import { SkillStats, DamageBreakdown, DamageTimelineEvent, PetStats } from "@/protocols";
 import TargetConditionView from "./TargetConditionView.vue";
 import { hiddenPlayers, toggleHiddenPlayer, setAllHiddenPlayers, globalHideMode, showClassColorsForVisiblePlayers, listSkillMetrics, cardSkillMetrics, dpsMeterFillMode } from "@/store";
 
@@ -893,10 +926,11 @@ const getPlayerColor = (item: any) => {
 // --- STATE ---
 const skillNameMap = inject("skillNameMap") as any;
 const condNameMap = inject("condNameMap") as any;
+const raceNameMap = inject("raceNameMap") as any;
 const expanded = ref<string[]>([]);
 const viewMode = ref<"table" | "cards">("table"); 
 
-watch(activeSessionId, () => {
+watch([activeSessionId, selectedTargetId], () => {
   expanded.value = [];
 });
 
@@ -1123,11 +1157,85 @@ const getSkillImageSrc = (skillId: number): string => {
   return skillNameMap.value[skillId]?.iconUrl || "";
 };
 
-const getSkillBreakdown = (playerData: DamageBreakdown): SkillStats[] => {
-  if (!playerData.skills) return [];
-  return Object.values(playerData.skills).sort(
-    (a, b) => b.totalDamage - a.totalDamage
-  );
+const getPetNumericId = (petId: string): number => {
+  let hash = 0;
+  for (let i = 0; i < petId.length; i++) {
+    hash = (hash << 5) - hash + petId.charCodeAt(i);
+    hash |= 0;
+  }
+  return -Math.abs(hash || 9999);
+};
+
+const getPetRaceName = (raceId: number | undefined): string => {
+  if (!raceId || !raceNameMap || !raceNameMap.value) return "";
+  const val = raceNameMap.value[raceId];
+  if (!val) return `Race:${raceId}`;
+  
+  const parts = val.split(" ");
+  if (parts.length > 1 && !isNaN(Number(parts[parts.length - 1]))) {
+    return parts.slice(0, -1).join(" ");
+  }
+  return val;
+};
+
+const getSkillBreakdown = (playerItem: any): any[] => {
+  if (!playerItem) return [];
+  
+  const skillsList: any[] = [];
+  if (playerItem.skills) {
+    for (const [skillId, skill] of Object.entries(playerItem.skills)) {
+      skillsList.push({
+        ...(skill as any),
+        id: Number(skillId),
+        isPet: false,
+      });
+    }
+  }
+
+  // Look up player's pets from fightSummary using playerItem.id
+  const playerState = fightSummary.players[playerItem.id];
+  if (playerState && playerState.pets) {
+    for (const [petId, pet] of Object.entries(playerState.pets)) {
+      const stats = selectedTargetId.value 
+        ? pet.damageByTarget[selectedTargetId.value] 
+        : pet.overallStats;
+      
+      if (stats && stats.totalDamage > 0) {
+        // Calculate max / average stats from pet's skills
+        let maxDamage = 0;
+        let maxDamageCrit = 0;
+        let maxDamageNonCrit = 0;
+        let totalDamageCrit = 0;
+        let totalDamageNonCrit = 0;
+        for (const skill of Object.values(stats.skills || {})) {
+          if (skill.maxDamage > maxDamage) maxDamage = skill.maxDamage;
+          if (skill.maxDamageCrit > maxDamageCrit) maxDamageCrit = skill.maxDamageCrit;
+          if (skill.maxDamageNonCrit > maxDamageNonCrit) maxDamageNonCrit = skill.maxDamageNonCrit;
+          totalDamageCrit += skill.totalDamageCrit || 0;
+          totalDamageNonCrit += skill.totalDamageNonCrit || 0;
+        }
+        
+        skillsList.push({
+          id: getPetNumericId(petId),
+          isPet: true,
+          petId: petId,
+          name: pet.name,
+          raceId: pet.raceId,
+          count: stats.hitCount,
+          critCount: stats.critCount,
+          totalDamage: stats.totalDamage,
+          totalDamageCrit,
+          totalDamageNonCrit,
+          maxDamage,
+          maxDamageCrit,
+          maxDamageNonCrit,
+          uses: 0,
+        });
+      }
+    }
+  }
+
+  return skillsList.sort((a, b) => b.totalDamage - a.totalDamage);
 };
 
  const getRowProps = ({ item }: { item: any }) => {
@@ -1158,8 +1266,11 @@ const getSkillRowProps = (
   playerItem?: any,
   index?: number
 ) => {
+  const isPet = !!skillItem.isPet;
+  const classes = isPet ? "pet-row" : "";
+
   if (dpsMeterFillMode.value === "full") {
-    if (!topSkillDamage || !skillItem.totalDamage) return { style: {} };
+    if (!topSkillDamage || !skillItem.totalDamage) return { class: classes, style: {} };
     const percentage = (skillItem.totalDamage / topSkillDamage) * 100;
     
     let color = getMabiNameColor(playerName);
@@ -1168,11 +1279,14 @@ const getSkillRowProps = (
     }
 
     let bgColor = color;
-    if (index !== undefined && index % 2 !== 0) {
+    if (isPet) {
+      bgColor = `color-mix(in srgb, ${color}, #ffb300 20%)`;
+    } else if (index !== undefined && index % 2 !== 0) {
       bgColor = `color-mix(in srgb, ${color}, black 10%)`;
     }
 
     return {
+      class: classes,
       style: {
         background: `linear-gradient(to right, ${bgColor} ${percentage}%, transparent ${percentage}%)`,
         backgroundClip: 'padding-box',
@@ -1180,7 +1294,9 @@ const getSkillRowProps = (
     };
   }
   
-  return {};
+  return {
+    class: classes,
+  };
 };
 
 // Helper for Hex -> RGBA

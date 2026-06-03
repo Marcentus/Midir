@@ -354,6 +354,7 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 					Name:           playerInfo.Name,
 					OverallStats:   newDamageBreakdown(),
 					DamageByTarget: make(map[string]DamageBreakdown),
+					Pets:           make(map[string]*PetStats),
 				}
 			}
 		}
@@ -530,7 +531,7 @@ func processEventsForSummary(
 		}
 
 		// --- A) PROCESS DAMAGE DEALT ---
-		// Check if the attacker is a known player.
+		// Check if the attacker is a known player or a player's pet.
 		attackerId := parseUint64(damageEvent.Id)
 		if playerInfo, isPlayer := getPlayer(attackerId); isPlayer {
 			// Mark the target as having been engaged in combat.
@@ -544,8 +545,12 @@ func processEventsForSummary(
 					Name:           playerInfo.Name,
 					OverallStats:   newDamageBreakdown(),
 					DamageByTarget: make(map[string]DamageBreakdown),
+					Pets:           make(map[string]*PetStats),
 				}
 				playerStats[damageEvent.Id] = stats
+			}
+			if stats.Pets == nil {
+				stats.Pets = make(map[string]*PetStats)
 			}
 
 			// Update the player's overall damage stats.
@@ -592,6 +597,96 @@ func processEventsForSummary(
 					MaxHP:      maxHP,
 					IsCritical: damageEvent.IsCritical,
 				})
+			}
+		} else if appear, ok := entitiesInLog[damageEvent.Id]; ok && appear.OwnerId != "" && appear.OwnerId != "0" {
+			ownerID := parseUint64(appear.OwnerId)
+			if ownerInfo, isOwnerPlayer := getPlayer(ownerID); isOwnerPlayer {
+				uniqueTargets[damageEvent.TargetId] = true
+
+				// Get or create owner stats
+				stats, exists := playerStats[appear.OwnerId]
+				if !exists {
+					stats = &PlayerStats{
+						ID:             appear.OwnerId,
+						Name:           ownerInfo.Name,
+						OverallStats:   newDamageBreakdown(),
+						DamageByTarget: make(map[string]DamageBreakdown),
+						Pets:           make(map[string]*PetStats),
+					}
+					playerStats[appear.OwnerId] = stats
+				}
+				if stats.Pets == nil {
+					stats.Pets = make(map[string]*PetStats)
+				}
+
+				// Update owner totals only (no skills)
+				updateBreakdownOnlyFromLog(&stats.OverallStats, &damageEvent)
+				targetBreakdown, targetExists := stats.DamageByTarget[damageEvent.TargetId]
+				if !targetExists {
+					targetBreakdown = newDamageBreakdown()
+				}
+				updateBreakdownOnlyFromLog(&targetBreakdown, &damageEvent)
+				stats.DamageByTarget[damageEvent.TargetId] = targetBreakdown
+
+				// Update pet breakdown under owner
+				petStats, petExists := stats.Pets[damageEvent.Id]
+				if !petExists {
+					petName := resolveTargetNameFromLog(damageEvent.Id, entitiesInLog)
+					var petRaceID uint32
+					if petEntity, ok := entitiesInLog[damageEvent.Id]; ok {
+						petRaceID = petEntity.RaceId
+					}
+					petStats = &PetStats{
+						ID:             damageEvent.Id,
+						Name:           petName,
+						RaceID:         petRaceID,
+						OverallStats:   newDamageBreakdown(),
+						DamageByTarget: make(map[string]DamageBreakdown),
+					}
+					stats.Pets[damageEvent.Id] = petStats
+				}
+				updateBreakdownFromLog(&petStats.OverallStats, &damageEvent)
+				petTargetBreakdown, petTargetExists := petStats.DamageByTarget[damageEvent.TargetId]
+				if !petTargetExists {
+					petTargetBreakdown = newDamageBreakdown()
+				}
+				updateBreakdownFromLog(&petTargetBreakdown, &damageEvent)
+				petStats.DamageByTarget[damageEvent.TargetId] = petTargetBreakdown
+
+				// Update DamageTimeline for owner (include pet hit)
+				if damageEvent.IsCorrection {
+					for i := len(stats.DamageTimeline) - 1; i >= 0; i-- {
+						if stats.DamageTimeline[i].TargetID == damageEvent.TargetId && stats.DamageTimeline[i].SkillID == damageEvent.SkillId {
+							stats.DamageTimeline[i].Damage += damageEvent.Damage
+							stats.DamageTimeline[i].Overkill -= damageEvent.Damage
+							if stats.DamageTimeline[i].Damage < 0 {
+								stats.DamageTimeline[i].Damage = 0
+							}
+							break
+						}
+					}
+				} else {
+					var currentHP, maxHP float32
+					var defaultHP TargetHPPoint
+					if entity, ok := entitiesInLog[damageEvent.TargetId]; ok {
+						defaultHP.CurrentHP = entity.CurrentHP
+						defaultHP.MaxHP = entity.MaxHP
+					}
+					currentHP, maxHP = findTargetHPAtTime(hpHistoryByTarget[damageEvent.TargetId], damageEvent.At, defaultHP)
+
+					targetName := resolveTargetNameFromLog(damageEvent.TargetId, entitiesInLog)
+
+					stats.DamageTimeline = append(stats.DamageTimeline, DamageTimelineEvent{
+						Timestamp:  damageEvent.At,
+						SkillID:    damageEvent.SkillId,
+						TargetID:   damageEvent.TargetId,
+						TargetName: targetName,
+						Damage:     damageEvent.Damage,
+						CurrentHP:  currentHP,
+						MaxHP:      maxHP,
+						IsCritical: damageEvent.IsCritical,
+					})
+				}
 			}
 		}
 
@@ -1004,6 +1099,31 @@ func finalizeSummaryFromLog(
 		if color, ok := playerTalentColorsInLog[pStats.ID]; ok {
 			finalizedPstats.TalentColor = color
 		}
+		finalizedPstats.Pets = make(map[string]*PetStats)
+		for petIDStr, petStats := range pStats.Pets {
+			petCopy := &PetStats{
+				ID:             petStats.ID,
+				Name:           petStats.Name,
+				RaceID:         petStats.RaceID,
+				OverallStats:   finalizeBreakdownFromLog(petStats.OverallStats, overallDuration, encounterStartTime, encounterEndTime, pStats.ID, conditionHistory, activeConditions, playerSkillUses, true, 0, targetTimestamps),
+				DamageByTarget: make(map[string]DamageBreakdown),
+			}
+			petCopy.OverallStats.StartTime = encounterStartTime
+			petCopy.OverallStats.EndTime = encounterEndTime
+
+			for targetId, breakdown := range petStats.DamageByTarget {
+				targetTimes := targetTimestamps[targetId]
+				targetDuration := float64(targetTimes.EndTime - targetTimes.StartTime)
+				targetIdUint, _ := strconv.ParseUint(targetId, 10, 64)
+				finalizedBreakdown := finalizeBreakdownFromLog(
+					breakdown, targetDuration, targetTimes.StartTime, targetTimes.EndTime, pStats.ID, conditionHistory, activeConditions, playerSkillUses, false, targetIdUint, targetTimestamps)
+				finalizedBreakdown.StartTime = targetTimes.StartTime
+				finalizedBreakdown.EndTime = targetTimes.EndTime
+				petCopy.DamageByTarget[targetId] = finalizedBreakdown
+			}
+			finalizedPstats.Pets[petIDStr] = petCopy
+		}
+
 		summary.Players[pStats.ID] = finalizedPstats
 		totalDamage += finalizedPstats.OverallStats.TotalDamage
 	}
@@ -1053,6 +1173,20 @@ func finalizeSummaryFromLog(
 	computePartyBuffs(&summary)
 
 	return summary
+}
+
+func updateBreakdownOnlyFromLog(breakdown *DamageBreakdown, damageEvent *eventDamage) {
+	if damageEvent.IsCorrection {
+		breakdown.TotalDamage += damageEvent.Damage
+		return
+	}
+	breakdown.TotalDamage += damageEvent.Damage
+	if !damageEvent.IsDelayed {
+		breakdown.HitCount++
+		if damageEvent.IsCritical {
+			breakdown.CritCount++
+		}
+	}
 }
 
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
