@@ -26,15 +26,7 @@
         ></v-progress-circular>
 
         <template v-if="activeTool === 'dps'">
-          <v-btn
-            variant="text"
-            size="small"
-            prepend-icon="mdi-bug"
-            class="action-btn mr-2"
-            @click="activeTool = 'hpdebug'"
-          >
-            HP Debug
-          </v-btn>
+
 
           <v-btn
             variant="text"
@@ -66,7 +58,7 @@
           ></v-btn>
         </template>
 
-        <template v-else-if="activeTool === 'settings' || activeTool === 'hpdebug'">
+        <template v-else-if="activeTool === 'settings'">
           <v-btn
             variant="tonal"
             size="small"
@@ -84,7 +76,6 @@
     <v-main>
       <damage-meter-view v-if="activeTool === 'dps'" />
       <settings-view v-else-if="activeTool === 'settings'" />
-      <hp-debug-view v-else-if="activeTool === 'hpdebug'" />
     </v-main>
 
     <v-snackbar
@@ -118,7 +109,7 @@ import { FightSummary } from "./protocols";
 import { initPlayerCache } from "@/playerCache";
 import DamageMeterView from "@/components/DamageMeterView.vue";
 import SettingsView from "@/components/SettingsView.vue";
-import HPDebugView from "@/components/HPDebugView.vue";
+
 import {
   getSessionSummary,
   saveSession,
@@ -136,7 +127,6 @@ import {
   activeTool,
   loadingCount,
   isLoading,
-  hpValidationEvents,
 } from "@/store";
 
 export default defineComponent({
@@ -144,7 +134,6 @@ export default defineComponent({
   components: {
     DamageMeterView,
     SettingsView,
-    HPDebugView,
   },
   setup() {
     const raceNameMap = inject("raceNameMap");
@@ -175,12 +164,7 @@ export default defineComponent({
         playerBatchUpdateEvent.value = players;
     };
 
-    socket.onHPValidation = (event) => {
-      hpValidationEvents.value.push(event);
-      if (hpValidationEvents.value.length > 200) {
-        hpValidationEvents.value.shift();
-      }
-    };
+
     
     // Handle system errors
     const systemErrorVisible = ref(false);
@@ -196,7 +180,6 @@ export default defineComponent({
 
     const clearSession = async () => {
       selectedTargetId.value = "";
-      hpValidationEvents.value = [];
       Object.assign(fightSummary, {
         encounterDuration: 0,
         totalDamage: 0,

@@ -1,6 +1,6 @@
 import { ref, computed, shallowReactive, reactive, watch } from "vue";
 import { PlayerCacheInfo, Session } from "./types";
-import { FightSummary, HPValidationEvent } from "@/protocols";
+import { FightSummary } from "@/protocols";
 import { SocketClient } from "./socketClient";
 
 export const socket = new SocketClient(
@@ -36,9 +36,8 @@ export const playerNameCache = shallowReactive<Record<string, PlayerCacheInfo>>(
 export const sessions = ref<Session[]>([]);
 export const activeSessionId = ref<string | "live">("live");
 export const isNavDrawerOpen = ref(true);
-export const activeTool = ref<"dps" | "settings" | "hpdebug">("dps");
+export const activeTool = ref<"dps" | "settings">("dps");
 export const selectedTargetId = ref<string>("");
-export const hpValidationEvents = ref<HPValidationEvent[]>([]);
 
 
 export const fightSummary = reactive<FightSummary>({
