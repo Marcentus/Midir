@@ -24,6 +24,34 @@ type entityHPLogState struct {
 	LastLoggedAt  time.Time
 }
 
+type hpVerificationState struct {
+	LastCurrentHP float32
+	PendingDamage float32
+	DamageHits    []DamageHitInfo
+}
+
+type DamageHitInfo struct {
+	AttackerID   string    `json:"attackerId"`
+	AttackerName string    `json:"attackerName"`
+	SkillID      uint16    `json:"skillId"`
+	Damage       float32   `json:"damage"`
+	Timestamp    time.Time `json:"timestamp"`
+}
+
+type HPValidationEvent struct {
+	Timestamp     int64           `json:"timestamp"`
+	EntityID      string          `json:"entityId"`
+	EntityName    string          `json:"entityName"`
+	LastHP        float32         `json:"lastHp"`
+	NewHP         float32         `json:"newHp"`
+	MaxHP         float32         `json:"maxHp"`
+	ActualDelta   float32         `json:"actualDelta"`
+	ExpectedHP    float32         `json:"expectedHp"`
+	PendingDamage float32         `json:"pendingDamage"`
+	DamageHits    []DamageHitInfo `json:"damageHits"`
+	Status        string          `json:"status"` // "success", "mismatch", "heal"
+}
+
 type pendingDisable struct {
 	packet    *packet.GamePacket
 	cancelled bool
@@ -50,6 +78,10 @@ type eventPublisher struct {
 	// HP tracking and spam prevention
 	hpLogStates  map[uint64]*entityHPLogState
 	lastCombatAt map[uint64]time.Time
+
+	// HP validation states
+	hpVerificationStates map[uint64]*hpVerificationState
+	hpVerificationMu     sync.Mutex
 
 	// Condition tracking to prevent redundant log spam
 	activeConditions map[uint64]map[uint32]string
@@ -108,6 +140,8 @@ func newEventPublisher(ctx context.Context, packetCh <-chan *packet.GamePacket, 
 		hpLogStates:  make(map[uint64]*entityHPLogState),
 		lastCombatAt: make(map[uint64]time.Time),
 		activeConditions: make(map[uint64]map[uint32]string),
+
+		hpVerificationStates: make(map[uint64]*hpVerificationState),
 
 		pendingDisables: make(map[string]*pendingDisable),
 		flushCh:         make(chan string, 1000),
@@ -411,6 +445,7 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		// Now, create damage events for each hit using the correct skill ID.
 		for _, sub := range pack.SubPackets {
 			if sub.Hit != nil && (sub.Hit.Damage > 0 || sub.Hit.ManaDamage > 0) {
+				t.recordDamageHit(sub.EntityId, attackerId, attackSkillId, sub.Hit.Damage, p.At)
 				isCrit := (sub.Hit.Options & packet.CombatActionHitOptionsCritical) != 0
 				e := &eventDamage{
 					eventBase: eventBase{
@@ -448,6 +483,8 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		skillId := p.Msg[5].Data().(uint16)
 		targetId := p.Id
 
+		t.recordDamageHit(targetId, attackerId, skillId, damage, p.At)
+
 		t.lastCombatAt[attackerId] = p.At
 		t.lastCombatAt[targetId] = p.At
 
@@ -482,6 +519,8 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		attackerId := p.Msg[5].Data().(uint64)
 		skillId := p.Msg[6].Data().(uint16)
 		targetId := p.Id
+
+		t.recordDamageHit(targetId, attackerId, skillId, damage, p.At)
 
 		t.lastCombatAt[attackerId] = p.At
 		t.lastCombatAt[targetId] = p.At
@@ -679,6 +718,9 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 			break
 		}
 
+		// Verify HP changes before any filtering/throttling
+		t.verifyHPChange(statPack.EntityId, curHP, maxHP)
+
 		// Only log HP changes for enemies that are in our combat target list.
 		// Skip players, NPCs, props, or unengaged entities.
 		if t.aggregator.IsPlayerSafe(statPack.EntityId) || !t.aggregator.IsCombatTarget(statPack.EntityId) {
@@ -864,4 +906,158 @@ func (t *eventPublisher) cleanupEntityState(entityID uint64) {
 	delete(t.activeConditions, entityID)
 	delete(t.hpLogStates, entityID)
 	delete(t.lastCombatAt, entityID)
+
+	t.hpVerificationMu.Lock()
+	delete(t.hpVerificationStates, entityID)
+	t.hpVerificationMu.Unlock()
+}
+
+func (t *eventPublisher) getEntityName(entityID uint64) string {
+	t.aggregator.mu.RLock()
+	defer t.aggregator.mu.RUnlock()
+	if name, ok := t.aggregator.targetNames[entityID]; ok {
+		return name
+	}
+	if entity, ok := t.aggregator.entityCache[entityID]; ok {
+		return getRaceName(entity.RaceId)
+	}
+	if player, ok := playerCache.Get(entityID); ok {
+		return player.Name
+	}
+	return "Unknown (" + strconv.FormatUint(entityID, 10) + ")"
+}
+
+func (t *eventPublisher) recordDamageHit(targetID uint64, attackerID uint64, skillID uint16, damage float32, timestamp time.Time) {
+	if damage <= 0 {
+		return
+	}
+
+	t.hpVerificationMu.Lock()
+	defer t.hpVerificationMu.Unlock()
+
+	state, exists := t.hpVerificationStates[targetID]
+	if !exists {
+		state = &hpVerificationState{
+			DamageHits: make([]DamageHitInfo, 0),
+		}
+		t.hpVerificationStates[targetID] = state
+
+		// Initialize LastCurrentHP from aggregator if available
+		if curHP, _, _, _, ok := t.aggregator.GetEntityHP(targetID); ok {
+			state.LastCurrentHP = curHP
+		}
+	}
+
+	// Resolve attacker name
+	attackerName := "Unknown"
+	if pInfo, isPlayer := playerCache.Get(attackerID); isPlayer {
+		attackerName = pInfo.Name
+	} else if entity, ok := t.aggregator.entityCache[attackerID]; ok {
+		attackerName = getRaceName(entity.RaceId)
+	}
+
+	state.PendingDamage += damage
+	state.DamageHits = append(state.DamageHits, DamageHitInfo{
+		AttackerID:   strconv.FormatUint(attackerID, 10),
+		AttackerName: attackerName,
+		SkillID:      skillID,
+		Damage:       damage,
+		Timestamp:    timestamp,
+	})
+}
+
+func (t *eventPublisher) verifyHPChange(targetID uint64, curHP float32, maxHP float32) {
+	t.hpVerificationMu.Lock()
+	state, exists := t.hpVerificationStates[targetID]
+	if !exists {
+		// Create state to track from now on
+		state = &hpVerificationState{
+			LastCurrentHP: curHP,
+			DamageHits:    make([]DamageHitInfo, 0),
+		}
+		t.hpVerificationStates[targetID] = state
+		t.hpVerificationMu.Unlock()
+		return
+	}
+
+	// If no damage is pending, we don't care about any HP changes (e.g. gear changes, healing, regen, etc.)
+	// We only run verification if there was a combat hit (pending damage > 0)
+	if state.PendingDamage == 0 {
+		state.LastCurrentHP = curHP
+		t.hpVerificationMu.Unlock()
+		return
+	}
+
+	lastHP := state.LastCurrentHP
+	expectedDelta := state.PendingDamage
+
+	hitsCopy := make([]DamageHitInfo, len(state.DamageHits))
+	copy(hitsCopy, state.DamageHits)
+
+	// Reset state for this target
+	state.LastCurrentHP = curHP
+	state.PendingDamage = 0
+	state.DamageHits = make([]DamageHitInfo, 0)
+	t.hpVerificationMu.Unlock()
+
+	// Calculate deltas
+	actualDelta := lastHP - curHP
+	expectedHP := lastHP - expectedDelta
+
+	// Determine status
+	status := "success"
+	// Tolerance threshold: 1% of expected damage or 1.0 HP (whichever is larger)
+	// to handle rounding of large values as well as small damage hits.
+	tolerance := float32(1.0)
+	if expectedDelta > 100.0 {
+		tolerance = 0.01 * expectedDelta
+	}
+
+	diff := actualDelta - expectedDelta
+	if diff < 0 {
+		diff = -diff
+	}
+
+	if diff <= tolerance {
+		status = "success"
+	} else {
+		status = "mismatch"
+	}
+
+	// Resolve target name
+	targetName := t.getEntityName(targetID)
+
+	// Construct validation event
+	event := HPValidationEvent{
+		Timestamp:     time.Now().UnixMilli(),
+		EntityID:      strconv.FormatUint(targetID, 10),
+		EntityName:    targetName,
+		LastHP:        lastHP,
+		NewHP:         curHP,
+		MaxHP:         maxHP,
+		ActualDelta:   actualDelta,
+		ExpectedHP:    expectedHP,
+		PendingDamage: expectedDelta,
+		DamageHits:    hitsCopy,
+		Status:        status,
+	}
+
+	// Log to server console (cmd prompt)
+	statusIndicator := "\x1b[32m✓ SUCCESS\x1b[0m"
+	boxColor := "\x1b[32m"
+	if status == "mismatch" {
+		statusIndicator = "\x1b[31;1m✗ MISMATCH\x1b[0m"
+		boxColor = "\x1b[31;1m"
+	}
+
+	logger.Printf("\n"+boxColor+"┌── [HP Verification: %s"+boxColor+"] ───────────────────────────────\n"+
+		"│\x1b[0m Target: %s (ID: %d)\n"+
+		boxColor+"│\x1b[0m HP State: %.1f -> %.1f (Actual Change: %.1f HP)\n"+
+		boxColor+"│\x1b[0m Expected Damage: %.1f (%d hits)\n"+
+		boxColor+"│\x1b[0m Status: %s\n"+
+		boxColor+"└─────────────────────────────────────────────────────────────\x1b[0m",
+		statusIndicator, targetName, targetID, lastHP, curHP, actualDelta, expectedDelta, len(hitsCopy), statusIndicator)
+
+	// Broadcast to clients
+	t.Broadcast("hp_validation", event)
 }

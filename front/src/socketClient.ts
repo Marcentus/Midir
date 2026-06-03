@@ -1,6 +1,6 @@
 // front/src/socketClient.ts
 
-import { FightSummary, WebSocketMessage, PlayerInfo } from "@/protocols";
+import { FightSummary, WebSocketMessage, PlayerInfo, HPValidationEvent } from "@/protocols";
 
 export class SocketClient {
   private socket?: WebSocket;
@@ -16,6 +16,7 @@ export class SocketClient {
   public onPacketStatus?: (status: {total: number, perSecond: number, lastPacketAt: string, lastOp: number, topOps?: {op: number, count: number, total: number}[]}) => void;
   public onAutodetectProgress?: (progress: {current: number, target: number}) => void;
   public onAutodetectDone?: (result: {ip: string, port: string}) => void;
+  public onHPValidation?: (event: HPValidationEvent) => void;
 
   constructor(private url: string) {}
 
@@ -78,6 +79,9 @@ export class SocketClient {
             case "autodetect_done":
                 this.onAutodetectDone?.(msg.data as any);
                 break;
+            case "hp_validation":
+                this.onHPValidation?.(msg.data as HPValidationEvent);
+                break;
             default:
                 console.warn("Unknown message type:", msg.type);
         }
@@ -119,6 +123,7 @@ export class SocketClient {
     this.onPacketStatus = undefined;
     this.onAutodetectProgress = undefined;
     this.onAutodetectDone = undefined;
+    this.onHPValidation = undefined;
 
     if (this.socket) {
       this.socket.onclose = null; 

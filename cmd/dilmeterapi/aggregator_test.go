@@ -516,3 +516,53 @@ func TestAggregator_EffectPacket(t *testing.T) {
 		t.Errorf("Expected damage to remain 2500 under invincibility, got %f", stats.OverallStats.TotalDamage)
 	}
 }
+
+func TestEventPublisher_HPVerification(t *testing.T) {
+	agg := NewAggregator()
+	pub := &eventPublisher{
+		aggregator:           agg,
+		hpVerificationStates: make(map[uint64]*hpVerificationState),
+	}
+
+	targetID := uint64(9999)
+	attackerID := uint64(5555)
+
+	// Set up target in aggregator cache
+	agg.entityCache[targetID] = &packet.EntityInfo{
+		Id:        targetID,
+		Name:      "TestTarget",
+		CurrentHP: 100,
+		MaxHP:     100,
+	}
+
+	// 1. Record damage hit
+	pub.recordDamageHit(targetID, attackerID, 123, 30.0, time.Now())
+
+	state := pub.hpVerificationStates[targetID]
+	if state == nil {
+		t.Fatalf("Expected verification state to be initialized")
+	}
+	if state.PendingDamage != 30.0 {
+		t.Errorf("Expected pending damage to be 30.0, got %f", state.PendingDamage)
+	}
+	if len(state.DamageHits) != 1 {
+		t.Errorf("Expected 1 damage hit, got %d", len(state.DamageHits))
+	}
+
+	// 2. Validate HP change - Match (Success)
+	// Mock that target HP updated to 70 in aggregator
+	agg.entityCache[targetID].CurrentHP = 70.0
+
+	// Run verification. Since it matches, it should clear pending damage.
+	pub.verifyHPChange(targetID, 70.0, 100.0)
+
+	if state.PendingDamage != 0 {
+		t.Errorf("Expected pending damage to be reset to 0, got %f", state.PendingDamage)
+	}
+	if len(state.DamageHits) != 0 {
+		t.Errorf("Expected damage hits to be cleared, got %d", len(state.DamageHits))
+	}
+	if state.LastCurrentHP != 70.0 {
+		t.Errorf("Expected last current HP to be updated to 70.0, got %f", state.LastCurrentHP)
+	}
+}

@@ -153,10 +153,31 @@ export interface GraphDataPoint {
   rollingDPS: number;
 }
 
-// --- NEW: WebSocket and Player Interfaces ---
+export interface DamageHitInfo {
+  attackerId: string;
+  attackerName: string;
+  skillId: number;
+  skillName?: string;
+  damage: number;
+  timestamp: string;
+}
+
+export interface HPValidationEvent {
+  timestamp: number;
+  entityId: string;
+  entityName: string;
+  lastHp: number;
+  newHp: number;
+  maxHp: number;
+  actualDelta: number;
+  expectedHp: number;
+  pendingDamage: number;
+  damageHits: DamageHitInfo[];
+  status: "success" | "mismatch" | "heal";
+}
 
 export interface WebSocketMessage {
-  type: "summary" | "player_update_batch" | "system_error" | "system_warning" | "packet_debug" | "packet_details" | "packet_status" | "autodetect_progress" | "autodetect_done";
+  type: "summary" | "player_update_batch" | "system_error" | "system_warning" | "packet_debug" | "packet_details" | "packet_status" | "autodetect_progress" | "autodetect_done" | "hp_validation";
   data: any;
 }
 
