@@ -80,12 +80,13 @@ type eventEntityDisappear struct {
 
 type eventDamage struct {
 	eventBase
-	TargetId   string
-	SkillId    uint16
-	Damage     float32
-	ManaDamage float32
-	IsCritical bool
-	IsDelayed  bool
+	TargetId     string
+	SkillId      uint16
+	Damage       float32
+	ManaDamage   float32
+	IsCritical   bool
+	IsDelayed    bool
+	IsCorrection bool `json:"isCorrection,omitempty"`
 }
 
 type eventCharacterConditionEnable struct {

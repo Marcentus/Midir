@@ -597,6 +597,20 @@ func generateGraphDataFromEvents(allDamageEvents []eventDamage, startTime, endTi
 
 func updateBreakdownFromLog(breakdown *DamageBreakdown, damageEvent *eventDamage) {
 	breakdown.TotalDamage += damageEvent.Damage
+	if damageEvent.IsCorrection {
+		// Do not increment hit/crit counts, count uses, or adjust max damage for corrections.
+		skillStats := breakdown.Skills[damageEvent.SkillId]
+		skillStats.ID = damageEvent.SkillId
+		skillStats.TotalDamage += damageEvent.Damage
+		if damageEvent.IsCritical {
+			skillStats.TotalDamageCrit += damageEvent.Damage
+		} else {
+			skillStats.TotalDamageNonCrit += damageEvent.Damage
+		}
+		breakdown.Skills[damageEvent.SkillId] = skillStats
+		return
+	}
+
 	if !damageEvent.IsDelayed {
 		breakdown.HitCount++
 		if damageEvent.IsCritical {
@@ -813,6 +827,13 @@ func updateDamageTakenFromLog(damageEvent *eventDamage, damageTakenInLog map[str
 			SkillID:      damageEvent.SkillId,
 		}
 	}
+
+	if damageEvent.IsCorrection {
+		details.TotalDamage += damageEvent.Damage + damageEvent.ManaDamage
+		stats.Breakdown[breakdownKey] = details
+		return
+	}
+
 	details.TotalDamage += damageEvent.Damage + damageEvent.ManaDamage
 	details.TotalManaDamage += damageEvent.ManaDamage
 	details.HitCount++

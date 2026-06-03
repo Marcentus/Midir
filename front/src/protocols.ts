@@ -159,6 +159,7 @@ export interface DamageHitInfo {
   skillId: number;
   skillName?: string;
   damage: number;
+  isCritical?: boolean;
   timestamp: string;
 }
 

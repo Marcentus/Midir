@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"strconv"
 
 	"testing"
 	"time"
@@ -536,7 +537,7 @@ func TestEventPublisher_HPVerification(t *testing.T) {
 	}
 
 	// 1. Record damage hit
-	pub.recordDamageHit(targetID, attackerID, 123, 30.0, time.Now())
+	pub.recordDamageHit(targetID, attackerID, 123, 30.0, false, time.Now())
 
 	state := pub.hpVerificationStates[targetID]
 	if state == nil {
@@ -564,5 +565,91 @@ func TestEventPublisher_HPVerification(t *testing.T) {
 	}
 	if state.LastCurrentHP != 70.0 {
 		t.Errorf("Expected last current HP to be updated to 70.0, got %f", state.LastCurrentHP)
+	}
+}
+
+func TestEventPublisher_HPVerification_Overkill(t *testing.T) {
+	agg := NewAggregator()
+	logCh := make(chan iEvent, 10)
+	pub := &eventPublisher{
+		aggregator:           agg,
+		hpVerificationStates: make(map[uint64]*hpVerificationState),
+		logCh:                logCh,
+	}
+
+	playerID := uint64(5555)
+	targetID := uint64(9999)
+
+	agg.entityCache[targetID] = &packet.EntityInfo{
+		Id:        targetID,
+		Name:      "TestTarget",
+		CurrentHP: 50,
+		MaxHP:     100,
+	}
+
+	// Initialize the player stats in aggregator
+	pInfo := &PlayerInfo{
+		ID:     playerID,
+		Name:   "TestAttacker",
+		RaceId: 8001,
+	}
+	stats := agg.getOrCreatePlayerStats(pInfo)
+	stats.OverallStats.TotalDamage = 80.0
+	stats.OverallStats.Skills = make(map[uint16]SkillStats)
+	stats.OverallStats.Skills[123] = SkillStats{
+		ID:          123,
+		TotalDamage: 80.0,
+	}
+	
+	targetIDStr := strconv.FormatUint(targetID, 10)
+	targetStats := newDamageBreakdown()
+	targetStats.TotalDamage = 80.0
+	targetStats.Skills = make(map[uint16]SkillStats)
+	targetStats.Skills[123] = SkillStats{
+		ID:          123,
+		TotalDamage: 80.0,
+	}
+	stats.DamageByTarget[targetIDStr] = targetStats
+
+	// 1. Record damage hit
+	pub.recordDamageHit(targetID, playerID, 123, 80.0, false, time.Now())
+	
+	// Set the state's LastCurrentHP to 50
+	pub.hpVerificationStates[targetID].LastCurrentHP = 50.0
+
+	// 2. Validate HP change - Mismatch with Overkill
+	// Target HP drops to 0 (actual delta = 50, expected = 80)
+	agg.entityCache[targetID].CurrentHP = 0.0
+	pub.verifyHPChange(targetID, 0.0, 100.0)
+
+	// The recorded damage should have been corrected by subtracting 30.0 reduction
+	if stats.OverallStats.TotalDamage != 50.0 {
+		t.Errorf("Expected overall total damage to be corrected to 50.0, got %f", stats.OverallStats.TotalDamage)
+	}
+	if stats.OverallStats.Skills[123].TotalDamage != 50.0 {
+		t.Errorf("Expected overall skill 123 damage to be corrected to 50.0, got %f", stats.OverallStats.Skills[123].TotalDamage)
+	}
+	if stats.DamageByTarget[targetIDStr].TotalDamage != 50.0 {
+		t.Errorf("Expected per-target damage to be corrected to 50.0, got %f", stats.DamageByTarget[targetIDStr].TotalDamage)
+	}
+	if stats.DamageByTarget[targetIDStr].Skills[123].TotalDamage != 50.0 {
+		t.Errorf("Expected per-target skill 123 damage to be corrected to 50.0, got %f", stats.DamageByTarget[targetIDStr].Skills[123].TotalDamage)
+	}
+
+	// Verify that the negative correction event was logged to the channel
+	select {
+	case ev := <-logCh:
+		dmgEv, ok := ev.(*eventDamage)
+		if !ok {
+			t.Fatalf("Expected eventDamage type")
+		}
+		if dmgEv.Damage != -30.0 {
+			t.Errorf("Expected correction damage to be -30.0, got %f", dmgEv.Damage)
+		}
+		if !dmgEv.IsCorrection {
+			t.Errorf("Expected IsCorrection to be true")
+		}
+	default:
+		t.Fatalf("Expected a correction event to be written to logCh")
 	}
 }

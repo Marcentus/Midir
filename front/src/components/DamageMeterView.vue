@@ -558,8 +558,8 @@ export default defineComponent({
             }
           }
 
-          // If the target is dead, override current HP to 0
-          if (stats.seenDead) {
+          // If the target is dead, override current HP to 0 unless it went negative
+          if (stats.seenDead && currentHp > 0) {
             currentHp = 0;
           }
 

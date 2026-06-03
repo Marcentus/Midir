@@ -53,6 +53,7 @@ type Aggregator struct {
 	disappeared  map[uint64]bool
 	// Presence Intervals Tracking
 	targetPresenceIntervals map[uint64][]PresenceInterval
+	targetHP                map[uint64]TargetHPPoint
 }
 
 // NewAggregator creates and initializes a new Aggregator.
@@ -79,6 +80,7 @@ func NewAggregator() *Aggregator {
 		seenAppear:             make(map[uint64]bool),
 		disappeared:            make(map[uint64]bool),
 		targetPresenceIntervals: make(map[uint64][]PresenceInterval),
+		targetHP:                make(map[uint64]TargetHPPoint),
 	}
 }
 
@@ -252,6 +254,13 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 					}
 				}
 			}
+			if entity.MaxHP > 0 {
+				a.targetHP[entity.Id] = TargetHPPoint{
+					Time:      p.At.Unix(),
+					CurrentHP: entity.CurrentHP,
+					MaxHP:     entity.MaxHP,
+				}
+			}
 			a.mu.Unlock()
 			playerCache.Update(entity)
 		}
@@ -279,6 +288,13 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 							MetaData:   normalizeMetaData(cond.MetaData),
 							AttackerID: cond.AttackerId,
 						}
+					}
+				}
+				if entity.MaxHP > 0 {
+					a.targetHP[entity.Id] = TargetHPPoint{
+						Time:      p.At.Unix(),
+						CurrentHP: entity.CurrentHP,
+						MaxHP:     entity.MaxHP,
 					}
 				}
 				playerCache.Update(entity)
@@ -473,6 +489,16 @@ func (a *Aggregator) processPublicStatUpdate(p *packet.GamePacket) {
 
 	if baseChanged || bonusChanged {
 		entity.MaxHP = entity.BaseHP + entity.AdditionalHP
+	}
+
+	if hpChanged || baseChanged || bonusChanged {
+		if entity.MaxHP > 0 {
+			a.targetHP[statUpdate.EntityId] = TargetHPPoint{
+				Time:      p.At.Unix(),
+				CurrentHP: entity.CurrentHP,
+				MaxHP:     entity.MaxHP,
+			}
+		}
 	}
 	_ = hpChanged // Keep compiler happy if unused locally
 }
@@ -803,6 +829,11 @@ func (a *Aggregator) GetSummary() FightSummary {
 		targetDuration := float64(targetTimes.EndTime - targetTimes.StartTime)
 		conditions := a.calculateConditions(targetId, targetDuration, targetTimes.StartTime, targetTimes.EndTime)
 
+		var hpHistoryCopy []TargetHPPoint
+		if hpPt, ok := a.targetHP[targetId]; ok {
+			hpHistoryCopy = []TargetHPPoint{hpPt}
+		}
+
 		summary.Targets[targetIdStr] = TargetStats{
 			Name:        name,
 			RaceID:      raceId,
@@ -812,6 +843,7 @@ func (a *Aggregator) GetSummary() FightSummary {
 			Disappeared: a.disappeared[targetId],
 			StartTime:   targetTimes.StartTime,
 			EndTime:     targetTimes.EndTime,
+			HPHistory:   hpHistoryCopy,
 		}
 	}
 
@@ -1104,11 +1136,20 @@ func (a *Aggregator) Clear() {
 	a.deadEntities = make(map[uint64]bool)
 	a.seenDead = make(map[uint64]bool)
 	a.seenAppear = make(map[uint64]bool)
-	for id := range a.entityCache {
-		a.seenAppear[id] = true
-	}
 	a.disappeared = make(map[uint64]bool)
 	a.targetPresenceIntervals = make(map[uint64][]PresenceInterval)
+
+	a.targetHP = make(map[uint64]TargetHPPoint)
+	for id, entity := range a.entityCache {
+		a.seenAppear[id] = true
+		if entity.MaxHP > 0 {
+			a.targetHP[id] = TargetHPPoint{
+				Time:      time.Now().Unix(),
+				CurrentHP: entity.CurrentHP,
+				MaxHP:     entity.MaxHP,
+			}
+		}
+	}
 
 	// Clear condition HISTORY, but keep ACTIVE conditions.
 	// This ensures that when the new session starts, we know they still have the buff,
@@ -1227,5 +1268,64 @@ func (a *Aggregator) processDeadFeather(p *packet.GamePacket) {
 	}
 	a.seenDead[entityID] = false
 	a.startPresenceInterval(entityID, p.At.Unix())
+}
+
+// ApplyDamageCorrection retroactively subtracts overkill damage reduction from player and target metrics.
+func (a *Aggregator) ApplyDamageCorrection(attackerID uint64, targetID uint64, skillID uint16, reduction float32, isCritical bool) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	stats, exists := a.playerStats[attackerID]
+	if exists {
+		// 1. Update overall stats
+		stats.OverallStats.TotalDamage -= reduction
+		if stats.OverallStats.Skills != nil {
+			skillStats := stats.OverallStats.Skills[skillID]
+			skillStats.ID = skillID
+			skillStats.TotalDamage -= reduction
+			if isCritical {
+				skillStats.TotalDamageCrit -= reduction
+			} else {
+				skillStats.TotalDamageNonCrit -= reduction
+			}
+			stats.OverallStats.Skills[skillID] = skillStats
+		}
+
+		// 2. Update stats by target
+		targetIDStr := strconv.FormatUint(targetID, 10)
+		if targetBreakdown, targetExists := stats.DamageByTarget[targetIDStr]; targetExists {
+			targetBreakdown.TotalDamage -= reduction
+			if targetBreakdown.Skills != nil {
+				targetSkillStats := targetBreakdown.Skills[skillID]
+				targetSkillStats.ID = skillID
+				targetSkillStats.TotalDamage -= reduction
+				if isCritical {
+					targetSkillStats.TotalDamageCrit -= reduction
+				} else {
+					targetSkillStats.TotalDamageNonCrit -= reduction
+				}
+				targetBreakdown.Skills[skillID] = targetSkillStats
+			}
+			stats.DamageByTarget[targetIDStr] = targetBreakdown
+		}
+	}
+
+	// 3. Update damage taken stats
+	if statsDT, existsDT := a.damageTaken[targetID]; existsDT {
+		statsDT.TotalDamage -= reduction
+		
+		attackerName := "Unknown"
+		if entity, ok := a.entityCache[attackerID]; ok {
+			attackerName = getRaceName(entity.RaceId)
+		} else if player, ok := playerCache.Get(attackerID); ok {
+			attackerName = player.Name
+		}
+		
+		breakdownKey := fmt.Sprintf("%s-%d", attackerName, skillID)
+		if details, existsDetails := statsDT.Breakdown[breakdownKey]; existsDetails {
+			details.TotalDamage -= reduction
+			statsDT.Breakdown[breakdownKey] = details
+		}
+	}
 }
 

@@ -35,6 +35,7 @@ type DamageHitInfo struct {
 	AttackerName string    `json:"attackerName"`
 	SkillID      uint16    `json:"skillId"`
 	Damage       float32   `json:"damage"`
+	IsCritical   bool      `json:"isCritical"`
 	Timestamp    time.Time `json:"timestamp"`
 }
 
@@ -445,8 +446,8 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		// Now, create damage events for each hit using the correct skill ID.
 		for _, sub := range pack.SubPackets {
 			if sub.Hit != nil && (sub.Hit.Damage > 0 || sub.Hit.ManaDamage > 0) {
-				t.recordDamageHit(sub.EntityId, attackerId, attackSkillId, sub.Hit.Damage, p.At)
 				isCrit := (sub.Hit.Options & packet.CombatActionHitOptionsCritical) != 0
+				t.recordDamageHit(sub.EntityId, attackerId, attackSkillId, sub.Hit.Damage, isCrit, p.At)
 				e := &eventDamage{
 					eventBase: eventBase{
 						EventId: eventIdDamage,
@@ -483,7 +484,7 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		skillId := p.Msg[5].Data().(uint16)
 		targetId := p.Id
 
-		t.recordDamageHit(targetId, attackerId, skillId, damage, p.At)
+		t.recordDamageHit(targetId, attackerId, skillId, damage, false, p.At)
 
 		t.lastCombatAt[attackerId] = p.At
 		t.lastCombatAt[targetId] = p.At
@@ -520,7 +521,7 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		skillId := p.Msg[6].Data().(uint16)
 		targetId := p.Id
 
-		t.recordDamageHit(targetId, attackerId, skillId, damage, p.At)
+		t.recordDamageHit(targetId, attackerId, skillId, damage, false, p.At)
 
 		t.lastCombatAt[attackerId] = p.At
 		t.lastCombatAt[targetId] = p.At
@@ -927,7 +928,7 @@ func (t *eventPublisher) getEntityName(entityID uint64) string {
 	return "Unknown (" + strconv.FormatUint(entityID, 10) + ")"
 }
 
-func (t *eventPublisher) recordDamageHit(targetID uint64, attackerID uint64, skillID uint16, damage float32, timestamp time.Time) {
+func (t *eventPublisher) recordDamageHit(targetID uint64, attackerID uint64, skillID uint16, damage float32, isCritical bool, timestamp time.Time) {
 	if damage <= 0 {
 		return
 	}
@@ -962,6 +963,7 @@ func (t *eventPublisher) recordDamageHit(targetID uint64, attackerID uint64, ski
 		AttackerName: attackerName,
 		SkillID:      skillID,
 		Damage:       damage,
+		IsCritical:   isCritical,
 		Timestamp:    timestamp,
 	})
 }
@@ -1022,6 +1024,41 @@ func (t *eventPublisher) verifyHPChange(targetID uint64, curHP float32, maxHP fl
 		status = "success"
 	} else {
 		status = "mismatch"
+	}
+
+	// Retroactive overkill damage correction
+	if status == "mismatch" && expectedDelta > actualDelta {
+		scaleFactor := float32(0.0)
+		if actualDelta > 0 {
+			scaleFactor = actualDelta / expectedDelta
+		}
+		for _, hit := range hitsCopy {
+			attackerID, _ := strconv.ParseUint(hit.AttackerID, 10, 64)
+			reduction := hit.Damage * (1.0 - scaleFactor)
+			if reduction > 0 {
+				// Apply reduction to live aggregator
+				t.aggregator.ApplyDamageCorrection(attackerID, targetID, hit.SkillID, reduction, hit.IsCritical)
+
+				// Log negative correction event to session log
+				corrEvent := &eventDamage{
+					eventBase: eventBase{
+						EventId: eventIdDamage,
+						At:      hit.Timestamp.Unix(),
+						Id:      hit.AttackerID,
+					},
+					TargetId:     strconv.FormatUint(targetID, 10),
+					SkillId:      hit.SkillID,
+					Damage:       -reduction,
+					IsCritical:   hit.IsCritical,
+					IsCorrection: true,
+				}
+				select {
+				case t.logCh <- corrEvent:
+				default:
+					logger.Println("Log channel full, dropping correction event!")
+				}
+			}
+		}
 	}
 
 	// Resolve target name
