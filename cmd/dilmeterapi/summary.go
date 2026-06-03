@@ -85,6 +85,18 @@ type SkillUseEvent struct {
 	Timestamp int64
 }
 
+type DamageTimelineEvent struct {
+	Timestamp  int64   `json:"timestamp"`
+	SkillID    uint16  `json:"skillId"`
+	TargetID   string  `json:"targetId"`
+	TargetName string  `json:"targetName"`
+	Damage     float32 `json:"damage"`
+	CurrentHP  float32 `json:"currentHp"`
+	MaxHP      float32 `json:"maxHp"`
+	IsCritical bool    `json:"isCritical,omitempty"`
+	Overkill   float32 `json:"overkill,omitempty"`
+}
+
 // PlayerStats is now more detailed.
 type PlayerStats struct {
 	ID                  string                     `json:"id"`
@@ -97,6 +109,7 @@ type PlayerStats struct {
 	DamageByTarget      map[string]DamageBreakdown `json:"damageByTarget"` // Key is Target ID
 	SkillUses           []SkillUseEvent            `json:"-"`
 	Deaths              []int64                    `json:"deaths,omitempty"`
+	DamageTimeline      []DamageTimelineEvent      `json:"damageTimeline,omitempty"`
 }
 
 // --- (Structs for Damage Taken remain the same) ---

@@ -241,6 +241,82 @@
               }}%
             </template>
           </v-data-table>
+
+          <!-- Damage Timeline Section -->
+          <div class="ma-2 pa-3 timeline-section border rounded-lg">
+            <div class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center timeline-title">
+              <v-icon start icon="mdi-history" color="primary" class="mr-2"></v-icon>
+              Damage Timeline
+              <v-chip class="ml-2 font-weight-bold" size="x-small" color="primary" variant="flat">
+                {{ getPlayerTimeline(item.id).length }} Hits
+              </v-chip>
+            </div>
+            
+            <div v-if="getPlayerTimeline(item.id).length === 0" class="text-caption text-grey text-center py-4">
+              <v-icon icon="mdi-information-outline" size="small" class="mr-1"></v-icon>
+              No hits recorded for this selection.
+            </div>
+            
+            <div v-else class="timeline-scroll-container">
+              <div class="timeline-events-wrapper">
+                <div 
+                  v-for="(evt, idx) in getPlayerTimeline(item.id)" 
+                  :key="idx" 
+                  class="timeline-event-card"
+                  :class="{ 'crit-card-glow': isCritHit(evt) }"
+                >
+                  <div class="d-flex align-center justify-space-between mb-1">
+                    <div class="d-flex align-center overflow-hidden">
+                      <img
+                        v-if="getSkillImageSrc(evt.skillId)"
+                        width="18"
+                        height="18"
+                        :src="getSkillImageSrc(evt.skillId)"
+                        class="mr-1 rounded-sm flex-shrink-0"
+                        @error="($event.target as HTMLImageElement).style.display = 'none'"
+                      />
+                      <span class="text-caption font-weight-medium text-truncate skill-name-label" style="max-width: 110px;">
+                        {{ getSkillName(evt.skillId) }}
+                      </span>
+                    </div>
+                    <span class="text-caption font-weight-semibold text-grey-darken-1 flex-shrink-0 ml-1">
+                      {{ formatTimeOffset(evt.timestamp) }}
+                    </span>
+                  </div>
+                  
+                  <div>
+                    <div class="timeline-damage-text font-weight-bold" :class="{ 'critical-hit': isCritHit(evt) }">
+                      {{ formatNumber(evt.damage) }}
+                      <v-icon v-if="isCritHit(evt)" icon="mdi-flash" size="x-small" class="ml-1 text-amber-accent-3"></v-icon>
+                    </div>
+                    
+                    <!-- Overkill Indicator -->
+                    <div v-if="evt.overkill && evt.overkill > 0" class="text-xxs text-red-accent-2 font-weight-semibold mt-n1 mb-1 d-flex align-center">
+                      <v-icon icon="mdi-shield-alert" size="x-small" class="mr-1"></v-icon>
+                      Overkill: -{{ formatNumber(evt.overkill) }}
+                    </div>
+                    
+                    <div class="text-caption text-truncate text-grey-lighten-1 mb-1 font-weight-medium">
+                      vs {{ evt.targetName }}
+                    </div>
+                  </div>
+                  
+                  <div class="target-hp-container mt-2">
+                    <div class="d-flex justify-space-between text-xxs text-grey mb-1">
+                      <span>HP:</span>
+                      <span :class="{'text-error': evt.currentHp < 0}">{{ formatHPDetails(evt.currentHp, evt.maxHp) }}</span>
+                    </div>
+                    <v-progress-linear
+                      :model-value="getHPPercentValue(evt.currentHp, evt.maxHp)"
+                      color="teal-accent-3"
+                      height="4"
+                      rounded
+                    ></v-progress-linear>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </td>
       </tr>
     </template>
@@ -706,6 +782,90 @@
 .skill-bar-cell .damage-bar-val {
   width: 95px;
 }
+
+.timeline-section {
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  width: 0;
+  min-width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.timeline-title {
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+.timeline-scroll-container {
+  overflow-x: auto;
+  width: 0;
+  min-width: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  padding-bottom: 8px;
+}
+.timeline-scroll-container::-webkit-scrollbar {
+  height: 6px;
+}
+.timeline-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.timeline-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+}
+.timeline-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+.timeline-events-wrapper {
+  display: flex;
+  gap: 12px;
+  padding: 4px;
+}
+.timeline-event-card {
+  flex: 0 0 200px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 140px;
+}
+.timeline-event-card:hover {
+  transform: translateY(-3px);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+.skill-name-label {
+  color: #e0e0e0;
+}
+.timeline-damage-text {
+  font-size: 1.15rem;
+  color: #ffffff;
+  line-height: 1.2;
+  margin: 4px 0;
+  font-variant-numeric: tabular-nums;
+}
+.critical-hit {
+  color: #ffd740 !important;
+  text-shadow: 0 0 10px rgba(255, 215, 64, 0.3);
+}
+.crit-card-glow {
+  border-color: rgba(255, 215, 64, 0.15) !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 215, 64, 0.015) 100%);
+}
+.crit-card-glow:hover {
+  border-color: rgba(255, 215, 64, 0.3) !important;
+  box-shadow: 0 6px 20px rgba(255, 215, 64, 0.08);
+}
+.text-xxs {
+  font-size: 0.7rem !important;
+}
 </style>
 
 <script lang="ts" setup>
@@ -716,7 +876,7 @@ import {
   activeSessionId,
   selectedTargetId,
 } from "@/store";
-import { SkillStats, DamageBreakdown } from "@/protocols";
+import { SkillStats, DamageBreakdown, DamageTimelineEvent } from "@/protocols";
 import TargetConditionView from "./TargetConditionView.vue";
 import { hiddenPlayers, toggleHiddenPlayer, setAllHiddenPlayers, globalHideMode, showClassColorsForVisiblePlayers, listSkillMetrics, cardSkillMetrics, dpsMeterFillMode } from "@/store";
 
@@ -1059,6 +1219,49 @@ const toggleAllPlayersVisibility = () => {
 };
 
 
+
+const getPlayerTimeline = (playerId: string): DamageTimelineEvent[] => {
+  const player = fightSummary.players[playerId];
+  if (!player || !player.damageTimeline) return [];
+
+  const timeline = player.damageTimeline;
+  if (selectedTargetId.value) {
+    return timeline.filter((evt) => evt.targetId === selectedTargetId.value);
+  }
+  return timeline;
+};
+
+const formatTimeOffset = (timestamp: number): string => {
+  const start = fightSummary.startTime || 0;
+  if (!start) return "";
+  const offset = timestamp - start;
+  if (offset < 0) return "+0:00";
+  const mins = Math.floor(offset / 60);
+  const secs = offset % 60;
+  return `+${mins}:${secs.toString().padStart(2, "0")}`;
+};
+
+const isCritHit = (evt: DamageTimelineEvent): boolean => {
+  return !!evt.isCritical;
+};
+
+const formatHPPercent = (current: number, max: number): string => {
+  if (!max) return "0%";
+  const pct = (current / max) * 100;
+  return `${pct.toFixed(0)}%`;
+};
+
+const formatHPDetails = (current: number, max: number): string => {
+  if (!max) return "0 / 0 (0%)";
+  const pct = (current / max) * 100;
+  return `${formatAbbreviated(current)} / ${formatAbbreviated(max)} (${pct.toFixed(0)}%)`;
+};
+
+const getHPPercentValue = (current: number, max: number): number => {
+  if (!max) return 0;
+  const pct = (current / max) * 100;
+  return Math.max(0, Math.min(100, pct));
+};
 
 // (Old static headers removed, using computed headers now)
 </script>

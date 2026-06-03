@@ -49,6 +49,18 @@ export interface DamageBreakdown {
   conditions?: { [id: number]: ConditionStats };
 }
 
+export interface DamageTimelineEvent {
+  timestamp: number;
+  skillId: number;
+  targetId: string;
+  targetName: string;
+  damage: number;
+  currentHp: number;
+  maxHp: number;
+  isCritical?: boolean;
+  overkill?: number;
+}
+
 export interface PlayerStats {
   id: string;
   name: string;
@@ -59,6 +71,7 @@ export interface PlayerStats {
   overallStats: DamageBreakdown;
   damageByTarget: { [targetId: string]: DamageBreakdown };
   deaths?: number[];
+  damageTimeline?: DamageTimelineEvent[];
 }
 
 // --- START: NEW INTERFACES FOR DAMAGE TAKEN ---

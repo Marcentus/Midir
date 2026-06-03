@@ -342,7 +342,7 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 	}
 
 	// STEP 1: Process the collected events to generate the main summary tables.
-	playerStats, damageTaken, talents, talentNames, talentColors, targets, startTime, endTime, targetTimestamps := processEventsForSummary(allDamageEvents, entitiesInLog)
+	playerStats, damageTaken, talents, talentNames, talentColors, targets, startTime, endTime, targetTimestamps := processEventsForSummary(allDamageEvents, entitiesInLog, hpHistoryByTarget)
 
 	// Ensure players who only used skills but did no damage are in playerStats
 	for playerIDStr := range skillUsesByPlayer {
@@ -405,9 +405,48 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 	return &summary, nil
 }
 
+func findTargetHPAtTime(hpHistory []TargetHPPoint, t int64, defaultHP TargetHPPoint) (float32, float32) {
+	if len(hpHistory) == 0 {
+		return defaultHP.CurrentHP, defaultHP.MaxHP
+	}
+	var lastPt *TargetHPPoint
+	for i := range hpHistory {
+		if hpHistory[i].Time <= t {
+			lastPt = &hpHistory[i]
+		} else {
+			break
+		}
+	}
+	if lastPt != nil {
+		return lastPt.CurrentHP, lastPt.MaxHP
+	}
+	return hpHistory[0].CurrentHP, hpHistory[0].MaxHP
+}
+
+func resolveTargetNameFromLog(targetIDStr string, entitiesInLog map[string]eventEntityAppear) string {
+	if entity, ok := entitiesInLog[targetIDStr]; ok {
+		if entity.Name != "" {
+			if _, err := strconv.Atoi(entity.Name); err == nil {
+				return getRaceName(entity.RaceId)
+			}
+			return entity.Name
+		}
+		return getRaceName(entity.RaceId)
+	}
+	targetID := parseUint64(targetIDStr)
+	if player, ok := playerCache.Get(targetID); ok {
+		return player.Name
+	}
+	return "Unknown"
+}
+
 // processEventsForSummary takes the raw list of damage events and entity data from a log file
 // and processes it into structured data needed for the summary view.
-func processEventsForSummary(allDamageEvents []eventDamage, entitiesInLog map[string]eventEntityAppear) (
+func processEventsForSummary(
+	allDamageEvents []eventDamage,
+	entitiesInLog map[string]eventEntityAppear,
+	hpHistoryByTarget map[string][]TargetHPPoint,
+) (
 	// RETURN VALUES:
 	playerStats map[string]*PlayerStats,
 	damageTakenInLog map[string]*PlayerDamageTakenStats,
@@ -519,6 +558,41 @@ func processEventsForSummary(allDamageEvents []eventDamage, entitiesInLog map[st
 			}
 			updateBreakdownFromLog(&targetBreakdown, &damageEvent)
 			stats.DamageByTarget[damageEvent.TargetId] = targetBreakdown
+
+			// Update the DamageTimeline
+			if damageEvent.IsCorrection {
+				for i := len(stats.DamageTimeline) - 1; i >= 0; i-- {
+					if stats.DamageTimeline[i].TargetID == damageEvent.TargetId && stats.DamageTimeline[i].SkillID == damageEvent.SkillId {
+						stats.DamageTimeline[i].Damage += damageEvent.Damage
+						stats.DamageTimeline[i].Overkill -= damageEvent.Damage
+						if stats.DamageTimeline[i].Damage < 0 {
+							stats.DamageTimeline[i].Damage = 0
+						}
+						break
+					}
+				}
+			} else {
+				var currentHP, maxHP float32
+				var defaultHP TargetHPPoint
+				if entity, ok := entitiesInLog[damageEvent.TargetId]; ok {
+					defaultHP.CurrentHP = entity.CurrentHP
+					defaultHP.MaxHP = entity.MaxHP
+				}
+				currentHP, maxHP = findTargetHPAtTime(hpHistoryByTarget[damageEvent.TargetId], damageEvent.At, defaultHP)
+
+				targetName := resolveTargetNameFromLog(damageEvent.TargetId, entitiesInLog)
+
+				stats.DamageTimeline = append(stats.DamageTimeline, DamageTimelineEvent{
+					Timestamp:  damageEvent.At,
+					SkillID:    damageEvent.SkillId,
+					TargetID:   damageEvent.TargetId,
+					TargetName: targetName,
+					Damage:     damageEvent.Damage,
+					CurrentHP:  currentHP,
+					MaxHP:      maxHP,
+					IsCritical: damageEvent.IsCritical,
+				})
+			}
 		}
 
 		// --- B) PROCESS DAMAGE TAKEN ---
@@ -887,6 +961,17 @@ func finalizeSummaryFromLog(
 		finalizedPstats := *pStats
 		finalizedPstats.MissingAppearPacket = !seenAppear[pStats.ID]
 		finalizedPstats.Deaths = playerDeaths[pStats.ID]
+
+		// Limit to last 200 hits
+		timelineLen := len(pStats.DamageTimeline)
+		if timelineLen > 0 {
+			startIdx := 0
+			if timelineLen > 200 {
+				startIdx = timelineLen - 200
+			}
+			finalizedPstats.DamageTimeline = make([]DamageTimelineEvent, timelineLen-startIdx)
+			copy(finalizedPstats.DamageTimeline, pStats.DamageTimeline[startIdx:])
+		}
 
 		playerSkillUses := skillUsesByPlayer[pStats.ID]
 

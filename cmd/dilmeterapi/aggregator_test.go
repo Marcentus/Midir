@@ -612,6 +612,15 @@ func TestEventPublisher_HPVerification_Overkill(t *testing.T) {
 	stats.DamageByTarget[targetIDStr] = targetStats
 
 	// 1. Record damage hit
+	stats.DamageTimeline = append(stats.DamageTimeline, DamageTimelineEvent{
+		Timestamp:  time.Now().Unix(),
+		SkillID:    123,
+		TargetID:   targetIDStr,
+		TargetName: "TestTarget",
+		Damage:     80.0,
+		CurrentHP:  50,
+		MaxHP:      100,
+	},)
 	pub.recordDamageHit(targetID, playerID, 123, 80.0, false, time.Now())
 	
 	// Set the state's LastCurrentHP to 50
@@ -651,5 +660,16 @@ func TestEventPublisher_HPVerification_Overkill(t *testing.T) {
 		}
 	default:
 		t.Fatalf("Expected a correction event to be written to logCh")
+	}
+
+	if len(stats.DamageTimeline) != 1 {
+		t.Errorf("Expected 1 timeline event, got %d", len(stats.DamageTimeline))
+	} else {
+		if stats.DamageTimeline[0].Damage != 50.0 {
+			t.Errorf("Expected timeline event damage to be corrected to 50.0, got %f", stats.DamageTimeline[0].Damage)
+		}
+		if stats.DamageTimeline[0].Overkill != 30.0 {
+			t.Errorf("Expected timeline event overkill to be 30.0, got %f", stats.DamageTimeline[0].Overkill)
+		}
 	}
 }

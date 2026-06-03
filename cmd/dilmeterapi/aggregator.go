@@ -393,6 +393,29 @@ func (a *Aggregator) processEffect(p *packet.GamePacket) {
 		tempHitPacket := &packet.CombatActionPacket{Hit: &packet.CombatActionPacketHitInfo{Damage: damage}}
 		a.updateBreakdown(&stats.OverallStats, tempHitPacket, skillId, true)
 		a.updatePerTargetBreakdown(stats, targetIdStr, tempHitPacket, skillId, true)
+
+		var currentHP, maxHP float32
+		if entity, ok := a.entityCache[targetId]; ok {
+			currentHP = entity.CurrentHP
+			maxHP = entity.MaxHP
+		} else if hpPt, ok := a.targetHP[targetId]; ok {
+			currentHP = hpPt.CurrentHP
+			maxHP = hpPt.MaxHP
+		}
+		targetName := a.getEntityName(targetId)
+		stats.DamageTimeline = append(stats.DamageTimeline, DamageTimelineEvent{
+			Timestamp:  p.At.Unix(),
+			SkillID:    skillId,
+			TargetID:   targetIdStr,
+			TargetName: targetName,
+			Damage:     damage,
+			CurrentHP:  currentHP,
+			MaxHP:      maxHP,
+			IsCritical: false,
+		})
+		if len(stats.DamageTimeline) > 200 {
+			stats.DamageTimeline = stats.DamageTimeline[len(stats.DamageTimeline)-200:]
+		}
 	}
 
 	if targetInfo, isPlayerTarget := playerCache.Get(targetId); isPlayerTarget {
@@ -449,6 +472,29 @@ func (a *Aggregator) processEffectDelayed(p *packet.GamePacket) {
 		tempHitPacket := &packet.CombatActionPacket{Hit: &packet.CombatActionPacketHitInfo{Damage: damage}}
 		a.updateBreakdown(&stats.OverallStats, tempHitPacket, skillId, true)
 		a.updatePerTargetBreakdown(stats, targetIdStr, tempHitPacket, skillId, true)
+
+		var currentHP, maxHP float32
+		if entity, ok := a.entityCache[targetId]; ok {
+			currentHP = entity.CurrentHP
+			maxHP = entity.MaxHP
+		} else if hpPt, ok := a.targetHP[targetId]; ok {
+			currentHP = hpPt.CurrentHP
+			maxHP = hpPt.MaxHP
+		}
+		targetName := a.getEntityName(targetId)
+		stats.DamageTimeline = append(stats.DamageTimeline, DamageTimelineEvent{
+			Timestamp:  p.At.Unix(),
+			SkillID:    skillId,
+			TargetID:   targetIdStr,
+			TargetName: targetName,
+			Damage:     damage,
+			CurrentHP:  currentHP,
+			MaxHP:      maxHP,
+			IsCritical: false,
+		})
+		if len(stats.DamageTimeline) > 200 {
+			stats.DamageTimeline = stats.DamageTimeline[len(stats.DamageTimeline)-200:]
+		}
 	}
 
 	if targetInfo, isPlayerTarget := playerCache.Get(targetId); isPlayerTarget {
@@ -632,6 +678,30 @@ func (a *Aggregator) processCombatAction(p *packet.GamePacket) {
 				a.updateBreakdown(&stats.OverallStats, sub, attackSkillId, false)
 				targetIdStr := strconv.FormatUint(sub.EntityId, 10)
 				a.updatePerTargetBreakdown(stats, targetIdStr, sub, attackSkillId, false)
+
+				var currentHP, maxHP float32
+				if entity, ok := a.entityCache[sub.EntityId]; ok {
+					currentHP = entity.CurrentHP
+					maxHP = entity.MaxHP
+				} else if hpPt, ok := a.targetHP[sub.EntityId]; ok {
+					currentHP = hpPt.CurrentHP
+					maxHP = hpPt.MaxHP
+				}
+				targetName := a.getEntityName(sub.EntityId)
+				isCrit := (sub.Hit.Options & packet.CombatActionHitOptionsCritical) != 0
+				stats.DamageTimeline = append(stats.DamageTimeline, DamageTimelineEvent{
+					Timestamp:  p.At.Unix(),
+					SkillID:    attackSkillId,
+					TargetID:   targetIdStr,
+					TargetName: targetName,
+					Damage:     sub.Hit.Damage,
+					CurrentHP:  currentHP,
+					MaxHP:      maxHP,
+					IsCritical: isCrit,
+				})
+				if len(stats.DamageTimeline) > 200 {
+					stats.DamageTimeline = stats.DamageTimeline[len(stats.DamageTimeline)-200:]
+				}
 			}
 		}
 
@@ -777,6 +847,16 @@ func (a *Aggregator) GetSummary() FightSummary {
 			TalentColor:         a.playerTalentColors[playerID],
 			DamageByTarget:      make(map[string]DamageBreakdown),
 			MissingAppearPacket: !a.playerSeenAppear[playerID], // Set the flag
+		}
+
+		timelineLen := len(pStats.DamageTimeline)
+		if timelineLen > 0 {
+			startIdx := 0
+			if timelineLen > 200 {
+				startIdx = timelineLen - 200
+			}
+			playerCopy.DamageTimeline = make([]DamageTimelineEvent, timelineLen-startIdx)
+			copy(playerCopy.DamageTimeline, pStats.DamageTimeline[startIdx:])
 		}
 
 		// Finalize overall stats using the single overall encounter duration
@@ -1307,6 +1387,18 @@ func (a *Aggregator) ApplyDamageCorrection(attackerID uint64, targetID uint64, s
 				targetBreakdown.Skills[skillID] = targetSkillStats
 			}
 			stats.DamageByTarget[targetIDStr] = targetBreakdown
+		}
+
+		// 2.5 Update DamageTimeline
+		for i := len(stats.DamageTimeline) - 1; i >= 0; i-- {
+			if stats.DamageTimeline[i].TargetID == targetIDStr && stats.DamageTimeline[i].SkillID == skillID {
+				stats.DamageTimeline[i].Damage -= reduction
+				stats.DamageTimeline[i].Overkill += reduction
+				if stats.DamageTimeline[i].Damage < 0 {
+					stats.DamageTimeline[i].Damage = 0
+				}
+				break // Correct only the most recent matching hit
+			}
 		}
 	}
 
