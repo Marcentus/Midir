@@ -266,11 +266,14 @@
               No hits recorded for this selection.
             </div>
             
-            <div v-else class="timeline-scroll-container">
+            <div v-else class="timeline-scroll-container" @scroll="onScroll(item.id, $event)">
               <div class="timeline-events-wrapper">
+                <!-- Left Spacer -->
+                <div :style="{ width: getVirtualTimeline(item.id).leftSpace + 'px', flexShrink: 0 }"></div>
+
                 <div 
-                  v-for="(evt, idx) in getPlayerTimeline(item.id)" 
-                  :key="idx" 
+                  v-for="{ evt, originalIndex } in getVirtualTimeline(item.id).events" 
+                  :key="originalIndex" 
                   class="timeline-event-card"
                   :class="{ 'crit-card-glow': isCritHit(evt) }"
                 >
@@ -323,6 +326,9 @@
                     ></v-progress-linear>
                   </div>
                 </div>
+
+                <!-- Right Spacer -->
+                <div :style="{ width: getVirtualTimeline(item.id).rightSpace + 'px', flexShrink: 0 }"></div>
               </div>
             </div>
           </div>
@@ -932,6 +938,7 @@ const viewMode = ref<"table" | "cards">("table");
 
 watch([activeSessionId, selectedTargetId], () => {
   expanded.value = [];
+  scrollLeftByPlayer.value = {};
 });
 
 const ALL_SKILL_METRICS_MAP: Record<string, { title: string, cardTitle: string }> = {
@@ -1345,6 +1352,38 @@ const getPlayerTimeline = (playerId: string): DamageTimelineEvent[] => {
     return timeline.filter((evt) => evt.targetId === selectedTargetId.value);
   }
   return timeline;
+};
+
+const scrollLeftByPlayer = ref<Record<string, number>>({});
+
+const onScroll = (playerId: string, event: Event) => {
+  const target = event.target as HTMLElement;
+  scrollLeftByPlayer.value[playerId] = target.scrollLeft;
+};
+
+const getVirtualTimeline = (playerId: string) => {
+  const timeline = getPlayerTimeline(playerId);
+  const scrollLeft = scrollLeftByPlayer.value[playerId] || 0;
+  
+  const itemWidth = 212; // 200px card width + 12px gap
+  const viewportWidth = 1200; // default visible width buffer
+  
+  const visibleItems = Math.ceil(viewportWidth / itemWidth);
+  const scrolledItems = Math.floor(scrollLeft / itemWidth);
+  
+  const buffer = 5;
+  const startIndex = Math.max(0, scrolledItems - buffer);
+  const endIndex = Math.min(timeline.length, scrolledItems + visibleItems + buffer);
+  
+  const renderedEvents = timeline.slice(startIndex, endIndex);
+  const leftSpace = startIndex > 0 ? (startIndex * itemWidth - 12) : 0;
+  const rightSpace = endIndex < timeline.length ? ((timeline.length - endIndex) * itemWidth - 12) : 0;
+  
+  return {
+    events: renderedEvents.map((evt, idx) => ({ evt, originalIndex: startIndex + idx })),
+    leftSpace,
+    rightSpace,
+  };
 };
 
 const formatTimeOffset = (timestamp: number): string => {

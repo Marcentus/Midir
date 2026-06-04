@@ -226,16 +226,6 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 		case eventIdDamage:
 			var damageEvent eventDamage
 			if err := json.Unmarshal(line, &damageEvent); err == nil {
-				// Zero-out damage if the target has active invincibility conditions (494 or 277)
-				if active, exists := activeConditions[damageEvent.TargetId]; exists {
-					if _, has494 := active[494]; has494 {
-						damageEvent.Damage = 0
-						damageEvent.ManaDamage = 0
-					} else if _, has277 := active[277]; has277 {
-						damageEvent.Damage = 0
-						damageEvent.ManaDamage = 0
-					}
-				}
 				allDamageEvents = append(allDamageEvents, damageEvent)
 			}
 
@@ -1057,15 +1047,9 @@ func finalizeSummaryFromLog(
 		finalizedPstats.MissingAppearPacket = !seenAppear[pStats.ID]
 		finalizedPstats.Deaths = playerDeaths[pStats.ID]
 
-		// Limit to last 200 hits
-		timelineLen := len(pStats.DamageTimeline)
-		if timelineLen > 0 {
-			startIdx := 0
-			if timelineLen > 200 {
-				startIdx = timelineLen - 200
-			}
-			finalizedPstats.DamageTimeline = make([]DamageTimelineEvent, timelineLen-startIdx)
-			copy(finalizedPstats.DamageTimeline, pStats.DamageTimeline[startIdx:])
+		if len(pStats.DamageTimeline) > 0 {
+			finalizedPstats.DamageTimeline = make([]DamageTimelineEvent, len(pStats.DamageTimeline))
+			copy(finalizedPstats.DamageTimeline, pStats.DamageTimeline)
 		}
 
 		playerSkillUses := skillUsesByPlayer[pStats.ID]

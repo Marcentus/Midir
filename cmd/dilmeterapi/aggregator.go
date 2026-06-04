@@ -90,24 +90,7 @@ func (a *Aggregator) SetLive(live bool) {
 	a.isLive = live
 }
 
-const (
-	conditionInvincibleFethFiada = 494
-	conditionInvincibleGeneral   = 277
-)
 
-// isInvincible checks if the given entity currently has an invincibility condition active.
-// Note: This method assumes a.mu is held (either RLock or Lock) or is called within a locked context.
-func (a *Aggregator) isInvincible(entityID uint64) bool {
-	if active, ok := a.playerConditionActive[entityID]; ok {
-		if _, has494 := active[conditionInvincibleFethFiada]; has494 {
-			return true
-		}
-		if _, has277 := active[conditionInvincibleGeneral]; has277 {
-			return true
-		}
-	}
-	return false
-}
 
 // startPresenceInterval starts a presence interval for the target at the given timestamp.
 // Note: This method assumes a.mu is held or is called within a locked context.
@@ -368,10 +351,6 @@ func (a *Aggregator) processEffect(p *packet.GamePacket) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
-	if a.isInvincible(targetId) {
-		damage = 0
-	}
-
 	// Update the shared timers for this target
 	a.updateTimestamps(targetId, p.At)
 
@@ -413,9 +392,7 @@ func (a *Aggregator) processEffect(p *packet.GamePacket) {
 			MaxHP:      maxHP,
 			IsCritical: false,
 		})
-		if len(stats.DamageTimeline) > 200 {
-			stats.DamageTimeline = stats.DamageTimeline[len(stats.DamageTimeline)-200:]
-		}
+
 	} else if ownerInfo, petEntity, isPet := a.resolvePlayerOwner(attackerId); isPet {
 		stats := a.getOrCreatePlayerStats(ownerInfo)
 		targetIdStr := strconv.FormatUint(targetId, 10)
@@ -471,9 +448,7 @@ func (a *Aggregator) processEffect(p *packet.GamePacket) {
 			MaxHP:      maxHP,
 			IsCritical: false,
 		})
-		if len(stats.DamageTimeline) > 200 {
-			stats.DamageTimeline = stats.DamageTimeline[len(stats.DamageTimeline)-200:]
-		}
+
 	}
 
 	if targetInfo, isPlayerTarget := playerCache.Get(targetId); isPlayerTarget {
@@ -503,11 +478,6 @@ func (a *Aggregator) processEffectDelayed(p *packet.GamePacket) {
 		a.mu.Unlock()
 		// logger.Println("...[Unlocked] Aggregator.EffectDelayed released lock.")
 	}()
-
-	if a.isInvincible(targetId) {
-		damage = 0
-	}
-
 	// Update the shared timers for this target
 	a.updateTimestamps(targetId, p.At)
 
@@ -550,9 +520,7 @@ func (a *Aggregator) processEffectDelayed(p *packet.GamePacket) {
 			MaxHP:      maxHP,
 			IsCritical: false,
 		})
-		if len(stats.DamageTimeline) > 200 {
-			stats.DamageTimeline = stats.DamageTimeline[len(stats.DamageTimeline)-200:]
-		}
+
 	} else if ownerInfo, petEntity, isPet := a.resolvePlayerOwner(attackerId); isPet {
 		stats := a.getOrCreatePlayerStats(ownerInfo)
 		targetIdStr := strconv.FormatUint(targetId, 10)
@@ -608,9 +576,7 @@ func (a *Aggregator) processEffectDelayed(p *packet.GamePacket) {
 			MaxHP:      maxHP,
 			IsCritical: false,
 		})
-		if len(stats.DamageTimeline) > 200 {
-			stats.DamageTimeline = stats.DamageTimeline[len(stats.DamageTimeline)-200:]
-		}
+
 	}
 
 	if targetInfo, isPlayerTarget := playerCache.Get(targetId); isPlayerTarget {
@@ -776,10 +742,6 @@ func (a *Aggregator) processCombatAction(p *packet.GamePacket) {
 	}
 
 	for _, sub := range pack.SubPackets {
-		if sub.Hit != nil && a.isInvincible(sub.EntityId) {
-			sub.Hit.Damage = 0
-			sub.Hit.ManaDamage = 0
-		}
 
 		if sub.Hit == nil || (sub.Hit.Damage <= 0 && sub.Hit.ManaDamage <= 0) {
 			continue
@@ -815,9 +777,7 @@ func (a *Aggregator) processCombatAction(p *packet.GamePacket) {
 					MaxHP:      maxHP,
 					IsCritical: isCrit,
 				})
-				if len(stats.DamageTimeline) > 200 {
-					stats.DamageTimeline = stats.DamageTimeline[len(stats.DamageTimeline)-200:]
-				}
+
 			} else if ownerInfo, petEntity, isPet := a.resolvePlayerOwner(attackerId); isPet {
 				stats := a.getOrCreatePlayerStats(ownerInfo)
 				targetIdStr := strconv.FormatUint(sub.EntityId, 10)
@@ -873,9 +833,7 @@ func (a *Aggregator) processCombatAction(p *packet.GamePacket) {
 					MaxHP:      maxHP,
 					IsCritical: isCrit,
 				})
-				if len(stats.DamageTimeline) > 200 {
-					stats.DamageTimeline = stats.DamageTimeline[len(stats.DamageTimeline)-200:]
-				}
+
 			}
 		}
 
@@ -1049,14 +1007,9 @@ func (a *Aggregator) GetSummary() FightSummary {
 			MissingAppearPacket: !a.playerSeenAppear[playerID], // Set the flag
 		}
 
-		timelineLen := len(pStats.DamageTimeline)
-		if timelineLen > 0 {
-			startIdx := 0
-			if timelineLen > 200 {
-				startIdx = timelineLen - 200
-			}
-			playerCopy.DamageTimeline = make([]DamageTimelineEvent, timelineLen-startIdx)
-			copy(playerCopy.DamageTimeline, pStats.DamageTimeline[startIdx:])
+		if len(pStats.DamageTimeline) > 0 {
+			playerCopy.DamageTimeline = make([]DamageTimelineEvent, len(pStats.DamageTimeline))
+			copy(playerCopy.DamageTimeline, pStats.DamageTimeline)
 		}
 
 		// Finalize overall stats using the single overall encounter duration
