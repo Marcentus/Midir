@@ -232,6 +232,9 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 		case eventIdEntityAppear:
 			var appear eventEntityAppear
 			if err := json.Unmarshal(line, &appear); err == nil {
+				if appear.CurrentHP < 0 {
+					appear.CurrentHP = 0
+				}
 				seenAppear[appear.Id] = true
 				targetSeenAppear[appear.Id] = true
 				targetDisappeared[appear.Id] = false
@@ -322,9 +325,13 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 		case eventIdEntityHPUpdate:
 			var hpUpdate eventEntityHPUpdate
 			if err := json.Unmarshal(line, &hpUpdate); err == nil {
+				currentHP := hpUpdate.CurrentHP
+				if currentHP < 0 {
+					currentHP = 0
+				}
 				hpHistoryByTarget[hpUpdate.Id] = append(hpHistoryByTarget[hpUpdate.Id], TargetHPPoint{
 					Time:      baseEvent.At,
-					CurrentHP: hpUpdate.CurrentHP,
+					CurrentHP: currentHP,
 					MaxHP:     hpUpdate.MaxHP,
 				})
 			}
@@ -398,7 +405,11 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 
 func findTargetHPAtTime(hpHistory []TargetHPPoint, t int64, defaultHP TargetHPPoint) (float32, float32) {
 	if len(hpHistory) == 0 {
-		return defaultHP.CurrentHP, defaultHP.MaxHP
+		curHP := defaultHP.CurrentHP
+		if curHP < 0 {
+			curHP = 0
+		}
+		return curHP, defaultHP.MaxHP
 	}
 	var lastPt *TargetHPPoint
 	for i := range hpHistory {
@@ -409,9 +420,17 @@ func findTargetHPAtTime(hpHistory []TargetHPPoint, t int64, defaultHP TargetHPPo
 		}
 	}
 	if lastPt != nil {
-		return lastPt.CurrentHP, lastPt.MaxHP
+		curHP := lastPt.CurrentHP
+		if curHP < 0 {
+			curHP = 0
+		}
+		return curHP, lastPt.MaxHP
 	}
-	return hpHistory[0].CurrentHP, hpHistory[0].MaxHP
+	curHP := hpHistory[0].CurrentHP
+	if curHP < 0 {
+		curHP = 0
+	}
+	return curHP, hpHistory[0].MaxHP
 }
 
 func resolveTargetNameFromLog(targetIDStr string, entitiesInLog map[string]eventEntityAppear) string {

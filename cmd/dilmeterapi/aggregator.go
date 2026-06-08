@@ -214,6 +214,9 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 	if p.Op == opcodeEntityAppear {
 		entity, err := packet.ParseEntityAppearPacket(p.Msg)
 		if err == nil && entity != nil {
+			if entity.CurrentHP < 0 {
+				entity.CurrentHP = 0
+			}
 			a.mu.Lock()
 			a.entityCache[entity.Id] = entity
 			// Mark that we have seen this entity appear, so condition tracking is reliable
@@ -254,6 +257,9 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 		if err == nil {
 			a.mu.Lock()
 			for _, entity := range entities {
+				if entity.CurrentHP < 0 {
+					entity.CurrentHP = 0
+				}
 				a.entityCache[entity.Id] = entity
 				a.playerSeenAppear[entity.Id] = true
 				a.seenAppear[entity.Id] = true
@@ -603,6 +609,9 @@ func (a *Aggregator) processPublicStatUpdate(p *packet.GamePacket) {
 	bonusChanged := false
 
 	if val, ok := statUpdate.Stats[28]; ok {
+		if val < 0 {
+			val = 0
+		}
 		entity.CurrentHP = val
 		hpChanged = true
 	}

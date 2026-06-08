@@ -620,3 +620,88 @@ func TestAggregator_PetDamageAttribution(t *testing.T) {
 		t.Errorf("Expected pet skill 888 to record 1500 damage, got %f", petStats.OverallStats.Skills[888].TotalDamage)
 	}
 }
+
+func TestEventPublisher_HPVerification_NegativeHP(t *testing.T) {
+	agg := NewAggregator()
+	logCh := make(chan iEvent, 10)
+	pub := &eventPublisher{
+		aggregator:           agg,
+		hpVerificationStates: make(map[uint64]*hpVerificationState),
+		logCh:                logCh,
+	}
+
+	playerID := uint64(5555)
+	targetID := uint64(9999)
+
+	agg.entityCache[targetID] = &packet.EntityInfo{
+		Id:        targetID,
+		Name:      "TestTarget",
+		CurrentHP: 50,
+		MaxHP:     100,
+	}
+
+	// Initialize the player stats in aggregator
+	pInfo := &PlayerInfo{
+		ID:     playerID,
+		Name:   "TestAttacker",
+		RaceId: 8001,
+	}
+	stats := agg.getOrCreatePlayerStats(pInfo)
+	stats.OverallStats.TotalDamage = 80.0
+	stats.OverallStats.Skills = make(map[uint16]SkillStats)
+	stats.OverallStats.Skills[123] = SkillStats{
+		ID:          123,
+		TotalDamage: 80.0,
+	}
+	
+	targetIDStr := strconv.FormatUint(targetID, 10)
+	targetStats := newDamageBreakdown()
+	targetStats.TotalDamage = 80.0
+	targetStats.Skills = make(map[uint16]SkillStats)
+	targetStats.Skills[123] = SkillStats{
+		ID:          123,
+		TotalDamage: 80.0,
+	}
+	stats.DamageByTarget[targetIDStr] = targetStats
+
+	stats.DamageTimeline = append(stats.DamageTimeline, DamageTimelineEvent{
+		Timestamp:  time.Now().Unix(),
+		SkillID:    123,
+		TargetID:   targetIDStr,
+		TargetName: "TestTarget",
+		Damage:     80.0,
+	})
+
+	// 1. Record damage hit of 80 damage when target has 50 HP
+	pub.recordDamageHit(targetID, playerID, 123, 80.0, false, time.Now())
+
+	// 2. Validate HP change - Target HP updates to negative (-30 HP)
+	agg.entityCache[targetID].CurrentHP = -30.0
+
+	// Verify HP change. -30.0 should be clamped to 0.0.
+	// Expected change = 80.0. Actual change = 50.0 - 0.0 = 50.0.
+	// Overkill = 80.0 - 50.0 = 30.0.
+	pub.verifyHPChange(targetID, -30.0, 100.0)
+
+	// Verify that correction was applied to the aggregator
+	if stats.OverallStats.TotalDamage != 50.0 {
+		t.Errorf("Expected overall damage corrected to 50.0, got %f", stats.OverallStats.TotalDamage)
+	}
+
+	// Verify that the negative correction event was logged to the channel
+	select {
+	case ev := <-logCh:
+		dmgEv, ok := ev.(*eventDamage)
+		if !ok {
+			t.Fatalf("Expected event to be *eventDamage")
+		}
+		if dmgEv.Damage != -30.0 {
+			t.Errorf("Expected correction damage to be -30.0, got %f", dmgEv.Damage)
+		}
+		if !dmgEv.IsCorrection {
+			t.Errorf("Expected IsCorrection to be true")
+		}
+	default:
+		t.Fatalf("Expected a correction event to be written to logCh")
+	}
+}

@@ -945,6 +945,9 @@ func (t *eventPublisher) recordDamageHit(targetID uint64, attackerID uint64, ski
 
 		// Initialize LastCurrentHP from aggregator if available
 		if curHP, _, _, _, ok := t.aggregator.GetEntityHP(targetID); ok {
+			if curHP < 0 {
+				curHP = 0
+			}
 			state.LastCurrentHP = curHP
 		}
 	}
@@ -969,6 +972,9 @@ func (t *eventPublisher) recordDamageHit(targetID uint64, attackerID uint64, ski
 }
 
 func (t *eventPublisher) verifyHPChange(targetID uint64, curHP float32, maxHP float32) {
+	if curHP < 0 {
+		curHP = 0
+	}
 	t.hpVerificationMu.Lock()
 	state, exists := t.hpVerificationStates[targetID]
 	if !exists {
