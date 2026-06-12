@@ -296,7 +296,6 @@ func TestAggregator_TargetIconStateTracking(t *testing.T) {
 	}
 }
 
-
 func TestAggregator_InvincibilityFilter(t *testing.T) {
 	agg := NewAggregator()
 	agg.SetLive(true)
@@ -378,8 +377,8 @@ func TestAggregator_InvincibilityFilter(t *testing.T) {
 		At: time.Now(),
 		Msg: []packet.IMessageElem{
 			packet.NewMessageElemByte(0),
-			packet.NewMessageElemInt(317),       // sub-ID
-			packet.NewMessageElemInt(5000),      // damage = 5000
+			packet.NewMessageElemInt(318),  // sub-ID
+			packet.NewMessageElemInt(5000), // damage = 5000
 			packet.NewMessageElemInt(0),
 			packet.NewMessageElemInt(0),
 			packet.NewMessageElemLong(playerID), // attacker
@@ -463,9 +462,9 @@ func TestAggregator_EffectPacket(t *testing.T) {
 		Id: enemyID,
 		At: time.Now(),
 		Msg: []packet.IMessageElem{
-			packet.NewMessageElemInt(999),       // type = 999 (ignored)
+			packet.NewMessageElemInt(999), // type = 999 (ignored)
 			packet.NewMessageElemByte(0),
-			packet.NewMessageElemInt(5000),      // damage
+			packet.NewMessageElemInt(5000), // damage
 			packet.NewMessageElemInt(0),
 			packet.NewMessageElemLong(playerID),
 			packet.NewMessageElemShort(888),

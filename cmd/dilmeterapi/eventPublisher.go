@@ -105,8 +105,8 @@ func newEventPublisher(ctx context.Context, packetCh <-chan *packet.GamePacket, 
 		playerUpdateBatch: make([]*PlayerInfo, 0),
 		logCh:             make(chan iEvent, 1000), // Buffered channel for events
 
-		hpLogStates:  make(map[uint64]*entityHPLogState),
-		lastCombatAt: make(map[uint64]time.Time),
+		hpLogStates:      make(map[uint64]*entityHPLogState),
+		lastCombatAt:     make(map[uint64]time.Time),
 		activeConditions: make(map[uint64]map[uint32]string),
 
 		pendingDisables: make(map[string]*pendingDisable),
@@ -469,7 +469,7 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		// NEW: Check against the full, correct packet structure.
 		if len(p.Msg) < 7 ||
 			p.Msg[1].Type() != packet.MessageElemTypeInt ||
-			p.Msg[1].Data().(uint32) != 317 || // Check for the specific sub-ID 317
+			p.Msg[1].Data().(uint32) != 318 || // Check for the specific sub-ID (this changes value some updates)
 			p.Msg[2].Type() != packet.MessageElemTypeInt ||
 			p.Msg[5].Type() != packet.MessageElemTypeLong ||
 			p.Msg[6].Type() != packet.MessageElemTypeShort {
