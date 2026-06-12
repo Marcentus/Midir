@@ -688,7 +688,7 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 		minIdx := 0
 		minSeq := layers[0].tcpLayer.Seq
 		for i, l := range layers {
-			if int32(l.tcpLayer.Seq-minSeq) < 0 {
+			if l.tcpLayer.Seq < minSeq {
 				minSeq = l.tcpLayer.Seq
 				minIdx = i
 			}
@@ -707,14 +707,6 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 			}
 
 			if foundIdx == -1 {
-				// Prune obsolete packets from the pending queue that have been fully processed
-				newPending := st.pending[:0]
-				for _, p := range st.pending {
-					if int32((p.tcpLayer.Seq+uint32(len(p.tcpLayer.Payload)))-st.nextSeq) > 0 {
-						newPending = append(newPending, p)
-					}
-				}
-				st.pending = newPending
 				return
 			}
 
@@ -762,30 +754,7 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 		}
 
 		for _, layer := range packetLayers {
-			if layer != layers.LayerTypeTCP {
-				continue
-			}
-
-			key := flowKeyFor(ip4Layer, tcpLayer)
-
-			// Handle TCP SYN (Connection initiation / SYN-ACK from server)
-			if tcpLayer.SYN {
-				streams[key] = &tcpStreamState{
-					baseSeq:  tcpLayer.Seq + 1, // SYN consumes 1 sequence number
-					nextSeq:  tcpLayer.Seq + 1,
-					pending:  make([]pendingTcpLayer, 0, packetQueueSize),
-					lastSeen: ci.Timestamp,
-				}
-				continue
-			}
-
-			// Handle TCP RST (Connection termination)
-			if tcpLayer.RST {
-				delete(streams, key)
-				continue
-			}
-
-			if len(tcpLayer.Payload) < 1 {
+			if layer != layers.LayerTypeTCP || len(tcpLayer.Payload) < 1 {
 				continue
 			}
 
@@ -799,6 +768,7 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 				continue
 			}
 
+			key := flowKeyFor(ip4Layer, tcpLayer)
 			for streamKey, st := range streams {
 				if !st.lastSeen.IsZero() && ci.Timestamp.Sub(st.lastSeen) > streamTTL {
 					delete(streams, streamKey)
@@ -818,10 +788,8 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 			st.lastSeen = ci.Timestamp
 
 			if st.nextSeq != 0 && tcpLayer.Seq != st.nextSeq {
-				// Circular comparison: is tcpLayer.Seq < st.nextSeq?
-				if int32(tcpLayer.Seq-st.nextSeq) < 0 {
-					// Circular comparison: is tcpLayer.Seq + len >= st.nextSeq?
-					if int32((tcpLayer.Seq+uint32(len(tcpLayer.Payload)))-st.nextSeq) >= 0 {
+				if tcpLayer.Seq < st.nextSeq {
+					if tcpLayer.Seq+uint32(len(tcpLayer.Payload)) >= st.nextSeq {
 						payload := tcpLayer.Payload[st.nextSeq-tcpLayer.Seq:]
 						if len(payload) > 0 {
 							ch <- gamePacketPayload{
