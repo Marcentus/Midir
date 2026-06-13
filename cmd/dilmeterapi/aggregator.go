@@ -30,8 +30,8 @@ type Aggregator struct {
 	encounterStartTime int64
 	encounterEndTime   int64
 	// General Entity Info
-	entityCache map[uint64]*packet.EntityInfo
-	targetNames map[uint64]string // Cache for entity names to persist after they disappear
+	entityCache   map[uint64]*packet.EntityInfo
+	targetNames   map[uint64]string // Cache for entity names to persist after they disappear
 	targetRaceIDs map[uint64]uint32 // Cache for entity race IDs to persist after they disappear
 
 	// Condition Tracking
@@ -71,14 +71,14 @@ func NewAggregator() *Aggregator {
 			StartTime int64
 			EndTime   int64
 		}),
-		playerConditionActive:  make(map[uint64]map[uint32]ActiveCondition),
-		playerConditionHistory: make(map[uint64]map[uint32][]ConditionInterval),
-		playerSeenAppear:       make(map[uint64]bool),
-		isLive:                 false, // Default to false, explicitly enabled by caller if needed
-		deadEntities:           make(map[uint64]bool),
-		seenDead:               make(map[uint64]bool),
-		seenAppear:             make(map[uint64]bool),
-		disappeared:            make(map[uint64]bool),
+		playerConditionActive:   make(map[uint64]map[uint32]ActiveCondition),
+		playerConditionHistory:  make(map[uint64]map[uint32][]ConditionInterval),
+		playerSeenAppear:        make(map[uint64]bool),
+		isLive:                  false, // Default to false, explicitly enabled by caller if needed
+		deadEntities:            make(map[uint64]bool),
+		seenDead:                make(map[uint64]bool),
+		seenAppear:              make(map[uint64]bool),
+		disappeared:             make(map[uint64]bool),
 		targetPresenceIntervals: make(map[uint64][]PresenceInterval),
 		targetHP:                make(map[uint64]TargetHPPoint),
 	}
@@ -89,8 +89,6 @@ func (a *Aggregator) SetLive(live bool) {
 	defer a.mu.Unlock()
 	a.isLive = live
 }
-
-
 
 // startPresenceInterval starts a presence interval for the target at the given timestamp.
 // Note: This method assumes a.mu is held or is called within a locked context.
@@ -465,7 +463,7 @@ func (a *Aggregator) processEffect(p *packet.GamePacket) {
 func (a *Aggregator) processEffectDelayed(p *packet.GamePacket) {
 	if len(p.Msg) < 7 ||
 		p.Msg[1].Type() != packet.MessageElemTypeInt ||
-		p.Msg[1].Data().(uint32) != 317 ||
+		p.Msg[1].Data().(uint32) != 318 ||
 		p.Msg[2].Type() != packet.MessageElemTypeInt ||
 		p.Msg[5].Type() != packet.MessageElemTypeLong ||
 		p.Msg[6].Type() != packet.MessageElemTypeShort {
@@ -852,8 +850,6 @@ func (a *Aggregator) processCombatAction(p *packet.GamePacket) {
 		}
 	}
 }
-
-
 
 func (a *Aggregator) getOrCreatePlayerStats(playerInfo *PlayerInfo) *PlayerStats {
 	stats, exists := a.playerStats[playerInfo.ID]
@@ -1462,7 +1458,6 @@ func (a *Aggregator) IsCombatTarget(entityID uint64) bool {
 	return exists
 }
 
-
 // getEntityName resolves and returns the name of an entity ID.
 // Note: This method assumes a.mu is held or is called within a locked context.
 func (a *Aggregator) getEntityName(entityID uint64) string {
@@ -1592,14 +1587,14 @@ func (a *Aggregator) ApplyDamageCorrection(attackerID uint64, targetID uint64, s
 	// 3. Update damage taken stats
 	if statsDT, existsDT := a.damageTaken[targetID]; existsDT {
 		statsDT.TotalDamage -= reduction
-		
+
 		attackerName := "Unknown"
 		if entity, ok := a.entityCache[attackerID]; ok {
 			attackerName = getRaceName(entity.RaceId)
 		} else if player, ok := playerCache.Get(attackerID); ok {
 			attackerName = player.Name
 		}
-		
+
 		breakdownKey := fmt.Sprintf("%s-%d", attackerName, skillID)
 		if details, existsDetails := statsDT.Breakdown[breakdownKey]; existsDetails {
 			details.TotalDamage -= reduction
@@ -1607,4 +1602,3 @@ func (a *Aggregator) ApplyDamageCorrection(attackerID uint64, targetID uint64, s
 		}
 	}
 }
-
