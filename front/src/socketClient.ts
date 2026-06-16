@@ -13,7 +13,24 @@ export class SocketClient {
   public onSystemWarning?: (msg: string) => void;
   public onPacketDebug?: (info: any) => void; // Header only
   public onPacketDetails?: (details: any) => void; // Full details
-  public onPacketStatus?: (status: {total: number, perSecond: number, lastPacketAt: string, lastOp: number, topOps?: {op: number, count: number, total: number}[]}) => void;
+  public onPacketStatus?: (status: {
+    total: number;
+    perSecond: number;
+    lastPacketAt: string;
+    lastOp: number;
+    topOps?: {op: number, count: number, total: number}[];
+    activeConditions?: number;
+    trackedEntities?: number;
+    bufferEvents?: number;
+    bufferBytes?: number;
+    goroutines?: number;
+    heapAlloc?: number;
+    eventBreakdown?: Record<string, number>;
+    pcapDrops?: number;
+    parserErrors?: number;
+    networkLoss?: number;
+    queueDrops?: number;
+  }) => void;
   public onAutodetectProgress?: (progress: {current: number, target: number}) => void;
   public onAutodetectDone?: (result: {ip: string, port: string}) => void;
 

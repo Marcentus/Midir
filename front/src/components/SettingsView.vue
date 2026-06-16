@@ -14,144 +14,226 @@
         <v-window v-model="activeTab">
           <!-- CAPTURE TAB -->
           <v-window-item value="capture">
-            <v-alert
-              v-if="captureStatus.is_running"
-              type="success"
-              variant="tonal"
-              class="mb-4"
-              density="compact"
-            >
-              Capture is currently <strong>running</strong> on NIC: {{ captureStatus.nic || 'File/Unknown' }} 
-              <span v-if="captureStatus.exitlag">(ExitLag Enabled)</span>
-            </v-alert>
-            <v-alert
-              v-else
-              type="warning"
-              variant="tonal"
-              class="mb-4"
-              density="compact"
-            >
-              Capture is currently <strong>stopped</strong>. Waiting for configuration.
-            </v-alert>
+            <!-- CARD 1: CAPTURE CONFIGURATION -->
+            <v-card variant="outlined" class="mb-4" style="border-color: rgba(140, 158, 255, 0.25) !important;">
+              <v-card-item class="pb-1 pt-2">
+                <div class="d-flex align-center justify-space-between w-100 flex-wrap">
+                  <v-card-title class="text-subtitle-2 d-flex align-center font-weight-bold text-white" style="font-size: 0.875rem !important;">
+                    <v-icon start size="small" color="primary" class="mr-2">mdi-cog</v-icon>
+                    Capture Configuration
+                  </v-card-title>
+                  
+                  <v-chip
+                    v-if="captureStatus.is_running"
+                    color="success"
+                    size="small"
+                    variant="tonal"
+                    class="font-weight-bold px-2"
+                    style="height: 22px; font-size: 10px;"
+                  >
+                    <v-icon start size="12" class="mr-1">mdi-radiobox-marked</v-icon>
+                    Running: {{ captureStatus.nic || 'File/Unknown' }}
+                    <span v-if="captureStatus.exitlag" class="ml-1 text-grey-lighten-2">(ExitLag)</span>
+                  </v-chip>
+                  <v-chip
+                    v-else
+                    color="warning"
+                    size="small"
+                    variant="tonal"
+                    class="font-weight-bold px-2"
+                    style="height: 22px; font-size: 10px;"
+                  >
+                    <v-icon start size="12" class="mr-1">mdi-pause-circle-outline</v-icon>
+                    Stopped
+                  </v-chip>
+                </div>
+              </v-card-item>
 
-            <v-alert
-              v-if="captureStatus.is_running"
-              :type="packetStatus.perSecond > 0 ? 'success' : 'info'"
-              variant="tonal"
-              class="mb-4"
-              density="compact"
-            >
-              <div class="d-flex align-center justify-space-between flex-wrap ga-2">
-                <div>
-                  <strong>Decoded packets:</strong>
-                  {{ packetStatus.total }} total,
-                  {{ packetStatus.perSecond }}/sec
-                  <span v-if="packetStatus.lastOp"> · last op: 0x{{ packetStatus.lastOp.toString(16) }}</span>
-                  <div v-if="packetStatus.topOps?.length" class="text-caption mt-1">
-                    Recent ops:
-                    <span v-for="op in packetStatus.topOps.slice(0, 8)" :key="op.op" class="mr-2">
-                      0x{{ op.op.toString(16) }}×{{ op.count }}
-                    </span>
+              <v-card-text class="pt-3">
+                <v-form @submit.prevent="applyCaptureSettings">
+                  <v-select
+                    v-model="captureConfig.nicName"
+                    :items="nics"
+                    item-title="description"
+                    item-value="name"
+                    label="Network Interface (NIC)"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    class="mb-4"
+                  >
+                    <template v-slot:item="{ props, item }">
+                      <v-list-item v-bind="props" :subtitle="item.raw.ip ? 'IP: ' + item.raw.ip : 'No IP'"></v-list-item>
+                    </template>
+                    <template v-slot:selection="{ item }">
+                      <span>{{ item.raw.description || item.raw.name }} ({{ item.raw.ip || 'No IP' }})</span>
+                    </template>
+                  </v-select>
+
+                  <v-switch
+                    v-model="captureConfig.promiscuous"
+                    label="Enable Npcap Promiscuous Mode"
+                    color="primary"
+                    hide-details
+                    inset
+                    class="mb-1"
+                  ></v-switch>
+                  <div class="text-caption text-grey-lighten-2 mb-4 ml-14">
+                    Turn this ON if you are capturing packets from a mirrored switch port.
+                    <div class="text-error mt-1">
+                      <strong>Warning:</strong> Enabling this on the same PC you run the game will NGS you.
+                    </div>
+                  </div>
+
+                  <v-switch
+                    v-model="captureConfig.exitlag"
+                    label="Enable ExitLag Routing"
+                    color="primary"
+                    hide-details
+                    inset
+                    class="mb-4"
+                  ></v-switch>
+                  
+                  <div class="d-flex ga-2 mt-4">
+                    <v-btn
+                      v-if="!captureStatus.is_running"
+                      color="primary"
+                      type="submit"
+                      prepend-icon="mdi-play"
+                      :loading="isApplying"
+                    >
+                      Start Capture
+                    </v-btn>
+                    
+                    <v-btn
+                      v-if="captureStatus.is_running"
+                      color="primary"
+                      prepend-icon="mdi-refresh"
+                      @click="restartCaptureKeepSession"
+                      :loading="isRestartingKeepSession"
+                    >
+                      Reconnect Capture
+                    </v-btn>
+
+                    <v-btn
+                      v-if="captureStatus.is_running"
+                      color="error"
+                      variant="outlined"
+                      prepend-icon="mdi-stop"
+                      @click="stopCapture"
+                      :loading="isStopping"
+                    >
+                      Stop Capture
+                    </v-btn>
+                  </div>
+                  <div class="text-caption text-grey-lighten-2 mt-2">
+                    Reconnect Capture reopens packet capture and keeps the current session data.
+                  </div>
+                </v-form>
+              </v-card-text>
+            </v-card>
+
+            <!-- CARD 2: SYSTEM DIAGNOSTICS & TELEMETRY -->
+            <v-card variant="outlined" class="mb-4" style="border-color: rgba(140, 158, 255, 0.25) !important;">
+              <v-card-item class="pb-1 pt-2">
+                <div class="d-flex align-center justify-space-between w-100 flex-wrap">
+                  <v-card-title class="text-subtitle-2 d-flex align-center font-weight-bold text-white" style="font-size: 0.875rem !important;">
+                    <v-icon start size="small" color="primary" class="mr-2">mdi-chart-line</v-icon>
+                    System Diagnostics & Telemetry
+                  </v-card-title>
+                </div>
+              </v-card-item>
+              
+              <v-card-text class="pb-3">
+                <v-row dense>
+                  <!-- Col 1: Decoded Packets -->
+                  <v-col cols="12" sm="4" class="py-1">
+                    <div class="d-flex align-center">
+                      <v-icon color="success" size="small" class="mr-2">mdi-swap-horizontal-bold</v-icon>
+                      <div>
+                        <div class="text-caption font-weight-bold text-white">Decoded Packets</div>
+                        <div class="text-caption text-grey-lighten-3">
+                          {{ formatNumber(packetStatus.total) }} total ({{ formatNumber(packetStatus.perSecond) }}/sec)
+                        </div>
+                      </div>
+                    </div>
+                  </v-col>
+
+                  <!-- Col 2: Dropped Packets -->
+                  <v-col cols="12" sm="4" class="py-1">
+                    <div class="d-flex align-center">
+                      <v-icon 
+                        :color="((packetStatus.pcapDrops || 0) + (packetStatus.parserErrors || 0) + (packetStatus.networkLoss || 0) + (packetStatus.queueDrops || 0) > 0) ? 'red-lighten-1' : 'grey-lighten-1'" 
+                        size="small" 
+                        class="mr-2"
+                      >
+                        mdi-alert-circle
+                      </v-icon>
+                      <div>
+                        <div class="text-caption font-weight-bold text-white">Dropped Packets</div>
+                        <div class="text-caption text-grey-lighten-3">
+                          Npcap: {{ packetStatus.pcapDrops || 0 }} · Parser: {{ packetStatus.parserErrors || 0 }} (Loss: {{ packetStatus.networkLoss || 0 }})
+                        </div>
+                      </div>
+                    </div>
+                  </v-col>
+
+                  <!-- Col 3: Go Runtime Memory -->
+                  <v-col cols="12" sm="4" class="py-1">
+                    <div class="d-flex align-center">
+                      <v-icon color="teal-lighten-2" size="small" class="mr-2">mdi-server</v-icon>
+                      <div>
+                        <div class="text-caption font-weight-bold text-white">Go Runtime Memory</div>
+                        <div class="text-caption text-grey-lighten-3">
+                          Heap: {{ formatBytes(packetStatus.heapAlloc || 0) }} ({{ packetStatus.goroutines || 0 }} threads)
+                        </div>
+                      </div>
+                    </div>
+                  </v-col>
+
+                  <!-- Col 4: Active Tracked Entities -->
+                  <v-col cols="12" sm="4" class="py-1">
+                    <div class="d-flex align-center">
+                      <v-icon color="blue-lighten-2" size="small" class="mr-2">mdi-account-group</v-icon>
+                      <div>
+                        <div class="text-caption font-weight-bold text-white">Active Tracked Entities</div>
+                        <div class="text-caption text-grey-lighten-3">
+                          {{ packetStatus.trackedEntities || 0 }} cached players & monsters
+                        </div>
+                      </div>
+                    </div>
+                  </v-col>
+                </v-row>
+
+                <v-divider class="my-3 border-opacity-25"></v-divider>
+
+                <!-- Live Session Event Buffer Section -->
+                <div class="d-flex align-center mb-2">
+                  <v-icon color="amber-darken-1" size="small" class="mr-2">mdi-database</v-icon>
+                  <div>
+                    <div class="text-caption font-weight-bold text-white">Live Session Event Buffer</div>
+                    <div class="text-caption text-grey-lighten-3">
+                      {{ formatNumber(packetStatus.bufferEvents || 0) }} events ({{ formatBytes(packetStatus.bufferBytes || 0) }} total buffered)
+                    </div>
                   </div>
                 </div>
-                <div class="text-caption text-grey">
-                  {{ packetStatus.perSecond > 0 ? 'Midir is receiving game packets.' : 'No decoded game packets this second.' }}
-                </div>
-              </div>
-            </v-alert>
 
-            <v-form @submit.prevent="applyCaptureSettings">
-              <v-select
-                v-model="captureConfig.nicName"
-                :items="nics"
-                item-title="description"
-                item-value="name"
-                label="Network Interface (NIC)"
-                variant="outlined"
-                density="compact"
-                hide-details
-                class="mb-4"
-              >
-                <template v-slot:item="{ props, item }">
-                  <v-list-item v-bind="props" :subtitle="item.raw.ip ? 'IP: ' + item.raw.ip : 'No IP'"></v-list-item>
-                </template>
-                <template v-slot:selection="{ item }">
-                  <span>{{ item.raw.description || item.raw.name }} ({{ item.raw.ip || 'No IP' }})</span>
-                </template>
-              </v-select>
-
-              <v-switch
-                v-model="captureConfig.promiscuous"
-                label="Enable Npcap Promiscuous Mode"
-                color="primary"
-                hide-details
-                inset
-                class="mb-1"
-              ></v-switch>
-              <div class="text-caption text-grey mb-4 ml-14">
-                Turn this ON if you are capturing packets from a mirrored switch port.
-                <div class="text-error mt-1">
-                  <strong>Warning:</strong> Enabling this on the same PC you run the game will NGS you.
-                </div>
-              </div>
-
-              <v-switch
-                v-model="captureConfig.exitlag"
-                label="Enable ExitLag Routing"
-                color="primary"
-                hide-details
-                inset
-                class="mb-2"
-              ></v-switch>
-
-              <v-expand-transition>
-                <v-alert
-                  v-show="captureConfig.exitlag"
-                  type="info"
-                  variant="tonal"
-                  density="compact"
-                  class="mb-4"
-                >
-                  Dynamic ExitLag mode captures TCP on the selected interface and follows decoded game packets automatically.
-                  IP/port auto-detect is disabled for this experimental build.
-                </v-alert>
-              </v-expand-transition>
-              <div class="d-flex ga-2 mt-4">
-                <v-btn
-                  v-if="!captureStatus.is_running"
-                  color="primary"
-                  type="submit"
-                  prepend-icon="mdi-play"
-                  :loading="isApplying"
-                >
-                  Start Capture
-                </v-btn>
-                
-                <v-btn
-                  v-if="captureStatus.is_running"
-                  color="primary"
-                  prepend-icon="mdi-refresh"
-                  @click="restartCaptureKeepSession"
-                  :loading="isRestartingKeepSession"
-                >
-                  Reconnect Capture
-                </v-btn>
-
-                <v-btn
-                  v-if="captureStatus.is_running"
-                  color="error"
-                  variant="outlined"
-                  prepend-icon="mdi-stop"
-                  @click="stopCapture"
-                  :loading="isStopping"
-                >
-                  Stop Capture
-                </v-btn>
-              </div>
-              <div class="text-caption text-grey mt-2">
-                Reconnect Capture reopens packet capture and keeps the current session data.
-              </div>
-            </v-form>
+                <v-row dense class="mt-1">
+                  <v-col 
+                    v-for="eventName in ALL_EVENT_TYPES" 
+                    :key="eventName" 
+                    cols="12" 
+                    sm="4"
+                    class="py-1 px-2"
+                  >
+                    <div class="d-flex justify-space-between align-center py-1 border-b" style="border-color: rgba(255, 255, 255, 0.08) !important; font-size: 0.75rem;">
+                      <span class="text-grey-lighten-2 text-truncate mr-1">{{ eventName }}</span>
+                      <span class="font-weight-bold text-white">{{ formatNumber(packetStatus.eventBreakdown?.[eventName] || 0) }}</span>
+                    </div>
+                  </v-col>
+                </v-row>
+              </v-card-text>
+            </v-card>
           </v-window-item>
 
           <!-- APPEARANCE TAB -->
@@ -225,7 +307,41 @@ export default defineComponent({
     // --- CAPTURE SETTINGS ---
     const nics = ref<any[]>([]);
     const captureStatus = ref({ is_running: false, nic: '', exitlag: false, promiscuous: false });
-    const packetStatus = ref<{ total: number; perSecond: number; lastPacketAt: string; lastOp: number; topOps: {op: number; count: number; total: number}[] }>({ total: 0, perSecond: 0, lastPacketAt: '', lastOp: 0, topOps: [] });
+    const packetStatus = ref<{
+      total: number;
+      perSecond: number;
+      lastPacketAt: string;
+      lastOp: number;
+      topOps: { op: number; count: number; total: number }[];
+      activeConditions?: number;
+      trackedEntities?: number;
+      bufferEvents?: number;
+      bufferBytes?: number;
+      goroutines?: number;
+      heapAlloc?: number;
+      eventBreakdown?: Record<string, number>;
+      pcapDrops?: number;
+      parserErrors?: number;
+      networkLoss?: number;
+      queueDrops?: number;
+    }>({
+      total: 0,
+      perSecond: 0,
+      lastPacketAt: '',
+      lastOp: 0,
+      topOps: [],
+      activeConditions: 0,
+      trackedEntities: 0,
+      bufferEvents: 0,
+      bufferBytes: 0,
+      goroutines: 0,
+      heapAlloc: 0,
+      eventBreakdown: {},
+      pcapDrops: 0,
+      parserErrors: 0,
+      networkLoss: 0,
+      queueDrops: 0,
+    });
     const isApplying = ref(false);
     const isStopping = ref(false);
     const isRestartingKeepSession = ref(false);
@@ -408,6 +524,32 @@ export default defineComponent({
        }
     });
 
+    const formatBytes = (bytes: number) => {
+      if (!bytes) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    };
+
+    const formatNumber = (num: number) => {
+      return num.toLocaleString();
+    };
+
+    const ALL_EVENT_TYPES = [
+      "Damage",
+      "Skill Use",
+      "Skill Start",
+      "HP Update",
+      "Condition Enable",
+      "Condition Disable",
+      "Entity Appear",
+      "Entity Disappear",
+      "Entity Death",
+      "Entity Revive",
+      "Session Summary"
+    ];
+
     return {
       activeTab,
       showClassColorsForVisiblePlayers,
@@ -429,7 +571,12 @@ export default defineComponent({
       isAutodetecting,
       autodetectProgress,
       startAutodetect,
-      stopAutodetect
+      stopAutodetect,
+
+      // Helpers
+      formatBytes,
+      formatNumber,
+      ALL_EVENT_TYPES
     };
   },
 });
