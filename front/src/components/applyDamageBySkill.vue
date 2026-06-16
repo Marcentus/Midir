@@ -73,8 +73,8 @@
 
     <template v-slot:[`item.totalDamage`]="{ item }">
       <div v-if="dpsMeterFillMode === 'column'" class="damage-bar-cell">
-        <span class="damage-bar-pct">
-          {{ totalDamageForView > 0 ? ((item.totalDamage / totalDamageForView) * 100).toFixed(1) : '0.0' }}%
+        <span class="damage-bar-val">
+          {{ formatAbbreviated(item.totalDamage) }}
         </span>
         <div class="damage-bar-wrapper">
           <div
@@ -85,8 +85,8 @@
             }"
           ></div>
         </div>
-        <span class="damage-bar-val">
-          {{ formatAbbreviated(item.totalDamage) }}
+        <span class="damage-bar-pct">
+          {{ totalDamageForView > 0 ? ((item.totalDamage / totalDamageForView) * 100).toFixed(1) : '0.0' }}%
         </span>
       </div>
       <div v-else class="text-no-wrap">
@@ -158,8 +158,8 @@
 
             <template v-slot:[`item.totalDamage`]="{ item: skillItem }">
               <div v-if="dpsMeterFillMode === 'column'" class="damage-bar-cell skill-bar-cell">
-                <span class="damage-bar-pct">
-                  {{ item.totalDamage > 0 ? ((skillItem.totalDamage / item.totalDamage) * 100).toFixed(1) : '0.0' }}%
+                <span class="damage-bar-val">
+                  {{ formatNumber(skillItem.totalDamage) }}
                 </span>
                 <div class="damage-bar-wrapper">
                   <div
@@ -170,8 +170,8 @@
                     }"
                   ></div>
                 </div>
-                <span class="damage-bar-val">
-                  {{ formatNumber(skillItem.totalDamage) }}
+                <span class="damage-bar-pct">
+                  {{ item.totalDamage > 0 ? ((skillItem.totalDamage / item.totalDamage) * 100).toFixed(1) : '0.0' }}%
                 </span>
               </div>
               <div v-else class="text-no-wrap">
@@ -672,7 +672,7 @@
 }
 .damage-bar-pct {
   width: 50px;
-  text-align: right;
+  text-align: left;
   font-weight: 600;
   font-size: 0.9rem;
   color: rgba(255, 255, 255, 0.9);
@@ -697,7 +697,7 @@
 
 .damage-bar-val {
   width: 80px;
-  text-align: left;
+  text-align: right;
   font-weight: 600;
   font-size: 0.9rem;
   color: rgba(255, 255, 255, 0.9);
