@@ -918,10 +918,6 @@ func (t *eventPublisher) cleanupEntityState(entityID uint64) {
 
 func getEventName(id eventId) string {
 	switch id {
-	case eventIdSkillUse:
-		return "Skill Use"
-	case eventIdSkillStart:
-		return "Skill Start"
 	case eventIdEntityHPUpdate:
 		return "HP Update"
 	case eventIdEntityAppear:

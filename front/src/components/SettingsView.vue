@@ -219,14 +219,40 @@
                 </div>
 
                 <v-row dense class="mt-1">
-                  <v-col 
-                    v-for="eventName in ALL_EVENT_TYPES" 
-                    :key="eventName" 
-                    cols="12" 
-                    sm="4"
-                    class="py-1 px-2"
-                  >
-                    <div class="d-flex justify-space-between align-center py-1 border-b" style="border-color: rgba(255, 255, 255, 0.08) !important; font-size: 0.75rem;">
+                  <!-- Col 1: Core Combat & Entity Presence -->
+                  <v-col cols="12" sm="4" class="py-1 px-2">
+                    <div 
+                      v-for="eventName in ['Damage', 'Entity Appear', 'Entity Disappear']"
+                      :key="eventName"
+                      class="d-flex justify-space-between align-center py-1 border-b" 
+                      style="border-color: rgba(255, 255, 255, 0.08) !important; font-size: 0.75rem;"
+                    >
+                      <span class="text-grey-lighten-2 text-truncate mr-1">{{ eventName }}</span>
+                      <span class="font-weight-bold text-white">{{ formatNumber(packetStatus.eventBreakdown?.[eventName] || 0) }}</span>
+                    </div>
+                  </v-col>
+
+                  <!-- Col 2: Vitality & Status States -->
+                  <v-col cols="12" sm="4" class="py-1 px-2">
+                    <div 
+                      v-for="eventName in ['HP Update', 'Entity Death', 'Entity Revive']"
+                      :key="eventName"
+                      class="d-flex justify-space-between align-center py-1 border-b" 
+                      style="border-color: rgba(255, 255, 255, 0.08) !important; font-size: 0.75rem;"
+                    >
+                      <span class="text-grey-lighten-2 text-truncate mr-1">{{ eventName }}</span>
+                      <span class="font-weight-bold text-white">{{ formatNumber(packetStatus.eventBreakdown?.[eventName] || 0) }}</span>
+                    </div>
+                  </v-col>
+
+                  <!-- Col 3: Buffs & Session Metadata -->
+                  <v-col cols="12" sm="4" class="py-1 px-2">
+                    <div 
+                      v-for="eventName in ['Condition Enable', 'Condition Disable', 'Session Summary']"
+                      :key="eventName"
+                      class="d-flex justify-space-between align-center py-1 border-b" 
+                      style="border-color: rgba(255, 255, 255, 0.08) !important; font-size: 0.75rem;"
+                    >
                       <span class="text-grey-lighten-2 text-truncate mr-1">{{ eventName }}</span>
                       <span class="font-weight-bold text-white">{{ formatNumber(packetStatus.eventBreakdown?.[eventName] || 0) }}</span>
                     </div>
@@ -536,20 +562,6 @@ export default defineComponent({
       return num.toLocaleString();
     };
 
-    const ALL_EVENT_TYPES = [
-      "Damage",
-      "Skill Use",
-      "Skill Start",
-      "HP Update",
-      "Condition Enable",
-      "Condition Disable",
-      "Entity Appear",
-      "Entity Disappear",
-      "Entity Death",
-      "Entity Revive",
-      "Session Summary"
-    ];
-
     return {
       activeTab,
       showClassColorsForVisiblePlayers,
@@ -575,8 +587,7 @@ export default defineComponent({
 
       // Helpers
       formatBytes,
-      formatNumber,
-      ALL_EVENT_TYPES
+      formatNumber
     };
   },
 });
