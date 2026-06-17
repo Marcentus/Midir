@@ -190,14 +190,26 @@
 
                   <!-- Col 4: Active Tracked Entities -->
                   <v-col cols="12" sm="4" class="py-1">
-                    <div class="d-flex align-center">
-                      <v-icon color="blue-lighten-2" size="small" class="mr-2">mdi-account-group</v-icon>
-                      <div>
-                        <div class="text-caption font-weight-bold text-white">Active Tracked Entities</div>
-                        <div class="text-caption text-grey-lighten-3">
-                          {{ packetStatus.trackedEntities || 0 }} cached players & monsters
+                    <div class="d-flex align-center justify-space-between">
+                      <div class="d-flex align-center">
+                        <v-icon color="blue-lighten-2" size="small" class="mr-2">mdi-account-group</v-icon>
+                        <div>
+                          <div class="text-caption font-weight-bold text-white">Active Tracked Entities</div>
+                          <div class="text-caption text-grey-lighten-3">
+                            {{ packetStatus.trackedEntities || 0 }} cached players & monsters
+                          </div>
                         </div>
                       </div>
+                      <v-btn
+                        variant="tonal"
+                        size="x-small"
+                        color="blue-lighten-2"
+                        class="ml-2 font-weight-bold"
+                        style="font-size: 0.65rem !important;"
+                        @click="showEntitiesDialog = true"
+                      >
+                        View List
+                      </v-btn>
                     </div>
                   </v-col>
                 </v-row>
@@ -314,11 +326,103 @@
       </v-card-text>
     </v-card>
   </v-container>
+
+  <!-- Dialog for Categorized Active Tracked Entities -->
+  <v-dialog v-model="showEntitiesDialog" max-width="1600" width="95%">
+    <v-card class="modern-card border border-opacity-10" style="background: linear-gradient(145deg, #181d28 0%, #10121a 100%) !important; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+      <v-card-title class="text-h6 font-weight-bold text-white d-flex align-center justify-space-between py-3 px-4" style="border-bottom: 1px solid rgba(255,255,255,0.08) !important;">
+        <div class="d-flex align-center">
+          <v-icon color="blue-lighten-2" class="mr-2">mdi-account-group</v-icon>
+          <span>Active Tracked Entities</span>
+        </div>
+        <v-btn icon="mdi-close" variant="text" size="small" color="grey" @click="showEntitiesDialog = false"></v-btn>
+      </v-card-title>
+      
+      <v-card-text class="pa-4" style="max-height: 800px; overflow-y: auto;">
+        <div v-if="!fightSummary.currentEntities || fightSummary.currentEntities.length === 0" class="text-center text-grey py-8">
+          <v-icon size="large" class="mb-2">mdi-alert-circle-outline</v-icon>
+          <div>No active entities tracked in the current area.</div>
+        </div>
+        
+        <div v-else>
+          <v-row dense class="align-stretch">
+            <v-col 
+              v-for="(entities, category) in categorizedEntities" 
+              :key="category"
+              v-show="entities.length > 0"
+              class="py-2 px-2 d-flex flex-column"
+              style="min-width: 300px; flex: 1 1 300px; max-width: 100%;"
+            >
+              <div class="text-caption font-weight-bold text-blue-lighten-2 pb-1 mb-2 d-flex justify-space-between" style="border-bottom: 1px solid rgba(255,255,255,0.08) !important;">
+                <span>{{ category }}</span>
+                <span class="text-grey">({{ entities.length }})</span>
+              </div>
+              
+              <div class="flex-grow-1" style="max-height: 650px; overflow-y: auto;">
+                <div 
+                  v-for="entity in entities" 
+                  :key="entity.id"
+                  class="px-3 py-2 rounded mb-2"
+                  style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.05); min-height: 52px;"
+                >
+                  <!-- Header: Name & HP -->
+                  <div class="d-flex justify-space-between align-center">
+                    <div class="text-subtitle-2 text-white font-weight-bold" style="word-break: break-word; overflow-wrap: anywhere; line-height: 1.2;">
+                      {{ entity.name }}
+                    </div>
+                    <div v-if="entity.maxHp > 0" class="text-caption font-weight-bold text-green-lighten-2 flex-shrink-0 ml-2" style="font-size: 0.7rem;">
+                      {{ formatNumber(Math.round(entity.currentHp)) }} / {{ formatNumber(Math.round(entity.maxHp)) }}
+                    </div>
+                  </div>
+
+                  <!-- Thin HP Bar (spanning all the way across, below the name) -->
+                  <div v-if="entity.maxHp > 0" class="mt-1.5 mb-2 w-100" style="height: 3px; background: rgba(255, 255, 255, 0.05); border-radius: 1.5px; overflow: hidden;">
+                    <div 
+                      :style="{ width: (entity.currentHp / entity.maxHp) * 100 + '%' }" 
+                      style="height: 100%; background: #4caf50; transition: width 0.3s ease;"
+                    ></div>
+                  </div>
+                  <div v-else class="mb-2"></div>
+
+                  <!-- Structured Key-Value Fields -->
+                  <div class="d-flex flex-column" style="gap: 3px;">
+                    <!-- Row: Entity ID -->
+                    <div class="d-flex justify-space-between text-caption text-grey" style="font-size: 0.68rem; line-height: 1.2;">
+                      <span class="font-weight-medium">Entity ID</span>
+                      <span style="font-family: monospace;" class="text-white">{{ entity.id }}</span>
+                    </div>
+
+                    <!-- Row: Owner ID (Only shown if available) -->
+                    <div v-if="entity.ownerId" class="d-flex justify-space-between text-caption text-grey" style="font-size: 0.68rem; line-height: 1.2;">
+                      <span class="font-weight-medium">Owner ID</span>
+                      <span style="font-family: monospace;" class="text-white">{{ entity.ownerId }}</span>
+                    </div>
+
+                    <!-- Row: Race (Translated + RaceID in parentheses) -->
+                    <div class="d-flex justify-space-between text-caption text-grey" style="font-size: 0.68rem; line-height: 1.2;">
+                      <span class="font-weight-medium">Race</span>
+                      <span class="text-white text-right font-weight-bold" style="word-break: break-word; overflow-wrap: anywhere; max-width: 70%;">
+                        {{ entity.raceName }} <span class="text-grey ml-1 font-weight-normal">({{ entity.raceId }})</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </v-col>
+          </v-row>
+        </div>
+      </v-card-text>
+      
+      <v-card-actions class="justify-end py-2 px-4" style="border-top: 1px solid rgba(255,255,255,0.08) !important;">
+        <v-btn color="primary" variant="text" @click="showEntitiesDialog = false">Close</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script lang="ts">
 import { defineComponent, computed, ref, onMounted, onUnmounted } from "vue";
-import { showClassColorsForVisiblePlayers, dpsMeterFillMode, socket } from "@/store";
+import { showClassColorsForVisiblePlayers, dpsMeterFillMode, socket, fightSummary } from "@/store";
 import ColorSettings from "./ColorSettings.vue";
 
 export default defineComponent({
@@ -328,6 +432,30 @@ export default defineComponent({
   },
   setup() {
     const activeTab = ref("capture");
+    const showEntitiesDialog = ref(false);
+
+    const categorizedEntities = computed(() => {
+      const groups: Record<string, any[]> = {
+        Players: [],
+        Pets: [],
+        Enemies: [],
+        NPCs: [],
+        Other: [],
+      };
+      
+      if (fightSummary && fightSummary.currentEntities) {
+        fightSummary.currentEntities.forEach((entity: any) => {
+          const cat = entity.category || "Other";
+          if (groups[cat]) {
+            groups[cat].push(entity);
+          } else {
+            groups["Other"].push(entity);
+          }
+        });
+      }
+      
+      return groups;
+    });
     
     // --- CAPTURE SETTINGS ---
     const nics = ref<any[]>([]);
@@ -586,7 +714,12 @@ export default defineComponent({
 
       // Helpers
       formatBytes,
-      formatNumber
+      formatNumber,
+
+      // Entities Dialog
+      fightSummary,
+      showEntitiesDialog,
+      categorizedEntities
     };
   },
 });

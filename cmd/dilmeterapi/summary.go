@@ -154,10 +154,12 @@ type EntityState struct {
 	ID         string                     `json:"id"`
 	Name       string                     `json:"name"`
 	RaceID     uint32                     `json:"raceId"`
+	RaceName   string                     `json:"raceName"`
 	Conditions map[uint32]ActiveCondition `json:"conditions,omitempty"`
 	CurrentHP  float32                    `json:"currentHp"`
 	MaxHP      float32                    `json:"maxHp"`
 	Category   string                     `json:"category"`
+	OwnerID    string                     `json:"ownerId,omitempty"`
 }
 
 // FightSummary's EncounterDuration now represents the time from the first to last damage event.

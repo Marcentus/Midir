@@ -217,12 +217,20 @@ func (a *Aggregator) resolveAndCacheName(entityID uint64) {
 }
 
 // resolveAttacker looks up the attacker ID in the entity cache and, if it is a
-// marionette with a valid owner, returns the owner's ID. Otherwise, it returns
-// the original attacker ID.
+// marionette (either by known RaceId range or by having an OwnerId and a numerical
+// name template), returns the owner's ID. Otherwise, it returns the original attacker ID.
 func (a *Aggregator) resolveAttacker(attackerId uint64) uint64 {
 	if entity, ok := a.entityCache[attackerId]; ok {
-		if packet.IsMarionetteRace(entity.RaceId) && entity.OwnerId != 0 {
-			return entity.OwnerId
+		if entity.OwnerId != 0 {
+			isMarionette := packet.IsMarionetteRace(entity.RaceId)
+			if !isMarionette {
+				if _, err := strconv.Atoi(entity.Name); err == nil {
+					isMarionette = true
+				}
+			}
+			if isMarionette {
+				return entity.OwnerId
+			}
 		}
 	}
 	return attackerId
@@ -869,12 +877,6 @@ func (a *Aggregator) GetSummary() FightSummary {
 
 	// NEW: Populate Current Entities
 	for entityID, entity := range a.entityCache {
-		// Resolve name if numeric
-		name := entity.Name
-		if _, err := strconv.Atoi(entity.Name); err == nil {
-			name = getRaceName(entity.RaceId)
-		}
-
 		// Calculate conditions for current entity
 		// We use the direct active map for "Current Entities" snapshots
 		var conditions map[uint32]ActiveCondition
@@ -887,19 +889,29 @@ func (a *Aggregator) GetSummary() FightSummary {
 
 		category := getEntityCategory(entity)
 
+		ownerIDStr := ""
+		if entity.OwnerId != 0 {
+			ownerIDStr = strconv.FormatUint(entity.OwnerId, 10)
+		}
+
 		summary.CurrentEntities = append(summary.CurrentEntities, EntityState{
 			ID:         strconv.FormatUint(entityID, 10),
-			Name:       name,
+			Name:       entity.Name,
 			RaceID:     entity.RaceId,
+			RaceName:   getRaceName(entity.RaceId),
 			Conditions: conditions,
 			CurrentHP:  entity.CurrentHP,
 			MaxHP:      entity.MaxHP,
 			Category:   category,
+			OwnerID:    ownerIDStr,
 		})
 	}
 
-	// Sort entities by name to prevent list jitter
+	// Sort entities by name, using ID as a tie-breaker to prevent list jitter (since identical names are common and Go map iteration is random)
 	sort.Slice(summary.CurrentEntities, func(i, j int) bool {
+		if summary.CurrentEntities[i].Name == summary.CurrentEntities[j].Name {
+			return summary.CurrentEntities[i].ID < summary.CurrentEntities[j].ID
+		}
 		return summary.CurrentEntities[i].Name < summary.CurrentEntities[j].Name
 	})
 
@@ -910,25 +922,25 @@ func (a *Aggregator) GetSummary() FightSummary {
 
 // getEntityCategory classifies an entity into categorized groups: Players, Enemies, Pets, NPCs, or Other.
 func getEntityCategory(entity *packet.EntityInfo) string {
-	// 1. Players: Human, Elf, Giant
-	switch entity.RaceId {
-	case 8001, 8002, 9001, 9002, 10001, 10002:
-		return "Players"
-	}
-
-	// 2. Pets / Summons: OwnerId != 0
+	// 1. Pets / Summons: OwnerId != 0
 	if entity.OwnerId != 0 {
 		return "Pets"
 	}
 
-	// 3. NPCs: Name starts with "_"
+	// 2. NPCs: Name starts with "_"
 	if strings.HasPrefix(entity.Name, "_") {
 		return "NPCs"
 	}
 
-	// 4. Enemies: Name is numeric
+	// 3. Enemies: Name is numeric
 	if _, err := strconv.Atoi(entity.Name); err == nil {
 		return "Enemies"
+	}
+
+	// 4. Players: Human, Elf, Giant
+	switch entity.RaceId {
+	case 8001, 8002, 9001, 9002, 10001, 10002:
+		return "Players"
 	}
 
 	// Fallback check using player criteria

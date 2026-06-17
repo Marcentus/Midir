@@ -116,10 +116,12 @@ export interface EntityState {
   id: string;
   name: string;
   raceId: number;
+  raceName: string;
   conditions?: { [id: number]: ActiveCondition };
   currentHp: number;
   maxHp: number;
   category: string;
+  ownerId?: string;
 }
 
 export interface FightSummary {
