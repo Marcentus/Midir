@@ -247,8 +247,10 @@
 
                   <!-- Col 3: Buffs & Session Metadata -->
                   <v-col cols="12" sm="4" class="py-1 px-2">
+                    <!-- Blank first row for vertical alignment -->
+                    <div class="py-1" style="font-size: 0.75rem; border-bottom: 1px solid transparent;">&nbsp;</div>
                     <div 
-                      v-for="eventName in ['Condition Enable', 'Condition Disable', 'Session Summary']"
+                      v-for="eventName in ['Condition Enable', 'Condition Disable']"
                       :key="eventName"
                       class="d-flex justify-space-between align-center py-1 border-b" 
                       style="border-color: rgba(255, 255, 255, 0.08) !important; font-size: 0.75rem;"
