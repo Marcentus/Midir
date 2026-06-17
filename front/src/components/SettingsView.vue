@@ -126,9 +126,6 @@
                       Stop Capture
                     </v-btn>
                   </div>
-                  <div class="text-caption text-grey-lighten-2 mt-2">
-                    Reconnect Capture reopens packet capture and keeps the current session data.
-                  </div>
                 </v-form>
               </v-card-text>
             </v-card>
