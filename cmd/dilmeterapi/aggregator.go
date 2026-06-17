@@ -236,6 +236,30 @@ func (a *Aggregator) resolveAttacker(attackerId uint64) uint64 {
 	return attackerId
 }
 
+// resolveAttackerAndSkill resolves the attacker ID (mapping puppets and pets back to their player owners).
+// If the attacker is a pet (and not a puppet), it returns the owner's ID and overrides the skill ID to 9999.
+// Otherwise, it attributes puppets to their owners while keeping their original skill IDs.
+func (a *Aggregator) resolveAttackerAndSkill(attackerId uint64, skillId uint16) (uint64, uint16) {
+	if entity, ok := a.entityCache[attackerId]; ok {
+		if entity.OwnerId != 0 {
+			isMarionette := packet.IsMarionetteRace(entity.RaceId)
+			if !isMarionette {
+				if _, err := strconv.Atoi(entity.Name); err == nil {
+					isMarionette = true
+				}
+			}
+			if isMarionette {
+				// Marionettes attribute damage to owner, but keep their original skillId
+				return entity.OwnerId, skillId
+			} else {
+				// Pets attribute damage to owner, but group all their damage under a special custom "Pets" skillId (9999)
+				return entity.OwnerId, 9999
+			}
+		}
+	}
+	return attackerId, skillId
+}
+
 // ProcessPacket is the entry point for new game data.
 func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 	// If we are in a live session, we want to ignore packets that are "too old" relative to the last Clear() time.
@@ -393,7 +417,7 @@ func (a *Aggregator) processEffect(p *packet.GamePacket) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
-	attackerId = a.resolveAttacker(attackerId)
+	attackerId, skillId = a.resolveAttackerAndSkill(attackerId, skillId)
 
 	if a.isInvincible(targetId) {
 		damage = 0
@@ -450,7 +474,7 @@ func (a *Aggregator) processEffectDelayed(p *packet.GamePacket) {
 		// logger.Println("...[Unlocked] Aggregator.EffectDelayed released lock.")
 	}()
 
-	attackerId = a.resolveAttacker(attackerId)
+	attackerId, skillId = a.resolveAttackerAndSkill(attackerId, skillId)
 
 	if a.isInvincible(targetId) {
 		damage = 0
@@ -627,7 +651,7 @@ func (a *Aggregator) processCombatAction(p *packet.GamePacket) {
 		return
 	}
 
-	attackerId = a.resolveAttacker(attackerId)
+	attackerId, attackSkillId = a.resolveAttackerAndSkill(attackerId, attackSkillId)
 
 	// Check if we have identified the talent color yet. If not, try to identify it.
 	if _, known := a.playerTalentColors[attackerId]; !known {

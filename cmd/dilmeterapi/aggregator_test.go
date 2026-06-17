@@ -711,3 +711,82 @@ func TestAggregator_MarionetteDamageAttribution(t *testing.T) {
 	}
 }
 
+func TestAggregator_PetDamageAttribution(t *testing.T) {
+	var err error
+	db, err = sql.Open("sqlite", ":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		db.Close()
+		db = nil
+	}()
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS players (
+		id INTEGER PRIMARY KEY,
+		name TEXT,
+		race_id INTEGER
+	);`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	playerID := uint64(123456)
+	petID := uint64(111111)
+	enemyID := uint64(99999)
+
+	// Insert player to DB
+	_, err = db.Exec("INSERT INTO players (id, name, race_id) VALUES (?, ?, ?)", playerID, "Bob", 8001)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	agg := NewAggregator()
+	agg.SetLive(true)
+
+	// Add player and pet to entityCache
+	agg.entityCache[playerID] = &packet.EntityInfo{Id: playerID, Name: "Bob", RaceId: 8001}
+	agg.entityCache[petID] = &packet.EntityInfo{Id: petID, Name: "Annwnaa", RaceId: 491006, OwnerId: playerID}
+	agg.entityCache[enemyID] = &packet.EntityInfo{Id: enemyID, Name: "99999", RaceId: 2000}
+
+	// Process Effect packet from pet (e.g. Smash, skill ID 100)
+	pEffect := &packet.GamePacket{
+		Op: opcodeEffect,
+		Id: enemyID, // target ID
+		At: time.Now(),
+		Msg: []packet.IMessageElem{
+			packet.NewMessageElemInt(352),     // type = 352
+			packet.NewMessageElemByte(0),      // skip byte
+			packet.NewMessageElemInt(5000),    // damage = 5000
+			packet.NewMessageElemInt(0),       // skip int
+			packet.NewMessageElemLong(petID),  // attacker ID (pet)
+			packet.NewMessageElemShort(100),   // skill ID (original)
+			packet.NewMessageElemByte(0),      // skip byte
+		},
+	}
+	agg.ProcessPacket(pEffect)
+
+	// Verify Bob's damage stats recorded the 5000 damage
+	stats := agg.playerStats[playerID]
+	if stats == nil {
+		t.Fatalf("Expected stats for player Bob, got nil")
+	}
+	if stats.OverallStats.TotalDamage != 5000 {
+		t.Errorf("Expected 5000 damage, got %f", stats.OverallStats.TotalDamage)
+	}
+
+	// Verify skill is in Bob's breakdown under skill 9999 (Pets)
+	skillStats, ok := stats.OverallStats.Skills[9999]
+	if !ok {
+		t.Errorf("Expected skill 9999 (Pets) in Bob's skills, but not found")
+	}
+	if skillStats.TotalDamage != 5000 {
+		t.Errorf("Expected 5000 skill damage under 9999, got %f", skillStats.TotalDamage)
+	}
+
+	// Verify original skill 100 is NOT in Bob's skills
+	if _, foundOriginal := stats.OverallStats.Skills[100]; foundOriginal {
+		t.Errorf("Expected original pet skill 100 to NOT be in Bob's skills, but it was found")
+	}
+}
+
