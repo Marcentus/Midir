@@ -276,7 +276,6 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 	if p.Op == opcodeEntityAppear {
 		entity, err := packet.ParseEntityAppearPacket(p.Msg)
 		if err == nil && entity != nil {
-			fmt.Printf("[DEBUG] EntityAppear - ID: %d, Name: %q, RaceId: %d, OwnerId: %d\n", entity.Id, entity.Name, entity.RaceId, entity.OwnerId)
 			a.mu.Lock()
 			a.entityCache[entity.Id] = entity
 			// Record initial HP to lastKnownHP
@@ -318,7 +317,6 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 		if err == nil {
 			a.mu.Lock()
 			for _, entity := range entities {
-				fmt.Printf("[DEBUG] EntitiesAppear (Bulk) - ID: %d, Name: %q, RaceId: %d, OwnerId: %d\n", entity.Id, entity.Name, entity.RaceId, entity.OwnerId)
 				a.entityCache[entity.Id] = entity
 				// Record initial HP to lastKnownHP
 				if entity.MaxHP > 0 {
