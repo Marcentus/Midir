@@ -10,26 +10,14 @@ const (
 	eventIdCharacterConditionDisable
 	eventIdEntityDeath
 	eventIdEntityRevive
-	eventIdSkillUse
-	eventIdSkillStart
+	_ // formerly eventIdSkillUse (8)
+	_ // formerly eventIdSkillStart (9)
 	eventIdEntityHPUpdate
 	eventIdSessionSummary eventId = 9999
 )
 
 type iEvent interface {
 	GetEventId() eventId
-}
-
-type eventSkillUse struct {
-	eventBase
-	SkillId  uint16 `json:"skillId"`
-	TargetId string `json:"targetId"`
-}
-
-type eventSkillStart struct {
-	eventBase
-	SkillId  uint16 `json:"skillId"`
-	TargetId string `json:"targetId"`
 }
 
 type eventEntityDeath struct {

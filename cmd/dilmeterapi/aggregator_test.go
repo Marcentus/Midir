@@ -515,3 +515,124 @@ func TestAggregator_EffectPacket(t *testing.T) {
 		t.Errorf("Expected damage to remain 2500 under invincibility, got %f", stats.OverallStats.TotalDamage)
 	}
 }
+
+func TestAggregator_LiveTargetLastKnownHP(t *testing.T) {
+	var err error
+	db, err = sql.Open("sqlite", ":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		db.Close()
+		db = nil
+	}()
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS players (
+		id INTEGER PRIMARY KEY,
+		name TEXT,
+		race_id INTEGER
+	);`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	playerID := uint64(9999)
+	enemyID := uint64(8888)
+
+	// Insert mock player into DB
+	_, err = db.Exec("INSERT INTO players (id, name, race_id) VALUES (?, ?, ?)", playerID, "Alice", 8001)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	agg := NewAggregator()
+	agg.SetLive(true)
+
+	// Mock player and enemy in cache
+	agg.entityCache[playerID] = &packet.EntityInfo{Id: playerID, Name: "Alice", RaceId: 8001}
+
+	// 1. Manually insert enemy entity into entityCache with initial HP
+	agg.mu.Lock()
+	agg.entityCache[enemyID] = &packet.EntityInfo{
+		Id:        enemyID,
+		Name:      "Boss",
+		RaceId:    7600,
+		CurrentHP: 1000,
+		BaseHP:    1000,
+		MaxHP:     1000,
+	}
+	agg.lastKnownHP[enemyID] = TargetHPPoint{
+		Time:      time.Now().Unix(),
+		CurrentHP: 1000,
+		MaxHP:     1000,
+	}
+	agg.mu.Unlock()
+
+	// 2. Simulate player dealing damage so enemy is recorded as a target
+	pEffect := &packet.GamePacket{
+		Op: opcodeEffect,
+		Id: enemyID,
+		At: time.Now(),
+		Msg: []packet.IMessageElem{
+			packet.NewMessageElemInt(352),
+			packet.NewMessageElemByte(0),
+			packet.NewMessageElemInt(500), // damage = 500
+			packet.NewMessageElemInt(0),
+			packet.NewMessageElemLong(playerID),
+			packet.NewMessageElemShort(888),
+			packet.NewMessageElemByte(0),
+		},
+	}
+	agg.ProcessPacket(pEffect)
+
+	// Verify we got the initial HP in lastKnownHP
+	hp, ok := agg.lastKnownHP[enemyID]
+	if !ok {
+		t.Fatalf("Expected lastKnownHP to be recorded on entity appear")
+	}
+	if hp.CurrentHP != 1000 || hp.MaxHP != 1000 {
+		t.Errorf("Expected lastKnownHP to be 1000/1000, got %f/%f", hp.CurrentHP, hp.MaxHP)
+	}
+
+	// 3. Simulate HP Update via PublicStatUpdate
+	pStatUpdate := &packet.GamePacket{
+		Op: opcodePublicStatUpdate,
+		Id: enemyID,
+		At: time.Now(),
+		Msg: []packet.IMessageElem{
+			packet.NewMessageElemByte(4), // subType
+			packet.NewMessageElemInt(1),  // count = 1
+			packet.NewMessageElemInt(28), // stat ID = 28 (CurrentHP)
+			packet.NewMessageElemFloat(500.0), // value = 500.0
+		},
+	}
+	agg.ProcessPacket(pStatUpdate)
+
+	// Verify updated HP
+	hp, ok = agg.lastKnownHP[enemyID]
+	if !ok {
+		t.Fatalf("Expected lastKnownHP to exist")
+	}
+	if hp.CurrentHP != 500 {
+		t.Errorf("Expected lastKnownHP CurrentHP to be 500, got %f", hp.CurrentHP)
+	}
+
+	// 4. Verify GetSummary populates HPHistory with a single point
+	summary := agg.GetSummary()
+	targetStats, found := summary.Targets["8888"]
+	if !found {
+		t.Fatalf("Expected target 8888 in summary")
+	}
+	if len(targetStats.HPHistory) != 1 {
+		t.Fatalf("Expected HPHistory to have exactly 1 entry, got %d", len(targetStats.HPHistory))
+	}
+	if targetStats.HPHistory[0].CurrentHP != 500 || targetStats.HPHistory[0].MaxHP != 1000 {
+		t.Errorf("Expected HPHistory entry to be 500/1000, got %f/%f", targetStats.HPHistory[0].CurrentHP, targetStats.HPHistory[0].MaxHP)
+	}
+
+	// 5. Verify Clear removes lastKnownHP
+	agg.Clear()
+	if len(agg.lastKnownHP) != 0 {
+		t.Errorf("Expected lastKnownHP to be cleared, got %d entries", len(agg.lastKnownHP))
+	}
+}

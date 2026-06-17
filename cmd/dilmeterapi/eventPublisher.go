@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -287,14 +288,63 @@ func (t *eventPublisher) loop() {
 				})
 			}
 
+			// Calculate diagnostic statistics
+			activeCondsCount := 0
+			for _, conds := range t.activeConditions {
+				activeCondsCount += len(conds)
+			}
+
+			t.aggregator.mu.RLock()
+			trackedEntitiesCount := len(t.aggregator.entityCache)
+			t.aggregator.mu.RUnlock()
+
+			eventsCount := 0
+			eventsBytes := 0
+			eventBreakdown := make(map[string]int)
+			t.sm.mu.RLock()
+			if t.sm.currentSession != nil {
+				eventsCount = len(t.sm.currentSession.events)
+				for _, e := range t.sm.currentSession.events {
+					id := e.GetEventId()
+					name := getEventName(id)
+					eventBreakdown[name]++
+
+					if bytes, err := json.Marshal(e); err == nil {
+						eventsBytes += len(bytes)
+					}
+				}
+			}
+			t.sm.mu.RUnlock()
+
+			var pcapDrops, parserErrors, networkLoss, queueDrops uint32
+			if globalReader != nil {
+				pcapDrops, parserErrors, networkLoss, queueDrops = globalReader.GetStats()
+			}
+
+			goroutinesCount := runtime.NumGoroutine()
+			var m runtime.MemStats
+			runtime.ReadMemStats(&m)
+			heapAllocBytes := m.Alloc
+
 			packetStatus := WebSocketMessage{
 				Type: "packet_status",
 				Data: map[string]interface{}{
-					"total":        totalPackets,
-					"perSecond":    packetsThisSecond,
-					"lastPacketAt": lastPacketAt,
-					"lastOp":       lastOp,
-					"topOps":       topOps,
+					"total":            totalPackets,
+					"perSecond":        packetsThisSecond,
+					"lastPacketAt":     lastPacketAt,
+					"lastOp":           lastOp,
+					"topOps":           topOps,
+					"activeConditions": activeCondsCount,
+					"trackedEntities":  trackedEntitiesCount,
+					"bufferEvents":     eventsCount,
+					"bufferBytes":      eventsBytes,
+					"goroutines":       goroutinesCount,
+					"heapAlloc":        heapAllocBytes,
+					"eventBreakdown":   eventBreakdown,
+					"pcapDrops":        pcapDrops,
+					"parserErrors":     parserErrors,
+					"networkLoss":      networkLoss,
+					"queueDrops":       queueDrops,
 				},
 			}
 			packetStatusBytes, err := json.Marshal(packetStatus)
@@ -864,4 +914,29 @@ func (t *eventPublisher) cleanupEntityState(entityID uint64) {
 	delete(t.activeConditions, entityID)
 	delete(t.hpLogStates, entityID)
 	delete(t.lastCombatAt, entityID)
+}
+
+func getEventName(id eventId) string {
+	switch id {
+	case eventIdEntityHPUpdate:
+		return "HP Update"
+	case eventIdEntityAppear:
+		return "Entity Appear"
+	case eventIdEntityDisappear:
+		return "Entity Disappear"
+	case eventIdDamage:
+		return "Damage"
+	case eventIdCharacterConditionEnable:
+		return "Condition Enable"
+	case eventIdCharacterConditionDisable:
+		return "Condition Disable"
+	case eventIdEntityDeath:
+		return "Entity Death"
+	case eventIdEntityRevive:
+		return "Entity Revive"
+	case eventIdSessionSummary:
+		return "Session Summary"
+	default:
+		return "Unknown Event"
+	}
 }

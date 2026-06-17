@@ -3,6 +3,34 @@
     "323": {
       "name": "Rage Impact",
       "iconUrl": "redirect/RageImpact.png"
+    },
+    "321": {
+      "name": "Bash Combo",
+      "iconUrl": "skills/gui_icon_skill_003_0_8.png"
+    },
+    "322": {
+      "name": "Bash Combo Max",
+      "iconUrl": "redirect/BashComboMax.png"
+    },
+    "839": {
+      "name": "Shattering Windmill Slow Effect",
+      "iconUrl": "skills/gui_icon_skill_005_3_5.png"
+    },
+    "927": {
+      "name": "Polar Vortex Targeting Condition",
+      "iconUrl": "skills/gui_icon_skill_005_3_8.png"
+    },
+    "931": {
+      "name": "Hexshroud Targeting Condition",
+      "iconUrl": "skills/gui_icon_skill_005_6_8.png"
+    },
+    "487": {
+      "name": "Time Shift",
+      "iconUrl": "skills/gui_icon_skill_004_4_4.png"
+    },
+    "521": {
+      "name": "Phantasmal Sight",
+      "iconUrl": "skills/gui_icon_skill_004_6_6.png"
     }
   },
   "skills": {

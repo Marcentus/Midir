@@ -53,6 +53,8 @@ type Aggregator struct {
 	disappeared  map[uint64]bool
 	// Presence Intervals Tracking
 	targetPresenceIntervals map[uint64][]PresenceInterval
+	// Target HP Tracking (Live session cache)
+	lastKnownHP map[uint64]TargetHPPoint
 }
 
 // NewAggregator creates and initializes a new Aggregator.
@@ -79,6 +81,7 @@ func NewAggregator() *Aggregator {
 		seenAppear:              make(map[uint64]bool),
 		disappeared:             make(map[uint64]bool),
 		targetPresenceIntervals: make(map[uint64][]PresenceInterval),
+		lastKnownHP:             make(map[uint64]TargetHPPoint),
 	}
 }
 
@@ -231,6 +234,14 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 		if err == nil && entity != nil {
 			a.mu.Lock()
 			a.entityCache[entity.Id] = entity
+			// Record initial HP to lastKnownHP
+			if entity.MaxHP > 0 {
+				a.lastKnownHP[entity.Id] = TargetHPPoint{
+					Time:      p.At.Unix(),
+					CurrentHP: entity.CurrentHP,
+					MaxHP:     entity.MaxHP,
+				}
+			}
 			// Mark that we have seen this entity appear, so condition tracking is reliable
 			a.playerSeenAppear[entity.Id] = true
 			a.seenAppear[entity.Id] = true
@@ -263,6 +274,14 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 			a.mu.Lock()
 			for _, entity := range entities {
 				a.entityCache[entity.Id] = entity
+				// Record initial HP to lastKnownHP
+				if entity.MaxHP > 0 {
+					a.lastKnownHP[entity.Id] = TargetHPPoint{
+						Time:      p.At.Unix(),
+						CurrentHP: entity.CurrentHP,
+						MaxHP:     entity.MaxHP,
+					}
+				}
 				a.playerSeenAppear[entity.Id] = true
 				a.seenAppear[entity.Id] = true
 				a.disappeared[entity.Id] = false
@@ -474,7 +493,15 @@ func (a *Aggregator) processPublicStatUpdate(p *packet.GamePacket) {
 	if baseChanged || bonusChanged {
 		entity.MaxHP = entity.BaseHP + entity.AdditionalHP
 	}
-	_ = hpChanged // Keep compiler happy if unused locally
+	if hpChanged || baseChanged || bonusChanged {
+		if entity.MaxHP > 0 {
+			a.lastKnownHP[statUpdate.EntityId] = TargetHPPoint{
+				Time:      p.At.Unix(),
+				CurrentHP: entity.CurrentHP,
+				MaxHP:     entity.MaxHP,
+			}
+		}
+	}
 }
 
 // GetEntityHP retrieves the current HP fields for a cached entity in a thread-safe manner.
@@ -801,6 +828,11 @@ func (a *Aggregator) GetSummary() FightSummary {
 		targetDuration := float64(targetTimes.EndTime - targetTimes.StartTime)
 		conditions := a.calculateConditions(targetId, targetDuration, targetTimes.StartTime, targetTimes.EndTime)
 
+		var hpHistory []TargetHPPoint
+		if lastHP, ok := a.lastKnownHP[targetId]; ok {
+			hpHistory = []TargetHPPoint{lastHP}
+		}
+
 		summary.Targets[targetIdStr] = TargetStats{
 			Name:        name,
 			RaceID:      raceId,
@@ -810,6 +842,7 @@ func (a *Aggregator) GetSummary() FightSummary {
 			Disappeared: a.disappeared[targetId],
 			StartTime:   targetTimes.StartTime,
 			EndTime:     targetTimes.EndTime,
+			HPHistory:   hpHistory,
 		}
 	}
 
@@ -825,7 +858,10 @@ func (a *Aggregator) GetSummary() FightSummary {
 		// We use the direct active map for "Current Entities" snapshots
 		var conditions map[uint32]ActiveCondition
 		if active, ok := a.playerConditionActive[entityID]; ok {
-			conditions = active
+			conditions = make(map[uint32]ActiveCondition, len(active))
+			for k, v := range active {
+				conditions[k] = v
+			}
 		}
 
 		category := getEntityCategory(entity)
@@ -1107,6 +1143,7 @@ func (a *Aggregator) Clear() {
 	}
 	a.disappeared = make(map[uint64]bool)
 	a.targetPresenceIntervals = make(map[uint64][]PresenceInterval)
+	a.lastKnownHP = make(map[uint64]TargetHPPoint)
 
 	// Clear condition HISTORY, but keep ACTIVE conditions.
 	// This ensures that when the new session starts, we know they still have the buff,

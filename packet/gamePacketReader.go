@@ -9,6 +9,7 @@ import (
 	"hash/fnv"
 	"io"
 	"os"
+	"sync/atomic"
 	"time"
 
 	"github.com/Marcentus/Midir/util"
@@ -32,6 +33,12 @@ type GameServerPacketReader struct {
 	// mutable
 	handle *pcap.Handle
 	fd     *os.File
+
+	// stats
+	pcapDrops    uint32
+	parserErrors uint32
+	networkLoss  uint32
+	queueDrops   uint32
 }
 
 type GameServerPacketReaderOpt struct {
@@ -452,6 +459,7 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 					select {
 					case t.packetCh <- errorPacket:
 					default:
+						atomic.AddUint32(&t.queueDrops, 1)
 						logger.Println("Packet channel full, dropped error packet.")
 					}
 				}
@@ -544,6 +552,7 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 						if err == io.EOF {
 							break readerLoop
 						}
+						atomic.AddUint32(&t.parserErrors, 1)
 						b := st.buffer.Bytes()
 						note := ""
 						if len(b) >= 5 && b[0] == 0x01 && (b[4] == 0x05 || b[4] == 0x03) {
@@ -815,6 +824,7 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 						targetLayer := st.pending[minIdx]
 						skippedBytes := targetLayer.tcpLayer.Seq - st.nextSeq
 						warningMsg := fmt.Sprintf("Network packet loss detected on %s (Gap: %d bytes). Skipping to resume.", key, skippedBytes)
+						atomic.AddUint32(&t.networkLoss, 1)
 						logger.Printf("[TCP Recovery] %s OldNext: %d, NewNext: %d (Active Streams: %d, Pending Count: %d)", warningMsg, st.nextSeq, targetLayer.tcpLayer.Seq, len(streams), len(st.pending))
 						st.nextSeq = targetLayer.tcpLayer.Seq
 
@@ -825,6 +835,7 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 							RawPacket: []byte(warningMsg),
 						}:
 						default:
+							atomic.AddUint32(&t.queueDrops, 1)
 							logger.Println("Packet channel full, dropped warning packet.")
 						}
 					}
@@ -970,4 +981,16 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func (t *GameServerPacketReader) GetStats() (uint32, uint32, uint32, uint32) {
+	if t.handle != nil {
+		if stats, err := t.handle.Stats(); err == nil {
+			atomic.StoreUint32(&t.pcapDrops, uint32(stats.PacketsDropped))
+		}
+	}
+	return atomic.LoadUint32(&t.pcapDrops),
+		atomic.LoadUint32(&t.parserErrors),
+		atomic.LoadUint32(&t.networkLoss),
+		atomic.LoadUint32(&t.queueDrops)
 }

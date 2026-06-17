@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -56,6 +55,7 @@ type Session struct {
 	ndjsonFile *os.File       `json:"-"`
 	pcapWriter *pcapgo.Writer `json:"-"`
 	pcapFile   *os.File       `json:"-"`
+	events     []iEvent
 }
 
 type SessionManager struct {
@@ -102,27 +102,19 @@ func (sm *SessionManager) StartLiveSession() (*Session, error) {
 		ID:        liveSessionFilename,
 		Name:      "Live Session",
 		StartTime: now.Unix(),
+		events:    make([]iEvent, 0, 1000),
 	}
-
-	ndjsonPath := filepath.Join(sm.logDirectory, liveSessionFilename)
-	ndjsonFile, err := os.OpenFile(ndjsonPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open ndjson log file: %w", err)
-	}
-	s.ndjsonFile = ndjsonFile
 
 	if sm.recordPcap {
 		pcapPath := filepath.Join(sm.logDirectory, livePcapFilename)
 		pcapFile, err := os.OpenFile(pcapPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 		if err != nil {
-			ndjsonFile.Close()
 			return nil, fmt.Errorf("failed to open pcapng log file: %w", err)
 		}
 		s.pcapFile = pcapFile
 		pcapWriter := pcapgo.NewWriter(pcapFile)
 		if err := pcapWriter.WriteFileHeader(65536, layers.LinkTypeEthernet); err != nil {
 			pcapFile.Close()
-			ndjsonFile.Close()
 			return nil, fmt.Errorf("failed to write pcapng header: %w", err)
 		}
 		s.pcapWriter = pcapWriter
@@ -157,43 +149,44 @@ func (sm *SessionManager) StopCurrentSession() {
 	sm.currentSession = nil
 }
 
-// SaveLiveSession renames the live session file to a permanent one.
+// SaveLiveSession renames the live session file to a permanent one, writing cached in-memory events.
 func (sm *SessionManager) SaveLiveSession(name string) error {
-	// logger.Println("[Locking] sessionManager.SaveLiveSession attempting to lock...")
 	sm.mu.Lock()
-	// logger.Println("...[Locked] sessionManager.SaveLiveSession acquired lock.")
 	defer func() {
-		// logger.Println("[Unlocking] sessionManager.SaveLiveSession attempting to unlock.")
 		sm.mu.Unlock()
-		// logger.Println("...[Unlocked] sessionManager.SaveLiveSession released lock.")
 	}()
 
 	if sm.currentSession == nil || sm.currentSession.ID != liveSessionFilename {
 		return fmt.Errorf("no active live session to save")
 	}
 
-	// Close file handles before renaming
-	if sm.currentSession.ndjsonFile != nil {
-		sm.currentSession.ndjsonFile.Close()
-	}
+	// Close PCAP file handle if open
 	if sm.currentSession.pcapFile != nil {
 		sm.currentSession.pcapFile.Close()
 	}
-	
-	newNdjsonFilename := fmt.Sprintf("session-%d.ndjson", time.Now().UnixMilli())
 
-	oldPath := filepath.Join(sm.logDirectory, liveSessionFilename)
+	newNdjsonFilename := fmt.Sprintf("session-%d.ndjson", time.Now().UnixMilli())
 	newPath := filepath.Join(sm.logDirectory, newNdjsonFilename)
 
-	summary, err := GenerateSummaryFromFile(oldPath)
+	var summary *FightSummary
+	var err error
+	if globalPub != nil && globalPub.aggregator != nil {
+		inMemSummary := globalPub.aggregator.GetSummary()
+		summary = &inMemSummary
+	} else {
+		// Fallback (for tests/CLI)
+		oldPath := filepath.Join(sm.logDirectory, liveSessionFilename)
+		summary, err = GenerateSummaryFromFile(oldPath)
+	}
+
 	var summaryData SessionSummaryData
 	summaryData.Name = name
 	summaryData.StartTime = sm.currentSession.StartTime
-	
+
 	if err == nil && summary != nil {
 		summaryData.Duration = summary.EncounterDuration
 		summaryData.TotalDamage = summary.TotalDamage
-		
+
 		targetDamageMap := make(map[string]float32)
 
 		for _, pstat := range summary.Players {
@@ -208,11 +201,11 @@ func (sm *SessionManager) SaveLiveSession(name string) error {
 				targetDamageMap[tID] += tBreakdown.TotalDamage
 			}
 		}
-		
+
 		sort.Slice(summaryData.Players, func(i, j int) bool {
 			return summaryData.Players[i].TotalDamage > summaryData.Players[j].TotalDamage
 		})
-		
+
 		for tID, dmg := range targetDamageMap {
 			name := "Unknown"
 			var raceId uint32
@@ -235,23 +228,36 @@ func (sm *SessionManager) SaveLiveSession(name string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create permanent session file: %w", err)
 	}
-	
+	defer newF.Close()
+
 	sumEvent := eventSessionSummary{
 		eventBase: eventBase{EventId: eventIdSessionSummary, At: time.Now().Unix(), Id: ""},
 		Type:      "SessionSummary",
 		Summary:   summaryData,
 	}
-	sumBytes, _ := json.Marshal(sumEvent)
-	newF.Write(sumBytes)
-	newF.Write([]byte("\n"))
-
-	oldF, err := os.Open(oldPath)
-	if err == nil {
-		io.Copy(newF, oldF)
-		oldF.Close()
+	sumBytes, err := json.Marshal(sumEvent)
+	if err != nil {
+		return fmt.Errorf("failed to marshal summary: %w", err)
 	}
-	newF.Close()
-	os.Remove(oldPath)
+	if _, err := newF.Write(append(sumBytes, '\n')); err != nil {
+		return fmt.Errorf("failed to write summary: %w", err)
+	}
+
+	// Write cached in-memory events to log file
+	writer := bufio.NewWriter(newF)
+	for _, e := range sm.currentSession.events {
+		b, err := json.Marshal(e)
+		if err != nil {
+			logger.Println("Failed to marshal event during save:", err)
+			continue
+		}
+		if _, err := writer.Write(append(b, '\n')); err != nil {
+			return fmt.Errorf("failed to write event: %w", err)
+		}
+	}
+	if err := writer.Flush(); err != nil {
+		return fmt.Errorf("failed to flush event writer: %w", err)
+	}
 
 	if sm.recordPcap {
 		oldPcapPath := filepath.Join(sm.logDirectory, livePcapFilename)
@@ -382,58 +388,144 @@ func (sm *SessionManager) DeleteSession(sessionID string) error {
 	return nil
 }
 
-// RenameSession remains unchanged.
-func (sm *SessionManager) RenameSession(sessionID, newName string) (*Session, error) {
-	// (This function is the same as the previous version)
-	// logger.Println("[Locking] sessionManager.RenameSession attempting to lock...")
-	sm.mu.Lock()
-	// logger.Println("...[Locked] sessionManager.RenameSession acquired lock.")
-	defer func() {
-		// logger.Println("[Unlocking] sessionManager.RenameSession attempting to unlock.")
-		sm.mu.Unlock()
-		// logger.Println("...[Unlocked] sessionManager.RenameSession released lock.")
-	}()
-
-	parts := strings.SplitN(sessionID, "_", 3)
-	if len(parts) < 3 {
-		return nil, fmt.Errorf("invalid session ID format for renaming")
-	}
-	timestampPart := parts[0] + "_" + parts[1]
-	sanitizedName := sanitizeFilename(newName)
-	newFilenameBase := fmt.Sprintf("%s_%s", timestampPart, sanitizedName)
-	newNdjsonFilename := newFilenameBase + ".ndjson"
-	oldPath := filepath.Join(sm.logDirectory, sessionID)
-	newPath := filepath.Join(sm.logDirectory, newNdjsonFilename)
-	if err := os.Rename(oldPath, newPath); err != nil {
-		return nil, fmt.Errorf("failed to rename session file: %w", err)
-	}
-	oldPcapPath := strings.TrimSuffix(oldPath, ".ndjson") + ".pcapng"
-	newPcapPath := strings.TrimSuffix(newPath, ".ndjson") + ".pcapng"
-	if _, err := os.Stat(oldPcapPath); err == nil {
-		os.Rename(oldPcapPath, newPcapPath)
-	}
-	return &Session{
-		ID:   newNdjsonFilename,
-		Name: sanitizedName,
-	}, nil
-}
-
-// WriteEventToLog remains unchanged.
-func (sm *SessionManager) WriteEventToLog(e iEvent) error {
-	// (This function is the same as the previous version)
-	sm.mu.RLock()
-	defer sm.mu.RUnlock()
-	s := sm.currentSession
-	if s == nil || s.ndjsonFile == nil {
-		return nil
-	}
-	b, err := json.Marshal(e)
+func updateSessionHeaderName(filePath string, newName string) error {
+	f, err := os.Open(filePath)
 	if err != nil {
 		return err
 	}
-	b = append(b, '\n')
-	_, err = s.ndjsonFile.Write(b)
-	return err
+	defer f.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(f)
+	if scanner.Scan() {
+		firstLine := scanner.Text()
+		var summaryEvent eventSessionSummary
+		if err := json.Unmarshal([]byte(firstLine), &summaryEvent); err == nil && summaryEvent.EventId == eventIdSessionSummary {
+			var firstLineMap map[string]interface{}
+			if err := json.Unmarshal([]byte(firstLine), &firstLineMap); err == nil {
+				if summaryObj, ok := firstLineMap["summary"].(map[string]interface{}); ok {
+					summaryObj["name"] = newName
+					firstLineMap["summary"] = summaryObj
+					updatedBytes, err := json.Marshal(firstLineMap)
+					if err == nil {
+						lines = append(lines, string(updatedBytes))
+					} else {
+						lines = append(lines, firstLine)
+					}
+				} else {
+					lines = append(lines, firstLine)
+				}
+			} else {
+				lines = append(lines, firstLine)
+			}
+		} else {
+			lines = append(lines, firstLine)
+		}
+	} else {
+		return nil
+	}
+
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	f.Close()
+
+	fWrite, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer fWrite.Close()
+	writer := bufio.NewWriter(fWrite)
+	for _, line := range lines {
+		if _, err := writer.WriteString(line + "\n"); err != nil {
+			return err
+		}
+	}
+	return writer.Flush()
+}
+
+// RenameSession handles renaming a session, supporting both YYYY-MM-DD_HH-MM-SS_Name.ndjson and session-<timestamp>.ndjson file formats.
+func (sm *SessionManager) RenameSession(sessionID, newName string) (*Session, error) {
+	sm.mu.Lock()
+	defer func() {
+		sm.mu.Unlock()
+	}()
+
+	sanitizedName := sanitizeFilename(newName)
+	oldPath := filepath.Join(sm.logDirectory, sessionID)
+
+	if _, err := os.Stat(oldPath); err != nil {
+		return nil, fmt.Errorf("session file not found: %w", err)
+	}
+
+	parts := strings.SplitN(sessionID, "_", 3)
+	var newNdjsonFilename string
+	if len(parts) >= 3 {
+		timestampPart := parts[0] + "_" + parts[1]
+		newFilenameBase := fmt.Sprintf("%s_%s", timestampPart, sanitizedName)
+		newNdjsonFilename = newFilenameBase + ".ndjson"
+		newPath := filepath.Join(sm.logDirectory, newNdjsonFilename)
+
+		if err := os.Rename(oldPath, newPath); err != nil {
+			return nil, fmt.Errorf("failed to rename session file: %w", err)
+		}
+		oldPcapPath := strings.TrimSuffix(oldPath, ".ndjson") + ".pcapng"
+		newPcapPath := strings.TrimSuffix(newPath, ".ndjson") + ".pcapng"
+		if _, err := os.Stat(oldPcapPath); err == nil {
+			os.Rename(oldPcapPath, newPcapPath)
+		}
+		_ = updateSessionHeaderName(newPath, newName)
+	} else {
+		newNdjsonFilename = sessionID
+		if err := updateSessionHeaderName(oldPath, newName); err != nil {
+			return nil, fmt.Errorf("failed to update session header: %w", err)
+		}
+	}
+
+	var startTime int64
+	var summaryData *SessionSummaryData
+	logFile, err := os.Open(filepath.Join(sm.logDirectory, newNdjsonFilename))
+	if err == nil {
+		scanner := bufio.NewScanner(logFile)
+		if scanner.Scan() {
+			var summaryEvent eventSessionSummary
+			if err := json.Unmarshal(scanner.Bytes(), &summaryEvent); err == nil && summaryEvent.EventId == eventIdSessionSummary {
+				summaryBytes, _ := json.Marshal(summaryEvent.Summary)
+				var sumData SessionSummaryData
+				if err := json.Unmarshal(summaryBytes, &sumData); err == nil {
+					startTime = sumData.StartTime
+					summaryData = &sumData
+				}
+			}
+		}
+		logFile.Close()
+	}
+
+	if startTime == 0 && len(parts) >= 3 {
+		timeStr := parts[0] + " " + strings.ReplaceAll(parts[1], "-", ":")
+		if t, err := time.Parse("2006-01-02 15:04:05", timeStr); err == nil {
+			startTime = t.Unix()
+		}
+	}
+
+	return &Session{
+		ID:        newNdjsonFilename,
+		Name:      sanitizedName,
+		StartTime: startTime,
+		Summary:   summaryData,
+	}, nil
+}
+
+// WriteEventToLog appends the event to the current live session in-memory event cache.
+func (sm *SessionManager) WriteEventToLog(e iEvent) error {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+	s := sm.currentSession
+	if s == nil {
+		return nil
+	}
+	s.events = append(s.events, e)
+	return nil
 }
 
 // WriteEntityAppearEvents generates and writes appearance events for currently cached entities.
