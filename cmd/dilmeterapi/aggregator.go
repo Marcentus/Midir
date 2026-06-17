@@ -216,6 +216,18 @@ func (a *Aggregator) resolveAndCacheName(entityID uint64) {
 	}
 }
 
+// resolveAttacker looks up the attacker ID in the entity cache and, if it is a
+// marionette with a valid owner, returns the owner's ID. Otherwise, it returns
+// the original attacker ID.
+func (a *Aggregator) resolveAttacker(attackerId uint64) uint64 {
+	if entity, ok := a.entityCache[attackerId]; ok {
+		if packet.IsMarionetteRace(entity.RaceId) && entity.OwnerId != 0 {
+			return entity.OwnerId
+		}
+	}
+	return attackerId
+}
+
 // ProcessPacket is the entry point for new game data.
 func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 	// If we are in a live session, we want to ignore packets that are "too old" relative to the last Clear() time.
@@ -232,6 +244,7 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 	if p.Op == opcodeEntityAppear {
 		entity, err := packet.ParseEntityAppearPacket(p.Msg)
 		if err == nil && entity != nil {
+			fmt.Printf("[DEBUG] EntityAppear - ID: %d, Name: %q, RaceId: %d, OwnerId: %d\n", entity.Id, entity.Name, entity.RaceId, entity.OwnerId)
 			a.mu.Lock()
 			a.entityCache[entity.Id] = entity
 			// Record initial HP to lastKnownHP
@@ -273,6 +286,7 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 		if err == nil {
 			a.mu.Lock()
 			for _, entity := range entities {
+				fmt.Printf("[DEBUG] EntitiesAppear (Bulk) - ID: %d, Name: %q, RaceId: %d, OwnerId: %d\n", entity.Id, entity.Name, entity.RaceId, entity.OwnerId)
 				a.entityCache[entity.Id] = entity
 				// Record initial HP to lastKnownHP
 				if entity.MaxHP > 0 {
@@ -371,6 +385,8 @@ func (a *Aggregator) processEffect(p *packet.GamePacket) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
+	attackerId = a.resolveAttacker(attackerId)
+
 	if a.isInvincible(targetId) {
 		damage = 0
 	}
@@ -425,6 +441,8 @@ func (a *Aggregator) processEffectDelayed(p *packet.GamePacket) {
 		a.mu.Unlock()
 		// logger.Println("...[Unlocked] Aggregator.EffectDelayed released lock.")
 	}()
+
+	attackerId = a.resolveAttacker(attackerId)
 
 	if a.isInvincible(targetId) {
 		damage = 0
@@ -584,19 +602,6 @@ func (a *Aggregator) processCombatAction(p *packet.GamePacket) {
 		if sub.Type&packet.CombatActionTypeAttacker != 0 {
 			attackerId = sub.EntityId
 			attackSkillId = sub.SkillId
-			// Check if we have identified the talent color yet. If not, try to identify it.
-			if _, known := a.playerTalentColors[attackerId]; !known {
-				if iconPath, found := skillToArcanaIcon[attackSkillId]; found {
-					a.playerTalents[attackerId] = iconPath
-					if name, ok := skillToArcanaName[attackSkillId]; ok {
-						a.playerTalentNames[attackerId] = name
-					}
-					if color, ok := skillToArcanaColor[attackSkillId]; ok {
-						a.playerTalentColors[attackerId] = color
-						// logger.Printf("Assigned color %s to attacker %d based on skill %d", color, attackerId, attackSkillId)
-					}
-				}
-			}
 			break
 		}
 	}
@@ -612,6 +617,22 @@ func (a *Aggregator) processCombatAction(p *packet.GamePacket) {
 
 	if attackerId == 0 {
 		return
+	}
+
+	attackerId = a.resolveAttacker(attackerId)
+
+	// Check if we have identified the talent color yet. If not, try to identify it.
+	if _, known := a.playerTalentColors[attackerId]; !known {
+		if iconPath, found := skillToArcanaIcon[attackSkillId]; found {
+			a.playerTalents[attackerId] = iconPath
+			if name, ok := skillToArcanaName[attackSkillId]; ok {
+				a.playerTalentNames[attackerId] = name
+			}
+			if color, ok := skillToArcanaColor[attackSkillId]; ok {
+				a.playerTalentColors[attackerId] = color
+				// logger.Printf("Assigned color %s to attacker %d based on skill %d", color, attackerId, attackSkillId)
+			}
+		}
 	}
 
 	for _, sub := range pack.SubPackets {
