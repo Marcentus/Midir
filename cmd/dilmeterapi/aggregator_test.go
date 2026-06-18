@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"strconv"
 
 	"testing"
 	"time"
@@ -789,4 +790,145 @@ func TestAggregator_PetDamageAttribution(t *testing.T) {
 		t.Errorf("Expected original pet skill 100 to NOT be in Bob's skills, but it was found")
 	}
 }
+
+func TestProcessEventsForSummary_PetAndPuppetDamage(t *testing.T) {
+	var err error
+	db, err = sql.Open("sqlite", ":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		db.Close()
+		db = nil
+	}()
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS players (
+		id INTEGER PRIMARY KEY,
+		name TEXT,
+		race_id INTEGER
+	);`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	playerIDStr := "123456"
+	playerID := uint64(123456)
+	petIDStr := "111111"
+	puppetIDStr := "222222"
+	monsterIDStr := "99999"
+
+	// Insert player to DB
+	_, err = db.Exec("INSERT INTO players (id, name, race_id) VALUES (?, ?, ?)", playerID, "Bob", 8001)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Mock entitiesInLog
+	entitiesInLog := map[string]eventEntityAppear{
+		petIDStr: {
+			Name:    "Annwnaa",
+			RaceId:  491006,
+			OwnerId: playerIDStr,
+		},
+		puppetIDStr: {
+			Name:    "4503599633336286",
+			RaceId:  990101,
+			OwnerId: playerIDStr,
+		},
+	}
+
+	rawEvents := []eventDamage{
+		{
+			eventBase:  eventBase{EventId: eventIdDamage, Id: petIDStr, At: 1000},
+			TargetId:   monsterIDStr,
+			SkillId:    100, // Smash
+			Damage:     5000,
+			IsCritical: false,
+		},
+		{
+			eventBase:  eventBase{EventId: eventIdDamage, Id: puppetIDStr, At: 1002},
+			TargetId:   monsterIDStr,
+			SkillId:    200, // Act 4
+			Damage:     12000,
+			IsCritical: true,
+		},
+		{
+			eventBase:  eventBase{EventId: eventIdDamage, Id: monsterIDStr, At: 1004},
+			TargetId:   playerIDStr,
+			SkillId:    10, // Regular attack
+			Damage:     1500,
+			IsCritical: false,
+		},
+	}
+
+	// Apply the same resolution logic that httpHandlerSession uses
+	var allDamageEvents []eventDamage
+	for _, de := range rawEvents {
+		if entity, ok := entitiesInLog[de.Id]; ok {
+			if entity.OwnerId != "" && entity.OwnerId != "0" {
+				ownerIdVal := parseUint64(entity.OwnerId)
+				if ownerIdVal != 0 {
+					isMarionette := packet.IsMarionetteRace(entity.RaceId)
+					if !isMarionette {
+						if _, err := strconv.Atoi(entity.Name); err == nil {
+							isMarionette = true
+						}
+					}
+					if isMarionette {
+						de.Id = entity.OwnerId
+					} else {
+						de.Id = entity.OwnerId
+						de.SkillId = 9999
+					}
+				}
+			}
+		}
+		allDamageEvents = append(allDamageEvents, de)
+	}
+
+	// Call the processor
+	playerStats, damageTakenInLog, _, _, _, _, _, _, _ := processEventsForSummary(allDamageEvents, entitiesInLog)
+
+	// Verify Bob's stats exist
+	stats, ok := playerStats[playerIDStr]
+	if !ok {
+		t.Fatalf("Expected stats for player %s, but not found", playerIDStr)
+	}
+
+	// Verify overall damage is 17000 (5000 pet + 12000 puppet)
+	if stats.OverallStats.TotalDamage != 17000 {
+		t.Errorf("Expected total damage of 17000, got %f", stats.OverallStats.TotalDamage)
+	}
+
+	// Verify Pet Skill 9999 (Pets) has 5000 damage
+	petSkillStats, ok := stats.OverallStats.Skills[9999]
+	if !ok {
+		t.Errorf("Expected skill 9999 (Pets) in Bob's stats, but not found")
+	} else if petSkillStats.TotalDamage != 5000 {
+		t.Errorf("Expected 5000 damage under skill 9999, got %f", petSkillStats.TotalDamage)
+	}
+
+	// Verify Puppet Skill 200 (Act 4) has 12000 damage
+	puppetSkillStats, ok := stats.OverallStats.Skills[200]
+	if !ok {
+		t.Errorf("Expected skill 200 (Act 4) in Bob's stats, but not found")
+	} else if puppetSkillStats.TotalDamage != 12000 {
+		t.Errorf("Expected 12000 damage under skill 200, got %f", puppetSkillStats.TotalDamage)
+	}
+
+	// Verify original pet skill 100 does not exist in stats
+	if _, foundOriginal := stats.OverallStats.Skills[100]; foundOriginal {
+		t.Errorf("Expected original pet skill 100 to NOT exist in stats, but found it")
+	}
+
+	// Verify damage taken stats for player Bob
+	takenStats, ok := damageTakenInLog[playerIDStr]
+	if !ok {
+		t.Fatalf("Expected damage taken stats for player %s, but not found", playerIDStr)
+	}
+	if takenStats.TotalDamage != 1500 {
+		t.Errorf("Expected 1500 damage taken, got %f", takenStats.TotalDamage)
+	}
+}
+
 

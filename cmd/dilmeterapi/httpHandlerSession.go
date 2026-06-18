@@ -236,6 +236,30 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 						damageEvent.ManaDamage = 0
 					}
 				}
+
+				// Resolve attacker and skill for puppets and pets in saved logs
+				if entity, ok := entitiesInLog[damageEvent.Id]; ok {
+					if entity.OwnerId != "" && entity.OwnerId != "0" {
+						ownerIdVal := parseUint64(entity.OwnerId)
+						if ownerIdVal != 0 {
+							// Check if it's a marionette
+							isMarionette := packet.IsMarionetteRace(entity.RaceId)
+							if !isMarionette {
+								if _, err := strconv.Atoi(entity.Name); err == nil {
+									isMarionette = true
+								}
+							}
+							if isMarionette {
+								damageEvent.Id = entity.OwnerId
+							} else {
+								// Pet
+								damageEvent.Id = entity.OwnerId
+								damageEvent.SkillId = 9999
+							}
+						}
+					}
+				}
+
 				allDamageEvents = append(allDamageEvents, damageEvent)
 			}
 
