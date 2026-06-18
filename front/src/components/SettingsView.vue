@@ -144,7 +144,7 @@
               <v-card-text class="pb-3">
                 <v-row dense>
                   <!-- Col 1: Decoded Packets -->
-                  <v-col cols="12" sm="4" class="py-1">
+                  <v-col cols="12" sm="6" class="py-1">
                     <div class="d-flex align-center">
                       <v-icon color="success" size="small" class="mr-2">mdi-swap-horizontal-bold</v-icon>
                       <div>
@@ -157,7 +157,7 @@
                   </v-col>
 
                   <!-- Col 2: Dropped Packets -->
-                  <v-col cols="12" sm="4" class="py-1">
+                  <v-col cols="12" sm="6" class="py-1">
                     <div class="d-flex align-center">
                       <v-icon 
                         :color="((packetStatus.pcapDrops || 0) + (packetStatus.parserErrors || 0) + (packetStatus.networkLoss || 0) + (packetStatus.queueDrops || 0) > 0) ? 'red-lighten-1' : 'grey-lighten-1'" 
@@ -176,7 +176,7 @@
                   </v-col>
 
                   <!-- Col 3: Go Runtime Memory -->
-                  <v-col cols="12" sm="4" class="py-1">
+                  <v-col cols="12" sm="6" class="py-1">
                     <div class="d-flex align-center">
                       <v-icon color="teal-lighten-2" size="small" class="mr-2">mdi-server</v-icon>
                       <div>
@@ -189,14 +189,14 @@
                   </v-col>
 
                   <!-- Col 4: Active Tracked Entities -->
-                  <v-col cols="12" sm="4" class="py-1">
+                  <v-col cols="12" sm="6" class="py-1">
                     <div class="d-flex align-center justify-space-between">
                       <div class="d-flex align-center">
                         <v-icon color="blue-lighten-2" size="small" class="mr-2">mdi-account-group</v-icon>
                         <div>
                           <div class="text-caption font-weight-bold text-white">Active Tracked Entities</div>
                           <div class="text-caption text-grey-lighten-3">
-                            {{ packetStatus.trackedEntities || 0 }} cached players & monsters
+                            {{ packetStatus.trackedEntities || 0 }} cached entities
                           </div>
                         </div>
                       </div>
