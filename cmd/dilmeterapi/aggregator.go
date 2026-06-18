@@ -216,6 +216,50 @@ func (a *Aggregator) resolveAndCacheName(entityID uint64) {
 	}
 }
 
+// resolveAttacker looks up the attacker ID in the entity cache and, if it is a
+// marionette (either by known RaceId range or by having an OwnerId and a numerical
+// name template), returns the owner's ID. Otherwise, it returns the original attacker ID.
+func (a *Aggregator) resolveAttacker(attackerId uint64) uint64 {
+	if entity, ok := a.entityCache[attackerId]; ok {
+		if entity.OwnerId != 0 {
+			isMarionette := packet.IsMarionetteRace(entity.RaceId)
+			if !isMarionette {
+				if _, err := strconv.Atoi(entity.Name); err == nil {
+					isMarionette = true
+				}
+			}
+			if isMarionette {
+				return entity.OwnerId
+			}
+		}
+	}
+	return attackerId
+}
+
+// resolveAttackerAndSkill resolves the attacker ID (mapping puppets and pets back to their player owners).
+// If the attacker is a pet (and not a puppet), it returns the owner's ID and overrides the skill ID to 9999.
+// Otherwise, it attributes puppets to their owners while keeping their original skill IDs.
+func (a *Aggregator) resolveAttackerAndSkill(attackerId uint64, skillId uint16) (uint64, uint16) {
+	if entity, ok := a.entityCache[attackerId]; ok {
+		if entity.OwnerId != 0 {
+			isMarionette := packet.IsMarionetteRace(entity.RaceId)
+			if !isMarionette {
+				if _, err := strconv.Atoi(entity.Name); err == nil {
+					isMarionette = true
+				}
+			}
+			if isMarionette {
+				// Marionettes attribute damage to owner, but keep their original skillId
+				return entity.OwnerId, skillId
+			} else {
+				// Pets attribute damage to owner, but group all their damage under a special custom "Pets" skillId (9999)
+				return entity.OwnerId, 9999
+			}
+		}
+	}
+	return attackerId, skillId
+}
+
 // ProcessPacket is the entry point for new game data.
 func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 	// If we are in a live session, we want to ignore packets that are "too old" relative to the last Clear() time.
@@ -371,6 +415,8 @@ func (a *Aggregator) processEffect(p *packet.GamePacket) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
+	attackerId, skillId = a.resolveAttackerAndSkill(attackerId, skillId)
+
 	if a.isInvincible(targetId) {
 		damage = 0
 	}
@@ -425,6 +471,8 @@ func (a *Aggregator) processEffectDelayed(p *packet.GamePacket) {
 		a.mu.Unlock()
 		// logger.Println("...[Unlocked] Aggregator.EffectDelayed released lock.")
 	}()
+
+	attackerId, skillId = a.resolveAttackerAndSkill(attackerId, skillId)
 
 	if a.isInvincible(targetId) {
 		damage = 0
@@ -584,19 +632,6 @@ func (a *Aggregator) processCombatAction(p *packet.GamePacket) {
 		if sub.Type&packet.CombatActionTypeAttacker != 0 {
 			attackerId = sub.EntityId
 			attackSkillId = sub.SkillId
-			// Check if we have identified the talent color yet. If not, try to identify it.
-			if _, known := a.playerTalentColors[attackerId]; !known {
-				if iconPath, found := skillToArcanaIcon[attackSkillId]; found {
-					a.playerTalents[attackerId] = iconPath
-					if name, ok := skillToArcanaName[attackSkillId]; ok {
-						a.playerTalentNames[attackerId] = name
-					}
-					if color, ok := skillToArcanaColor[attackSkillId]; ok {
-						a.playerTalentColors[attackerId] = color
-						// logger.Printf("Assigned color %s to attacker %d based on skill %d", color, attackerId, attackSkillId)
-					}
-				}
-			}
 			break
 		}
 	}
@@ -612,6 +647,22 @@ func (a *Aggregator) processCombatAction(p *packet.GamePacket) {
 
 	if attackerId == 0 {
 		return
+	}
+
+	attackerId, attackSkillId = a.resolveAttackerAndSkill(attackerId, attackSkillId)
+
+	// Check if we have identified the talent color yet. If not, try to identify it.
+	if _, known := a.playerTalentColors[attackerId]; !known {
+		if iconPath, found := skillToArcanaIcon[attackSkillId]; found {
+			a.playerTalents[attackerId] = iconPath
+			if name, ok := skillToArcanaName[attackSkillId]; ok {
+				a.playerTalentNames[attackerId] = name
+			}
+			if color, ok := skillToArcanaColor[attackSkillId]; ok {
+				a.playerTalentColors[attackerId] = color
+				// logger.Printf("Assigned color %s to attacker %d based on skill %d", color, attackerId, attackSkillId)
+			}
+		}
 	}
 
 	for _, sub := range pack.SubPackets {
@@ -848,12 +899,6 @@ func (a *Aggregator) GetSummary() FightSummary {
 
 	// NEW: Populate Current Entities
 	for entityID, entity := range a.entityCache {
-		// Resolve name if numeric
-		name := entity.Name
-		if _, err := strconv.Atoi(entity.Name); err == nil {
-			name = getRaceName(entity.RaceId)
-		}
-
 		// Calculate conditions for current entity
 		// We use the direct active map for "Current Entities" snapshots
 		var conditions map[uint32]ActiveCondition
@@ -866,19 +911,29 @@ func (a *Aggregator) GetSummary() FightSummary {
 
 		category := getEntityCategory(entity)
 
+		ownerIDStr := ""
+		if entity.OwnerId != 0 {
+			ownerIDStr = strconv.FormatUint(entity.OwnerId, 10)
+		}
+
 		summary.CurrentEntities = append(summary.CurrentEntities, EntityState{
 			ID:         strconv.FormatUint(entityID, 10),
-			Name:       name,
+			Name:       entity.Name,
 			RaceID:     entity.RaceId,
+			RaceName:   getRaceName(entity.RaceId),
 			Conditions: conditions,
 			CurrentHP:  entity.CurrentHP,
 			MaxHP:      entity.MaxHP,
 			Category:   category,
+			OwnerID:    ownerIDStr,
 		})
 	}
 
-	// Sort entities by name to prevent list jitter
+	// Sort entities by name, using ID as a tie-breaker to prevent list jitter (since identical names are common and Go map iteration is random)
 	sort.Slice(summary.CurrentEntities, func(i, j int) bool {
+		if summary.CurrentEntities[i].Name == summary.CurrentEntities[j].Name {
+			return summary.CurrentEntities[i].ID < summary.CurrentEntities[j].ID
+		}
 		return summary.CurrentEntities[i].Name < summary.CurrentEntities[j].Name
 	})
 
@@ -889,25 +944,25 @@ func (a *Aggregator) GetSummary() FightSummary {
 
 // getEntityCategory classifies an entity into categorized groups: Players, Enemies, Pets, NPCs, or Other.
 func getEntityCategory(entity *packet.EntityInfo) string {
-	// 1. Players: Human, Elf, Giant
-	switch entity.RaceId {
-	case 8001, 8002, 9001, 9002, 10001, 10002:
-		return "Players"
-	}
-
-	// 2. Pets / Summons: OwnerId != 0
+	// 1. Pets / Summons: OwnerId != 0
 	if entity.OwnerId != 0 {
 		return "Pets"
 	}
 
-	// 3. NPCs: Name starts with "_"
+	// 2. NPCs: Name starts with "_"
 	if strings.HasPrefix(entity.Name, "_") {
 		return "NPCs"
 	}
 
-	// 4. Enemies: Name is numeric
+	// 3. Enemies: Name is numeric
 	if _, err := strconv.Atoi(entity.Name); err == nil {
 		return "Enemies"
+	}
+
+	// 4. Players: Human, Elf, Giant
+	switch entity.RaceId {
+	case 8001, 8002, 9001, 9002, 10001, 10002:
+		return "Players"
 	}
 
 	// Fallback check using player criteria

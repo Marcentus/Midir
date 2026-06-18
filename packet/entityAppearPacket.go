@@ -108,6 +108,7 @@ func ParseEntityAppearPacket(msg Message) (*EntityInfo, error) {
 
 	v.Name = msg[2].Data().(string)
 
+
 	if msg[5].Type() != MessageElemTypeInt {
 		err := fmt.Errorf("raceId has unexpected type %v", msg[5].Type())
 		logger.Println(err)
@@ -526,21 +527,32 @@ func ParseEntityAppearPacket(msg Message) (*EntityInfo, error) {
 	v.GuildName = msg[1].Data().(string)
 	msg = msg[19:]
 
-	// 펫 관련
-	if len(msg) < 2 {
-		err := fmt.Errorf("entity appear data is too short %v", curPos())
-		logger.Println(err)
-		return nil, err
-	}
+	// 펫 / 마리오네트 관련
+	if IsMarionetteRace(v.RaceId) {
+		if len(origMsg) > 148 && origMsg[148].Type() == MessageElemTypeLong {
+			v.OwnerId = origMsg[148].Data().(uint64)
+		}
+		// For marionettes, still advance the pet-related fields if they exist to keep the message slice consistent,
+		// but ignore errors if this sub-block is missing/short.
+		if len(msg) >= 2 && msg[1].Type() == MessageElemTypeLong {
+			msg = msg[2:]
+		}
+	} else {
+		if len(msg) < 2 {
+			err := fmt.Errorf("entity appear data is too short %v", curPos())
+			logger.Println(err)
+			return nil, err
+		}
 
-	if msg[1].Type() != MessageElemTypeLong {
-		err := fmt.Errorf("ownerId has unexpected type %v", msg[1].Type())
-		logger.Println(err)
-		return nil, err
-	}
+		if msg[1].Type() != MessageElemTypeLong {
+			err := fmt.Errorf("ownerId has unexpected type %v", msg[1].Type())
+			logger.Println(err)
+			return nil, err
+		}
 
-	v.OwnerId = msg[1].Data().(uint64)
-	msg = msg[2:]
+		v.OwnerId = msg[1].Data().(uint64)
+		msg = msg[2:]
+	}
 
 	// --- LOGGING ---
 	// logger.Println("========================================")
@@ -627,4 +639,29 @@ func EntityItemReader(b []byte) (*EntityItem, error) {
 	}
 
 	return r, nil
+}
+
+func getElemTypeName(t MessageElemType) string {
+	switch t {
+	case MessageElemTypeByte:
+		return "Byte"
+	case MessageElemTypeShort:
+		return "Short"
+	case MessageElemTypeInt:
+		return "Int"
+	case MessageElemTypeLong:
+		return "Long"
+	case MessageElemTypeFloat:
+		return "Float"
+	case MessageElemTypeString:
+		return "String"
+	case MessageElemTypeBin:
+		return "Bin"
+	default:
+		return "Unknown"
+	}
+}
+
+func IsMarionetteRace(raceId uint32) bool {
+	return (raceId >= 990100 && raceId <= 990199) || (raceId >= 990200 && raceId <= 990299)
 }

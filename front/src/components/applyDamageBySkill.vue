@@ -138,7 +138,9 @@
           >
             <template v-slot:[`item.skillName`]="{ item: skillItem }">
               <div class="d-flex align-center">
+                <v-icon v-if="skillItem.id === 9999" class="mr-2" size="24" color="amber">mdi-paw</v-icon>
                 <img
+                  v-else
                   width="24"
                   height="24"
                   :src="getSkillImageSrc(skillItem.id)"
@@ -340,19 +342,21 @@
                 >
                     <!-- Icon + Tooltip (No Name Text) -->
                     <template v-slot:item.skillIcon="{ item: skillItem }">
-                         <v-tooltip location="top" open-delay="200">
-                             <template v-slot:activator="{ props }">
-                                 <img
-                                    v-bind="props"
-                                    width="28"
-                                    height="28"
-                                    :src="getSkillImageSrc(skillItem.id)"
-                                    style="vertical-align: middle; border-radius: 4px;"
-                                    @error="($event.target as HTMLImageElement).style.display = 'none'"
-                                  />
-                             </template>
-                             <span>{{ getSkillName(skillItem.id) }}</span>
-                         </v-tooltip>
+                          <v-tooltip location="top" open-delay="200">
+                              <template v-slot:activator="{ props }">
+                                  <v-icon v-if="skillItem.id === 9999" v-bind="props" size="24" color="amber" class="mr-1" style="vertical-align: middle;">mdi-paw</v-icon>
+                                  <img
+                                     v-else
+                                     v-bind="props"
+                                     width="28"
+                                     height="28"
+                                     :src="getSkillImageSrc(skillItem.id)"
+                                     style="vertical-align: middle; border-radius: 4px;"
+                                     @error="($event.target as HTMLImageElement).style.display = 'none'"
+                                   />
+                              </template>
+                              <span>{{ getSkillName(skillItem.id) }}</span>
+                          </v-tooltip>
                     </template>
 
                     <template v-slot:item.uses="{ item: skillItem }">
@@ -956,10 +960,12 @@ const currentEncounterDuration = computed(() => {
 });
 
 const getSkillName = (skillId: number): string => {
+  if (skillId === 9999) return "Pets";
   return skillNameMap.value[skillId]?.name || `unknownSkill:${skillId}`;
 };
 
 const getSkillImageSrc = (skillId: number): string => {
+  if (skillId === 9999) return "";
   return skillNameMap.value[skillId]?.iconUrl || "";
 };
 

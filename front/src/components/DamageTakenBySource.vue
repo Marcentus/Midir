@@ -64,7 +64,9 @@
               >
                 <template v-slot:[`item.skillName`]="{ item: breakdownItem }">
                   <div class="d-flex align-center">
+                    <v-icon v-if="breakdownItem.skillId === 9999" class="mr-2" size="32" color="amber">mdi-paw</v-icon>
                     <img
+                      v-else
                       width="32"
                       height="32"
                       :src="getSkillImageSrc(breakdownItem.skillId)"
@@ -142,6 +144,7 @@ const formatNumber = (num: number | undefined | null): string => {
 // REMOVED formatDuration and formattedEncounterDuration computed property
 
 const getSkillName = (skillId: number): string => {
+  if (skillId === 9999) return "Pets";
   return skillNameMap.value[skillId]?.name || `Unknown Skill: ${skillId}`;
 };
 
