@@ -76,6 +76,10 @@ export async function clearBackendState(): Promise<void> {
   });
 }
 
+export async function getLiveSummary(): Promise<FightSummary> {
+  return httpCall<FightSummary>("/api/state/summary");
+}
+
 // --- EMBEDDED DATA API FUNCTIONS ---
 
 export async function getSkills(): Promise<Record<string, DataItem>> {

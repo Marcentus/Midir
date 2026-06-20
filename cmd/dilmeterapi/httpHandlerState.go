@@ -12,7 +12,15 @@ func stateRouter(pub *eventPublisher, sm *SessionManager) http.Handler {
 	r := chi.NewRouter()
 	// CORRECTED: Pass the SessionManager to the handler.
 	r.Post("/clear", handleClearState(pub, sm))
+	r.Get("/summary", handleGetLiveSummary(pub))
 	return r
+}
+
+func handleGetLiveSummary(pub *eventPublisher) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		summary := pub.aggregator.GetSummary()
+		respondWithJSON(w, http.StatusOK, summary)
+	}
 }
 
 // This function is now correct as it receives both required arguments.
