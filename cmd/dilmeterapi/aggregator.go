@@ -721,7 +721,7 @@ func (a *Aggregator) updateBreakdown(breakdown *DamageBreakdown, hitPacket *pack
 	damage := hitPacket.Hit.Damage
 	isCrit := !isDelayed && (hitPacket.Hit.Options&packet.CombatActionHitOptionsCritical) != 0
 	breakdown.TotalDamage += damage
-	if !isDelayed {
+	if !isDelayed && skillId != 9999 {
 		breakdown.HitCount++
 		if isCrit {
 			breakdown.CritCount++

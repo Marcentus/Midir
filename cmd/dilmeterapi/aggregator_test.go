@@ -900,6 +900,14 @@ func TestProcessEventsForSummary_PetAndPuppetDamage(t *testing.T) {
 		t.Errorf("Expected total damage of 17000, got %f", stats.OverallStats.TotalDamage)
 	}
 
+	// Verify pet hits and crits are excluded from player's overall hit/crit counts, while puppet is included
+	if stats.OverallStats.HitCount != 1 {
+		t.Errorf("Expected overall HitCount of 1 (excluding pet, including puppet), got %d", stats.OverallStats.HitCount)
+	}
+	if stats.OverallStats.CritCount != 1 {
+		t.Errorf("Expected overall CritCount of 1 (puppet critical hit), got %d", stats.OverallStats.CritCount)
+	}
+
 	// Verify Pet Skill 9999 (Pets) has 5000 damage
 	petSkillStats, ok := stats.OverallStats.Skills[9999]
 	if !ok {
