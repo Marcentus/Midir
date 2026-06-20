@@ -32,7 +32,7 @@
             prepend-icon="mdi-content-save"
             class="action-btn"
             :loading="isSaving"
-            @click="promptAndSaveSession"
+            @click="triggerSaveSession"
           >
             Save Session
           </v-btn>
@@ -42,7 +42,7 @@
             size="small"
             prepend-icon="mdi-refresh"
             class="action-btn"
-            @click="clearSession"
+            @click="triggerClearSession"
           >
             Clear
           </v-btn>
@@ -97,11 +97,87 @@
         </v-btn>
       </template>
     </v-snackbar>
+
+    <!-- Custom Clear Confirmation Dialog -->
+    <v-dialog v-model="clearDialogVisible" max-width="450px" persistent>
+      <v-card class="dialog-card">
+        <v-card-title class="text-h5 d-flex align-center pt-4 px-6">
+          <v-icon color="warning" class="mr-2">mdi-alert-decagram</v-icon>
+          Clear Live Session
+        </v-card-title>
+        <v-card-text class="pt-2 px-6 pb-4 text-grey-lighten-1">
+          Are you sure you want to clear the current live session data? This will reset all current DPS meters and graph data. This action cannot be undone.
+        </v-card-text>
+        <v-card-actions class="px-6 pb-4">
+          <v-spacer></v-spacer>
+          <v-btn
+            variant="text"
+            class="font-weight-bold"
+            @click="clearDialogVisible = false"
+          >
+            Cancel
+          </v-btn>
+          <v-btn
+            color="warning"
+            variant="flat"
+            class="font-weight-bold ml-2"
+            @click="confirmClearSession"
+          >
+            Clear
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Custom Save Session Dialog -->
+    <v-dialog v-model="saveDialogVisible" max-width="500px" persistent>
+      <v-card class="dialog-card">
+        <v-card-title class="text-h5 d-flex align-center pt-4 px-6">
+          <v-icon color="primary" class="mr-2">mdi-content-save-cog</v-icon>
+          Save Live Session
+        </v-card-title>
+        <v-card-text class="pt-2 px-6 pb-4 text-grey-lighten-1">
+          Please enter a descriptive name for this live session to save it to your history.
+          <v-text-field
+            ref="saveSessionInput"
+            v-model="saveSessionName"
+            label="Session Name"
+            variant="outlined"
+            density="comfortable"
+            class="mt-4"
+            hide-details
+            autofocus
+            color="primary"
+            @keyup.enter="confirmSaveSession"
+          ></v-text-field>
+        </v-card-text>
+        <v-card-actions class="px-6 pb-4">
+          <v-spacer></v-spacer>
+          <v-btn
+            variant="text"
+            class="font-weight-bold"
+            @click="saveDialogVisible = false"
+          >
+            Cancel
+          </v-btn>
+          <v-btn
+            color="primary"
+            variant="flat"
+            class="font-weight-bold ml-2"
+            :loading="isSaving"
+            :disabled="!saveSessionName.trim()"
+            @click="confirmSaveSession"
+          >
+            Save
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-app>
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, onUnmounted, inject, ref, watch, computed, provide, reactive } from "vue";
+import { defineComponent, onMounted, onUnmounted, inject, ref, watch, computed, provide, reactive, nextTick } from "vue";
 import { socket } from "@/store"; // Static import
 import { FightSummary } from "./protocols";
 import { initPlayerCache } from "@/playerCache";
@@ -109,6 +185,7 @@ import DamageMeterView from "@/components/DamageMeterView.vue";
 import SettingsView from "@/components/SettingsView.vue";
 import {
   getSessionSummary,
+  getLiveSummary,
   saveSession,
   clearBackendState,
   getSkills,
@@ -194,25 +271,49 @@ export default defineComponent({
 
     const isSaving = ref(false);
 
-    const promptAndSaveSession = async () => {
-      const sessionName = prompt(
-        "Enter a name for this session:",
-        `Session @ ${new Date().toLocaleTimeString()}`
-      );
+    const clearDialogVisible = ref(false);
+    
+    const triggerClearSession = () => {
+      clearDialogVisible.value = true;
+    };
 
-      if (sessionName) {
-        isSaving.value = true;
-        try {
-          await saveSession(sessionName);
-          await clearSession();
-          appEvent.value.dispatchEvent(new CustomEvent("refresh-sessions"));
-          alert(`Session "${sessionName}" saved successfully.`);
-        } catch (e) {
-          console.error("Failed to save session:", e);
-          alert(`Error saving session: ${e}`);
-        } finally {
-          isSaving.value = false;
+    const confirmClearSession = async () => {
+      clearDialogVisible.value = false;
+      await clearSession();
+    };
+
+    const saveDialogVisible = ref(false);
+    const saveSessionName = ref("");
+    const saveSessionInput = ref<any>(null);
+
+    const triggerSaveSession = () => {
+      saveSessionName.value = `Session @ ${new Date().toLocaleTimeString()}`;
+      saveDialogVisible.value = true;
+      nextTick(() => {
+        const input = saveSessionInput.value?.$el?.querySelector("input");
+        if (input) {
+          input.focus();
+          input.select();
         }
+      });
+    };
+
+    const confirmSaveSession = async () => {
+      const name = saveSessionName.value.trim();
+      if (!name) return;
+      
+      saveDialogVisible.value = false;
+      isSaving.value = true;
+      try {
+        await saveSession(name);
+        await clearSession();
+        appEvent.value.dispatchEvent(new CustomEvent("refresh-sessions"));
+        alert(`Session "${name}" saved successfully.`);
+      } catch (e) {
+        console.error("Failed to save session:", e);
+        alert(`Error saving session: ${e}`);
+      } finally {
+        isSaving.value = false;
       }
     };
 
@@ -224,7 +325,16 @@ export default defineComponent({
         selectedTargetId.value = "";
         if (newId === "live") {
           socket.onSummary = handleSummary;
-          clearSession();
+          try {
+            if (loadingCount) loadingCount.value++;
+            const summary = await getLiveSummary();
+            handleSummary(summary);
+          } catch (e) {
+            console.error("Failed to load live summary:", e);
+            alert(`Error loading live summary: ${e}`);
+          } finally {
+            if (loadingCount) loadingCount.value--;
+          }
         } else if (newId && newId !== "file-load") {
           socket.onSummary = undefined;
           try {
@@ -333,12 +443,19 @@ export default defineComponent({
       isSaving,
       socketConnected,
       clearSession,
-      promptAndSaveSession,
       activeTool,
       isNavDrawerOpen,
       systemErrorVisible,
       systemErrorMessage,
       systemErrorType,
+      clearDialogVisible,
+      saveDialogVisible,
+      saveSessionName,
+      saveSessionInput,
+      triggerClearSession,
+      confirmClearSession,
+      triggerSaveSession,
+      confirmSaveSession,
     };
   },
 });
@@ -403,6 +520,13 @@ export default defineComponent({
 <style>
 .v-application {
   background: linear-gradient(145deg, #161922 0%, #0e1015 100%) !important;
+}
+
+.dialog-card {
+  background: #171b24 !important;
+  border: 1px solid rgba(129, 138, 248, 0.15) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5) !important;
+  border-radius: 12px !important;
 }
 </style>
 

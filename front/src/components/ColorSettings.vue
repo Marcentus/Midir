@@ -83,6 +83,24 @@
         </v-chip>
       </div>
     </v-card-text>
+
+    <!-- Reset Confirmation Dialog -->
+    <v-dialog v-model="resetDialogVisible" max-width="400px" persistent>
+      <v-card class="dialog-card">
+        <v-card-title class="text-h5 d-flex align-center pt-4 px-6">
+          <v-icon color="warning" class="mr-2">mdi-alert-decagram</v-icon>
+          Reset Colors
+        </v-card-title>
+        <v-card-text class="pt-2 px-6 pb-4 text-grey-lighten-1">
+          Are you sure you want to reset all name color settings to their default values?
+        </v-card-text>
+        <v-card-actions class="px-6 pb-4">
+          <v-spacer></v-spacer>
+          <v-btn variant="text" class="font-weight-bold" @click="resetDialogVisible = false">Cancel</v-btn>
+          <v-btn color="primary" variant="flat" class="font-weight-bold ml-2" @click="confirmReset">Reset</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-card>
 </template>
 
@@ -116,12 +134,17 @@ export default defineComponent({
         nameColorSeed.value = result;
     };
 
+    const resetDialogVisible = ref(false);
+
     const resetDefaults = () => {
-        if (confirm("Are you sure you want to reset color settings to default values?")) {
-            nameColorSaturation.value = [80, 95];
-            nameColorLightness.value = [20, 80];
-            nameColorSeed.value = "RY34CW";
-        }
+        resetDialogVisible.value = true;
+    };
+
+    const confirmReset = () => {
+        resetDialogVisible.value = false;
+        nameColorSaturation.value = [50, 90];
+        nameColorLightness.value = [30, 50];
+        nameColorSeed.value = "T0F89V";
     };
 
     return {
@@ -131,7 +154,9 @@ export default defineComponent({
       previewNames,
       getColor,
       randomizeSeed,
-      resetDefaults
+      resetDefaults,
+      resetDialogVisible,
+      confirmReset
     };
   },
 });

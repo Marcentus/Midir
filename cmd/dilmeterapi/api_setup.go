@@ -26,8 +26,6 @@ const configFile = "settings.json"
 
 type CaptureConfig struct {
 	NicName     string `json:"nicName"`
-	IP          string `json:"ip"`
-	Port        string `json:"port"`
 	ExitLag     bool   `json:"exitlag"`
 	Promiscuous bool   `json:"promiscuous"`
 }
@@ -58,27 +56,24 @@ func setupRouter() http.Handler {
 		captureMu.Lock()
 		defer captureMu.Unlock()
 
-		cfg := loadConfig()
-		var ip, port string
-		if cfg != nil {
-			ip = cfg.IP
-			port = cfg.Port
-		}
+		nic := activeNicName
+		exitlag := activeExitlag
+		promiscuous := activePromiscuous
 
-		exitlag := false
-		promiscuous := false
-		if isCaptureRunning {
-			exitlag = activeExitlag
-			promiscuous = activePromiscuous
+		cfg := loadConfig()
+		if cfg != nil {
+			if !isCaptureRunning {
+				nic = cfg.NicName
+				exitlag = cfg.ExitLag
+				promiscuous = cfg.Promiscuous
+			}
 		}
 
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"is_running":  isCaptureRunning,
-			"nic":         activeNicName,
+			"nic":         nic,
 			"exitlag":     exitlag,
 			"promiscuous": promiscuous,
-			"ip":          ip,
-			"port":        port,
 		})
 	})
 
@@ -121,12 +116,7 @@ func setupRouter() http.Handler {
 		// Save the requested settings permanently
 		saveConfig(&config)
 
-		var ip, port string
-		if config.ExitLag {
-			ip = config.IP
-			port = config.Port
-		}
-		filter := buildPcapFilter(ip, port, config.ExitLag)
+		filter := buildPcapFilter("", "", config.ExitLag)
 
 		err := startPacketCapture(config.NicName, "", config.ExitLag, filter, config.Promiscuous, true)
 		if err != nil {
@@ -147,12 +137,7 @@ func setupRouter() http.Handler {
 		// Save settings, but preserve current aggregator/session data.
 		saveConfig(&config)
 
-		var ip, port string
-		if config.ExitLag {
-			ip = config.IP
-			port = config.Port
-		}
-		filter := buildPcapFilter(ip, port, config.ExitLag)
+		filter := buildPcapFilter("", "", config.ExitLag)
 
 		err := startPacketCapture(config.NicName, "", config.ExitLag, filter, config.Promiscuous, false)
 		if err != nil {

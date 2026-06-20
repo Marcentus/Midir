@@ -500,8 +500,6 @@ export default defineComponent({
     const isRestartingKeepSession = ref(false);
     const captureConfig = ref({
       nicName: "",
-      ip: "",
-      port: "",
       exitlag: false,
       promiscuous: false
     });
@@ -511,9 +509,6 @@ export default defineComponent({
         const res = await fetch("/api/setup/nics");
         if (res.ok) {
           nics.value = (await res.json()) || [];
-          if (!captureConfig.value.nicName && nics.value.length > 0) {
-            captureConfig.value.nicName = nics.value[0].name;
-          }
         }
       } catch (err) {
         console.error("Failed to fetch nics:", err);
@@ -530,8 +525,6 @@ export default defineComponent({
           if (data.nic) captureConfig.value.nicName = data.nic;
           captureConfig.value.exitlag = data.exitlag || false;
           captureConfig.value.promiscuous = data.promiscuous || false;
-          if (data.ip) captureConfig.value.ip = data.ip;
-          if (data.port) captureConfig.value.port = data.port;
         }
       } catch (err) {
         console.error("Failed to fetch capture status:", err);
@@ -644,9 +637,16 @@ export default defineComponent({
       }
     };
 
-    onMounted(() => {
-       fetchNics();
-       fetchStatus();
+     onMounted(async () => {
+       await fetchNics();
+       await fetchStatus();
+
+        if (captureConfig.value.nicName && nics.value.length > 0) {
+          const exists = nics.value.some(nic => nic.name === captureConfig.value.nicName);
+          if (!exists) {
+            captureConfig.value.nicName = "";
+          }
+        }
        
        socket.onPacketStatus = (status) => {
          packetStatus.value = { ...status, topOps: status.topOps || [] };
@@ -660,8 +660,6 @@ export default defineComponent({
        
        socket.onAutodetectDone = (result) => {
          if (isAutodetecting.value) {
-           captureConfig.value.ip = result.ip;
-           captureConfig.value.port = result.port;
            isAutodetecting.value = false;
            autodetectProgress.value = 5;
          }

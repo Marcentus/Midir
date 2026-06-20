@@ -621,7 +621,7 @@ func generateGraphDataFromEvents(allDamageEvents []eventDamage, startTime, endTi
 
 func updateBreakdownFromLog(breakdown *DamageBreakdown, damageEvent *eventDamage) {
 	breakdown.TotalDamage += damageEvent.Damage
-	if !damageEvent.IsDelayed {
+	if !damageEvent.IsDelayed && damageEvent.SkillId != 9999 {
 		breakdown.HitCount++
 		if damageEvent.IsCritical {
 			breakdown.CritCount++
