@@ -139,6 +139,7 @@
         <v-card-text class="pt-2 px-6 pb-4 text-grey-lighten-1">
           Please enter a descriptive name for this live session to save it to your history.
           <v-text-field
+            ref="saveSessionInput"
             v-model="saveSessionName"
             label="Session Name"
             variant="outlined"
@@ -176,7 +177,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, onUnmounted, inject, ref, watch, computed, provide, reactive } from "vue";
+import { defineComponent, onMounted, onUnmounted, inject, ref, watch, computed, provide, reactive, nextTick } from "vue";
 import { socket } from "@/store"; // Static import
 import { FightSummary } from "./protocols";
 import { initPlayerCache } from "@/playerCache";
@@ -283,10 +284,18 @@ export default defineComponent({
 
     const saveDialogVisible = ref(false);
     const saveSessionName = ref("");
+    const saveSessionInput = ref<any>(null);
 
     const triggerSaveSession = () => {
       saveSessionName.value = `Session @ ${new Date().toLocaleTimeString()}`;
       saveDialogVisible.value = true;
+      nextTick(() => {
+        const input = saveSessionInput.value?.$el?.querySelector("input");
+        if (input) {
+          input.focus();
+          input.select();
+        }
+      });
     };
 
     const confirmSaveSession = async () => {
@@ -442,6 +451,7 @@ export default defineComponent({
       clearDialogVisible,
       saveDialogVisible,
       saveSessionName,
+      saveSessionInput,
       triggerClearSession,
       confirmClearSession,
       triggerSaveSession,
