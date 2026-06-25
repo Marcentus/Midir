@@ -720,7 +720,6 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 			}
 
 			v := st.pending[foundIdx]
-			logger.Printf("[TCP Pending] Draining packet on %s: Seq: %d, NextSeq: %d, PayloadLen: %d, RemainingPending: %d", key, v.tcpLayer.Seq, st.nextSeq, len(v.tcpLayer.Payload), len(st.pending)-1)
 			ch <- gamePacketPayload{
 				relSeq:  v.tcpLayer.Seq - st.baseSeq,
 				data:    v.tcpLayer.Payload,
@@ -787,7 +786,6 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 			key := flowKeyFor(ip4Layer, tcpLayer)
 			for streamKey, st := range streams {
 				if !st.lastSeen.IsZero() && ci.Timestamp.Sub(st.lastSeen) > streamTTL {
-					logger.Printf("[TCP Stream] TTL expired for stream %s, last seen %s ago (Pending Count: %d)", streamKey, ci.Timestamp.Sub(st.lastSeen), len(st.pending))
 					delete(streams, streamKey)
 				}
 			}
@@ -796,7 +794,6 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 
 			if tcpLayer.FIN || tcpLayer.RST {
 				if st != nil {
-					logger.Printf("[TCP Stream] FIN/RST flag detected. Deleting stream %s (Pending Count: %d)", key, len(st.pending))
 					delete(streams, key)
 				}
 				continue
@@ -804,7 +801,6 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 
 			if tcpLayer.SYN {
 				if st != nil {
-					logger.Printf("[TCP Stream] SYN flag detected on existing stream %s. Resetting sequence numbers (OldNext: %d, NewSeq: %d)", key, st.nextSeq, tcpLayer.Seq+1)
 					st.baseSeq = tcpLayer.Seq + 1
 					st.nextSeq = tcpLayer.Seq + 1
 					st.pending = st.pending[:0]
@@ -816,7 +812,6 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 						lastSeen: ci.Timestamp,
 					}
 					streams[key] = st
-					logger.Printf("[TCP Stream] SYN flag detected. Initialized stream %s, baseSeq: %d", key, tcpLayer.Seq+1)
 				}
 				continue
 			}
@@ -829,7 +824,6 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 					lastSeen: ci.Timestamp,
 				}
 				streams[key] = st
-				logger.Printf("[TCP Stream] Initialized stream %s (Drop-in), baseSeq: %d", key, tcpLayer.Seq)
 			}
 			st.lastSeen = ci.Timestamp
 
@@ -857,7 +851,6 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 					tcpLayer: tcpLayer,
 					ci:       ci,
 				})
-				logger.Printf("[TCP Pending] Appended packet on %s: Seq: %d, NextSeq: %d, PayloadLen: %d, PendingCount: %d", key, tcpLayer.Seq, st.nextSeq, len(tcpLayer.Payload), len(st.pending))
 
 				if len(st.pending) > 300 {
 					minIdx := findMinSeqIdx(st.pending)
@@ -867,29 +860,8 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 						warningMsg := fmt.Sprintf("Network packet loss detected on %s (Gap: %d bytes). Skipping to resume.", key, skippedBytes)
 						atomic.AddUint32(&t.networkLoss, 1)
 
-						// Analyze pending queue to diagnose wrap-around or stale packets
-						staleCount := 0
-						futureCount := 0
-						for _, p := range st.pending {
-							if int32(p.tcpLayer.Seq-st.nextSeq) < 0 {
-								staleCount++
-							} else {
-								futureCount++
-							}
-						}
-
-						// Print up to 5 sample sequence numbers from the beginning and end of pending queue
-						var sampleSeqs []string
-						for idx, p := range st.pending {
-							if idx < 5 || idx >= len(st.pending)-5 {
-								sampleSeqs = append(sampleSeqs, fmt.Sprintf("%d (stale:%t)", p.tcpLayer.Seq, int32(p.tcpLayer.Seq-st.nextSeq) < 0))
-							} else if idx == 5 {
-								sampleSeqs = append(sampleSeqs, "...")
-							}
-						}
-
-						logger.Printf("[TCP Recovery] %s OldNext: %d, NewNext: %d (Active Streams: %d, Pending Count: %d, Stale: %d, Future: %d, SampleSeqs: %v)",
-							warningMsg, st.nextSeq, targetLayer.tcpLayer.Seq, len(streams), len(st.pending), staleCount, futureCount, sampleSeqs)
+						logger.Printf("[TCP Recovery] %s OldNext: %d, NewNext: %d (Active Streams: %d, Pending Count: %d)",
+							warningMsg, st.nextSeq, targetLayer.tcpLayer.Seq, len(streams), len(st.pending))
 
 						st.nextSeq = targetLayer.tcpLayer.Seq
 
