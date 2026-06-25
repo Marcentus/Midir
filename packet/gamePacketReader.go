@@ -764,7 +764,13 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 		}
 
 		for _, layer := range packetLayers {
-			if layer != layers.LayerTypeTCP || len(tcpLayer.Payload) < 1 {
+			if layer != layers.LayerTypeTCP {
+				continue
+			}
+
+			// We must process control packets (SYN, FIN, RST) even if they have no payload.
+			isControl := tcpLayer.SYN || tcpLayer.FIN || tcpLayer.RST
+			if len(tcpLayer.Payload) < 1 && !isControl {
 				continue
 			}
 
@@ -787,6 +793,34 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 			}
 
 			st := streams[key]
+
+			if tcpLayer.FIN || tcpLayer.RST {
+				if st != nil {
+					logger.Printf("[TCP Stream] FIN/RST flag detected. Deleting stream %s (Pending Count: %d)", key, len(st.pending))
+					delete(streams, key)
+				}
+				continue
+			}
+
+			if tcpLayer.SYN {
+				if st != nil {
+					logger.Printf("[TCP Stream] SYN flag detected on existing stream %s. Resetting sequence numbers (OldNext: %d, NewSeq: %d)", key, st.nextSeq, tcpLayer.Seq+1)
+					st.baseSeq = tcpLayer.Seq + 1
+					st.nextSeq = tcpLayer.Seq + 1
+					st.pending = st.pending[:0]
+				} else {
+					st = &tcpStreamState{
+						baseSeq:  tcpLayer.Seq + 1,
+						nextSeq:  tcpLayer.Seq + 1,
+						pending:  make([]pendingTcpLayer, 0, packetQueueSize),
+						lastSeen: ci.Timestamp,
+					}
+					streams[key] = st
+					logger.Printf("[TCP Stream] SYN flag detected. Initialized stream %s, baseSeq: %d", key, tcpLayer.Seq+1)
+				}
+				continue
+			}
+
 			if st == nil {
 				st = &tcpStreamState{
 					baseSeq:  tcpLayer.Seq,
@@ -795,7 +829,7 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 					lastSeen: ci.Timestamp,
 				}
 				streams[key] = st
-				logger.Printf("[TCP Stream] Initialized stream %s, baseSeq: %d", key, tcpLayer.Seq)
+				logger.Printf("[TCP Stream] Initialized stream %s (Drop-in), baseSeq: %d", key, tcpLayer.Seq)
 			}
 			st.lastSeen = ci.Timestamp
 
