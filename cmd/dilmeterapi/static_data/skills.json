@@ -1131,7 +1131,7 @@
   },
   "30006": {
     "skillId": 30006,
-    "name": "Healing",
+    "name": "_LT[xml.skillinfo.7370]",
     "iconUrl": "gui_icon_skill_000_2_2.png"
   },
   "30007": {
@@ -2254,6 +2254,21 @@
     "name": "Transform with Equipment",
     "iconUrl": "gui_icon_skill_001_6_10.png"
   },
+  "50082": {
+    "skillId": 50082,
+    "name": "Gorias Imaging",
+    "iconUrl": "gui_icon_skill_006_3_0.png"
+  },
+  "50085": {
+    "skillId": 50085,
+    "name": "Marionette\\nCrafting",
+    "iconUrl": "GUI_icon_skill_006_1_2.png"
+  },
+  "50086": {
+    "skillId": 50086,
+    "name": "Marionette Link",
+    "iconUrl": "GUI_icon_skill_006_2_2.png"
+  },
   "50101": {
     "skillId": 50101,
     "name": "Pet Buffing",
@@ -3129,6 +3144,36 @@
     "name": "Smack 'em!",
     "iconUrl": "GUI_icon_skill_005_4_14.png"
   },
+  "50279": {
+    "skillId": 50279,
+    "name": "Almighty Stomp",
+    "iconUrl": "GUI_icon_skill_006_0_0.png"
+  },
+  "50280": {
+    "skillId": 50280,
+    "name": "Boost Life",
+    "iconUrl": "GUI_icon_skill_006_0_4.png"
+  },
+  "50281": {
+    "skillId": 50281,
+    "name": "Spiral Spin",
+    "iconUrl": "GUI_icon_skill_006_5_3.png"
+  },
+  "50282": {
+    "skillId": 50282,
+    "name": "Buddy Revive",
+    "iconUrl": "GUI_icon_skill_006_6_3.png"
+  },
+  "50283": {
+    "skillId": 50283,
+    "name": "Running Wheel",
+    "iconUrl": "GUI_icon_skill_006_7_3.png"
+  },
+  "50284": {
+    "skillId": 50284,
+    "name": "Sunflower Power",
+    "iconUrl": "GUI_icon_skill_006_1_4.png"
+  },
   "50300": {
     "skillId": 50300,
     "name": "Prone",
@@ -3178,6 +3223,26 @@
     "skillId": 50309,
     "name": "Windmill EX",
     "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "50310": {
+    "skillId": 50310,
+    "name": "Commander Skill: Summon Meteor",
+    "iconUrl": "gui_icon_skill_006_4_1.png"
+  },
+  "50311": {
+    "skillId": 50311,
+    "name": "Commander Skill: Battlefield Stasis",
+    "iconUrl": "gui_icon_skill_006_5_1.png"
+  },
+  "50312": {
+    "skillId": 50312,
+    "name": "Commander Skill: Battle Cry",
+    "iconUrl": "gui_icon_skill_006_6_1.png"
+  },
+  "50313": {
+    "skillId": 50313,
+    "name": "Soldier Skill",
+    "iconUrl": "gui_icon_skill_000_5_0.png"
   },
   "50400": {
     "skillId": 50400,
@@ -3406,13 +3471,18 @@
   },
   "50527": {
     "skillId": 50527,
-    "name": "과일 저글링",
+    "name": "Fruit Juggling",
     "iconUrl": "GUI_icon_skill_005_2_13.png"
   },
   "50528": {
     "skillId": 50528,
     "name": "Vocalist",
     "iconUrl": "GUI_icon_skill_005_5_13.png"
+  },
+  "50529": {
+    "skillId": 50529,
+    "name": "Prestige Action",
+    "iconUrl": "gui_icon_skill_003_4_3.png"
   },
   "50650": {
     "skillId": 50650,
@@ -4534,6 +4604,51 @@
     "name": "Fuathic Corvus Beam",
     "iconUrl": "gui_icon_skill_000_3_3.png"
   },
+  "52219": {
+    "skillId": 52219,
+    "name": "Activation: Flash",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52220": {
+    "skillId": 52220,
+    "name": "Command: Storm",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52221": {
+    "skillId": 52221,
+    "name": "Execute: Judgment",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52222": {
+    "skillId": 52222,
+    "name": "Crushing Arm",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52223": {
+    "skillId": 52223,
+    "name": "Hydro Spiral",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52224": {
+    "skillId": 52224,
+    "name": "Bombarding Burst",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52225": {
+    "skillId": 52225,
+    "name": "Iron Charge: Right",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52226": {
+    "skillId": 52226,
+    "name": "Iron Charge: Left",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
+  "52227": {
+    "skillId": 52227,
+    "name": "Deploy: Turn",
+    "iconUrl": "gui_icon_skill_000_3_3.png"
+  },
   "52300": {
     "skillId": 52300,
     "name": "Dance Beneath the Snowfall",
@@ -4712,6 +4827,26 @@
   "52413": {
     "skillId": 52413,
     "name": "Divine Punishment",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52414": {
+    "skillId": 52414,
+    "name": "Clash of Division",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52415": {
+    "skillId": 52415,
+    "name": "Feather Storm",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52416": {
+    "skillId": 52416,
+    "name": "Dance of Feathers",
+    "iconUrl": "gui_icon_skill_000_0_0.png"
+  },
+  "52417": {
+    "skillId": 52417,
+    "name": "Eternal Judgment",
     "iconUrl": "gui_icon_skill_000_0_0.png"
   },
   "52500": {
@@ -5126,7 +5261,7 @@
   },
   "59000": {
     "skillId": 59000,
-    "name": "Hand of Restoration",
+    "name": "_LT[xml.skillinfo.7376]",
     "iconUrl": "gui_icon_skill_005_7_3.png"
   },
   "59001": {
@@ -5413,6 +5548,101 @@
     "skillId": 59145,
     "name": "Fangs of Stone",
     "iconUrl": "gui_icon_skill_005_1_15.png"
+  },
+  "59160": {
+    "skillId": 59160,
+    "name": "Wireless Connection",
+    "iconUrl": "gui_icon_skill_AR_MP_0_0.png"
+  },
+  "59161": {
+    "skillId": 59161,
+    "name": "Downbeat Drop",
+    "iconUrl": "gui_icon_skill_AR_MP_1_0.png"
+  },
+  "59162": {
+    "skillId": 59162,
+    "name": "Relentless Tempo",
+    "iconUrl": "gui_icon_skill_AR_MP_2_0.png"
+  },
+  "59163": {
+    "skillId": 59163,
+    "name": "Showstopper",
+    "iconUrl": "gui_icon_skill_AR_MP_3_0.png"
+  },
+  "59164": {
+    "skillId": 59164,
+    "name": "Live Wire",
+    "iconUrl": "gui_icon_skill_AR_MP_4_0.png"
+  },
+  "59165": {
+    "skillId": 59165,
+    "name": "Cutting Chorus",
+    "iconUrl": "gui_icon_skill_AR_MP_5_0.png"
+  },
+  "59166": {
+    "skillId": 59166,
+    "name": "Moving Performance",
+    "iconUrl": "gui_icon_skill_AR_MP_6_0.png"
+  },
+  "59167": {
+    "skillId": 59167,
+    "name": "Downbeat Drop AI",
+    "iconUrl": "gui_icon_skill_AR_MP_1_0.png"
+  },
+  "59168": {
+    "skillId": 59168,
+    "name": "Relentless Tempo AI",
+    "iconUrl": "gui_icon_skill_AR_MP_2_0.png"
+  },
+  "59169": {
+    "skillId": 59169,
+    "name": "Showstopper AI",
+    "iconUrl": "gui_icon_skill_AR_MP_3_0.png"
+  },
+  "59180": {
+    "skillId": 59180,
+    "name": "Ignite: Flurry of Fists",
+    "iconUrl": "gui_icon_skill_AR_FF_0_0.png"
+  },
+  "59181": {
+    "skillId": 59181,
+    "name": "Ignite: Cyclone Drive",
+    "iconUrl": "gui_icon_skill_AR_FF_1_0.png"
+  },
+  "59182": {
+    "skillId": 59182,
+    "name": "Ignite: Hammerblow",
+    "iconUrl": "gui_icon_skill_AR_FF_2_0.png"
+  },
+  "59183": {
+    "skillId": 59183,
+    "name": "Berserker's Fury",
+    "iconUrl": "gui_icon_skill_AR_FF_3_0.png"
+  },
+  "59184": {
+    "skillId": 59184,
+    "name": "Fire Within",
+    "iconUrl": "gui_icon_skill_AR_FF_4_0.png"
+  },
+  "59185": {
+    "skillId": 59185,
+    "name": "Piercing Gale",
+    "iconUrl": "gui_icon_skill_AR_FF_5_0.png"
+  },
+  "59186": {
+    "skillId": 59186,
+    "name": "Earthshaker",
+    "iconUrl": "gui_icon_skill_AR_FF_6_0.png"
+  },
+  "59187": {
+    "skillId": 59187,
+    "name": "Radiant Storm",
+    "iconUrl": "gui_icon_skill_AR_FF_7_0.png"
+  },
+  "59188": {
+    "skillId": 59188,
+    "name": "Raging Rebound",
+    "iconUrl": "gui_icon_skill_002_1_5.png"
   },
   "60000": {
     "skillId": 60000,

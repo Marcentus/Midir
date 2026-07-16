@@ -297,6 +297,22 @@
       "talent_icon": "/images/talents/gui_icon_name_multi_class_1_2.png",
       "icon": "/images/skills/gui_icon_skill_005_5_15.png",
       "color": "#CCB400"
+    },
+    "Blazing Brawler": {
+      "arcana_name": "Blazing Brawler",
+      "related_skill_ids": [59180, 59181, 59182, 59183, 59184, 59185, 59186, 59187],
+      "talents": ["Fighter", "Warrior"],
+      "talent_icon": "",
+      "icon": "/images/skills/gui_icon_skill_AR_FF_2_0.png",
+      "color": "#CCB400"
+    },
+    "Melodic Puppeteer": {
+      "arcana_name": "Melodic Puppeteer",
+      "related_skill_ids": [59160, 59161, 59162, 59163, 59164, 59165, 59166],
+      "talents": ["Puppeteer", "Bard"],
+      "talent_icon": "",
+      "icon": "/images/skills/gui_icon_skill_AR_MP_0_0.png",
+      "color": "#CCB400"
     }
   }
 }

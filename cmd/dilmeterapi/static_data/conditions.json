@@ -1034,6 +1034,31 @@
     "name": "Cave to Provocation",
     "iconUrl": "gui_condition_change03_8_7.png"
   },
+  "1074": {
+    "conditionId": 1074,
+    "name": "Close Combat Talent Weapon Max Damage Increase",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1075": {
+    "conditionId": 1075,
+    "name": "Archery Talent Weapon Max Damage Increase",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1076": {
+    "conditionId": 1076,
+    "name": "Instill Elements Stamina Usage Reduction",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1077": {
+    "conditionId": 1077,
+    "name": "Healing Effect Boost",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1078": {
+    "conditionId": 1078,
+    "name": "Recovers Wounds Equal to Healing Effect",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
   "1079": {
     "conditionId": 1079,
     "name": "Mineralization",
@@ -1434,10 +1459,50 @@
     "name": "Boundary of the Dream",
     "iconUrl": "GUI_condition_change02_4_7.png"
   },
+  "1153": {
+    "conditionId": 1153,
+    "name": "Divided Energy",
+    "iconUrl": "GUI_condition_change04_7_1.png"
+  },
+  "1154": {
+    "conditionId": 1154,
+    "name": "Feather Storm",
+    "iconUrl": "GUI_condition_change04_8_1.png"
+  },
+  "1155": {
+    "conditionId": 1155,
+    "name": "Battle Cry",
+    "iconUrl": "gui_condition_change03_5_3.png"
+  },
+  "1159": {
+    "conditionId": 1159,
+    "name": "Berserker's Fury",
+    "iconUrl": "gui_condition_change04_4_2.png"
+  },
   "116": {
     "conditionId": 116,
     "name": "Demigod Invulnerability",
     "iconUrl": "gui_condition_change_0_3.png"
+  },
+  "1160": {
+    "conditionId": 1160,
+    "name": "축복의 공예품: 코르플레의 나팔",
+    "iconUrl": "gui_condition_change03_9_6.png"
+  },
+  "1161": {
+    "conditionId": 1161,
+    "name": "Live Wire",
+    "iconUrl": "gui_condition_change04_2_2.png"
+  },
+  "1162": {
+    "conditionId": 1162,
+    "name": "Live Wire DoT",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1163": {
+    "conditionId": 1163,
+    "name": "Relentless Tempo",
+    "iconUrl": "gui_condition_change04_3_2.png"
   },
   "1164": {
     "conditionId": 1164,
@@ -1454,19 +1519,79 @@
     "name": "Increased Damage Taken",
     "iconUrl": "GUI_condition_change04_1_2.png"
   },
+  "1167": {
+    "conditionId": 1167,
+    "name": "Melodic Puppeteer Link Effect",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1168": {
+    "conditionId": 1168,
+    "name": "Movement Speed Increase",
+    "iconUrl": "gui_condition_change03_2_4.png"
+  },
   "117": {
     "conditionId": 117,
     "name": "Height Change",
     "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1174": {
+    "conditionId": 1174,
+    "name": "퓨리어스 앱솔루트",
+    "iconUrl": "gui_condition_change04_4_2.png"
+  },
+  "1175": {
+    "conditionId": 1175,
+    "name": "Freshman Buff",
+    "iconUrl": "gui_condition_change04_6_2.png"
   },
   "118": {
     "conditionId": 118,
     "name": "Attacked by a Crow.",
     "iconUrl": "gui_condition_change_1_3.png"
   },
+  "1185": {
+    "conditionId": 1185,
+    "name": "Hamchi Almighty Rock",
+    "iconUrl": "gui_condition_change04_0_0.png"
+  },
+  "1186": {
+    "conditionId": 1186,
+    "name": "Hamchi Almighty Adrenaline",
+    "iconUrl": "gui_condition_change04_8_3.png"
+  },
+  "1187": {
+    "conditionId": 1187,
+    "name": "Hamchi Boost Buff",
+    "iconUrl": "gui_condition_change04_9_3.png"
+  },
   "119": {
     "conditionId": 119,
     "name": "누아자 페이즈 전환",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1190": {
+    "conditionId": 1190,
+    "name": "Restricted Use: Whispers",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1191": {
+    "conditionId": 1191,
+    "name": "Restricted Use: Party Chat",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1192": {
+    "conditionId": 1192,
+    "name": "Restricted Use: Squad Chat",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1193": {
+    "conditionId": 1193,
+    "name": "Restricted Use: Pet Interaction Chat",
+    "iconUrl": "gui_condition_change_0_0.png"
+  },
+  "1194": {
+    "conditionId": 1194,
+    "name": "Restricted Use: Sending Mail",
     "iconUrl": "gui_condition_change_0_0.png"
   },
   "12": {
@@ -1479,6 +1604,21 @@
     "name": "Allows you to attack while mounted.",
     "iconUrl": "gui_condition_change_0_0.png"
   },
+  "1200": {
+    "conditionId": 1200,
+    "name": "Auto-Repair (Prestige)",
+    "iconUrl": "gui_condition_change_13_5.png"
+  },
+  "1202": {
+    "conditionId": 1202,
+    "name": "Hamchi Boost Check",
+    "iconUrl": "gui_condition_change04_10_3.png"
+  },
+  "1203": {
+    "conditionId": 1203,
+    "name": "Auto-Potion (Prestige)",
+    "iconUrl": "gui_condition_change_13_5.png"
+  },
   "121": {
     "conditionId": 121,
     "name": "Decrease Stats Curse",
@@ -1488,6 +1628,11 @@
     "conditionId": 122,
     "name": "Shadow Crystal",
     "iconUrl": "gui_condition_change_3_3.png"
+  },
+  "1225": {
+    "conditionId": 1225,
+    "name": "Hamchi Spirit",
+    "iconUrl": "gui_condition_change04_7_4.png"
   },
   "123": {
     "conditionId": 123,
@@ -5662,7 +5807,7 @@
   "888": {
     "conditionId": 888,
     "name": "Invisibility for Monster Teleportation",
-    "iconUrl": "gui_condition_change_1_0.png"
+    "iconUrl": "gui_condition_change_0_0.png"
   },
   "889": {
     "conditionId": 889,
