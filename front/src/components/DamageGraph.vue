@@ -79,7 +79,7 @@ import {
 } from "chart.js";
 // Import selectedTargetId from the store
 import { fightSummary, selectedTargetId, hiddenPlayers, showClassColorsForVisiblePlayers, globalHideMode } from "@/store";
-import { getMabiNameColor } from "@/util";
+import { getMabiNameColor, getClassColor } from "@/util";
 import zoomPlugin from "chartjs-plugin-zoom";
 import annotationPlugin from "chartjs-plugin-annotation";
 
@@ -537,10 +537,10 @@ export default defineComponent({
 
         if (isHidden) {
           displayLabel = player?.talentName || "Hidden";
-          displayColor = player?.talentColor || "#808080";
+          displayColor = getClassColor(player?.talentName, player?.talentColor || "#808080");
         } else {
-          if (showClassColorsForVisiblePlayers.value && player?.talentColor) {
-            displayColor = player.talentColor;
+          if (showClassColorsForVisiblePlayers.value) {
+            displayColor = getClassColor(player?.talentName, player?.talentColor);
           }
         }
 

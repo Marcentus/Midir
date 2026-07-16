@@ -714,7 +714,7 @@
 
 <script lang="ts" setup>
 import { inject, ref, computed, watch } from "vue";
-import { getMabiNameColor } from "@/util";
+import { getMabiNameColor, getClassColor } from "@/util";
 import {
   fightSummary,
   activeSessionId,
@@ -731,7 +731,7 @@ const props = defineProps<{
 const getPlayerColor = (item: any) => {
   const isHidden = globalHideMode.value || hiddenPlayers.has(item.id);
   const shouldUseClassColor = isHidden || showClassColorsForVisiblePlayers.value;
-  return shouldUseClassColor ? (item.talentColor || 'hsl(0, 0%, 50%)') : getMabiNameColor(item.name);
+  return shouldUseClassColor ? getClassColor(item.talentName, item.talentColor) : getMabiNameColor(item.name);
 };
 
 // --- STATE ---
