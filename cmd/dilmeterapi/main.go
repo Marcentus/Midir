@@ -64,7 +64,9 @@ func buildPcapFilter(ips, ports string, exitlagEnabled bool) string {
 		// ExitLag can change both relay IP and relay port mid-session. In ExitLag
 		// mode we capture all TCP on the selected interface, then follow valid
 		// game streams in the Go parser instead of binding libpcap to one socket.
-		return "tcp"
+		// We exclude common non-game ports like our own UI server (8030) and HTTP/HTTPS (80/443)
+		// to reduce noise, CPU usage, and prevent false TCP Recovery warnings on unrelated streams.
+		return fmt.Sprintf("tcp and port not %d and port not 80 and port not 443", port)
 	}
 
 	ipList := constants.DefaultGameserverNet

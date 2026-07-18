@@ -1,5 +1,5 @@
 import { customRef } from "vue";
-import { nameColorSaturation, nameColorLightness, nameColorSeed } from "@/store";
+import { nameColorSaturation, nameColorLightness, nameColorSeed, customClassColors } from "@/store";
 
 /**
  * Generates a vibrant, consistent color from a string using the HSL color model.
@@ -106,4 +106,23 @@ export function CustomReactive<T extends IUpdateCallback>(value: T): T {
   });
 
   return state.value;
+}
+
+/**
+ * Resolves the color for a given class/talent name.
+ * Checks for a user-customized color first, then falls back to the default color,
+ * and finally to a neutral gray.
+ *
+ * @param className The name of the class/talent/arcana.
+ * @param defaultColor The default color (usually from talents.json).
+ * @returns A hex, rgb, or hsl color string.
+ */
+export function getClassColor(className?: string, defaultColor?: string): string {
+  if (!className) {
+    return defaultColor || "hsl(0, 0%, 50%)";
+  }
+  if (customClassColors.value && customClassColors.value[className]) {
+    return customClassColors.value[className];
+  }
+  return defaultColor || "hsl(0, 0%, 50%)";
 }

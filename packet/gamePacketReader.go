@@ -763,7 +763,13 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 		}
 
 		for _, layer := range packetLayers {
-			if layer != layers.LayerTypeTCP || len(tcpLayer.Payload) < 1 {
+			if layer != layers.LayerTypeTCP {
+				continue
+			}
+
+			// We must process control packets (SYN, FIN, RST) even if they have no payload.
+			isControl := tcpLayer.SYN || tcpLayer.FIN || tcpLayer.RST
+			if len(tcpLayer.Payload) < 1 && !isControl {
 				continue
 			}
 
@@ -785,6 +791,31 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 			}
 
 			st := streams[key]
+
+			if tcpLayer.FIN || tcpLayer.RST {
+				if st != nil {
+					delete(streams, key)
+				}
+				continue
+			}
+
+			if tcpLayer.SYN {
+				if st != nil {
+					st.baseSeq = tcpLayer.Seq + 1
+					st.nextSeq = tcpLayer.Seq + 1
+					st.pending = st.pending[:0]
+				} else {
+					st = &tcpStreamState{
+						baseSeq:  tcpLayer.Seq + 1,
+						nextSeq:  tcpLayer.Seq + 1,
+						pending:  make([]pendingTcpLayer, 0, packetQueueSize),
+						lastSeen: ci.Timestamp,
+					}
+					streams[key] = st
+				}
+				continue
+			}
+
 			if st == nil {
 				st = &tcpStreamState{
 					baseSeq:  tcpLayer.Seq,
@@ -798,6 +829,9 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 
 			if st.nextSeq != 0 && tcpLayer.Seq != st.nextSeq {
 				if tcpLayer.Seq < st.nextSeq {
+					if int32(tcpLayer.Seq-st.nextSeq) > 0 {
+						logger.Printf("[TCP Recovery Anomaly] Packet on %s is in the future but treated as past. Seq: %d, NextSeq: %d, PayloadLen: %d (Potential Wrap-around Bug)", key, tcpLayer.Seq, st.nextSeq, len(tcpLayer.Payload))
+					}
 					if tcpLayer.Seq+uint32(len(tcpLayer.Payload)) >= st.nextSeq {
 						payload := tcpLayer.Payload[st.nextSeq-tcpLayer.Seq:]
 						if len(payload) > 0 {
@@ -825,7 +859,10 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 						skippedBytes := targetLayer.tcpLayer.Seq - st.nextSeq
 						warningMsg := fmt.Sprintf("Network packet loss detected on %s (Gap: %d bytes). Skipping to resume.", key, skippedBytes)
 						atomic.AddUint32(&t.networkLoss, 1)
-						logger.Printf("[TCP Recovery] %s OldNext: %d, NewNext: %d (Active Streams: %d, Pending Count: %d)", warningMsg, st.nextSeq, targetLayer.tcpLayer.Seq, len(streams), len(st.pending))
+
+						logger.Printf("[TCP Recovery] %s OldNext: %d, NewNext: %d (Active Streams: %d, Pending Count: %d)",
+							warningMsg, st.nextSeq, targetLayer.tcpLayer.Seq, len(streams), len(st.pending))
+
 						st.nextSeq = targetLayer.tcpLayer.Seq
 
 						select {

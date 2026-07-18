@@ -29215,6 +29215,42 @@
     "raceId": 4776,
     "name": "Iolar"
   },
+  "4777": {
+    "raceId": 4777,
+    "name": "Glora"
+  },
+  "4778": {
+    "raceId": 4778,
+    "name": "Ater"
+  },
+  "4779": {
+    "raceId": 4779,
+    "name": "Excited Fan"
+  },
+  "4780": {
+    "raceId": 4780,
+    "name": "Venomous Rock Scorpion"
+  },
+  "4781": {
+    "raceId": 4781,
+    "name": "Elven Fighter"
+  },
+  "4782": {
+    "raceId": 4782,
+    "name": "Vitis"
+  },
+  "4783": {
+    "raceId": 4783,
+    "name": "Elf Guard"
+  },
+  "4784": {
+    "raceId": 4784,
+    "name": "Glora"
+  },
+  "4785": {
+    "raceId": 4785,
+    "name": "Ater"
+  },
   "48": {
     "raceId": 48,
     "name": "Dorren"
@@ -30747,6 +30783,10 @@
     "raceId": 490471,
     "name": "Fairy Dragon (Event)"
   },
+  "490481": {
+    "raceId": 490481,
+    "name": "Food Kiosk"
+  },
   "490489": {
     "raceId": 490489,
     "name": "Beep Beep Glanadh"
@@ -30774,6 +30814,50 @@
   "490499": {
     "raceId": 490499,
     "name": "Spirit of Tuan (Event)"
+  },
+  "490500": {
+    "raceId": 490500,
+    "name": "Squishy Hamchi"
+  },
+  "490501": {
+    "raceId": 490501,
+    "name": "Mighty Hamchi"
+  },
+  "490502": {
+    "raceId": 490502,
+    "name": "Leafy Hamchi"
+  },
+  "490503": {
+    "raceId": 490503,
+    "name": "Hungry Hamchi"
+  },
+  "490508": {
+    "raceId": 490508,
+    "name": "Chef Purrling"
+  },
+  "490509": {
+    "raceId": 490509,
+    "name": "Chef Purrling"
+  },
+  "490512": {
+    "raceId": 490512,
+    "name": "Prestige Cwn Annwn"
+  },
+  "490514": {
+    "raceId": 490514,
+    "name": "Dee Dee Scamall"
+  },
+  "490515": {
+    "raceId": 490515,
+    "name": "Doo Dee Doo Scamall"
+  },
+  "490516": {
+    "raceId": 490516,
+    "name": "Dee Dooo Scamall"
+  },
+  "490517": {
+    "raceId": 490517,
+    "name": "Prestige Cwn Annwn"
   },
   "491001": {
     "raceId": 491001,
@@ -30830,6 +30914,26 @@
   "491017": {
     "raceId": 491017,
     "name": "Practice Kart (Event)"
+  },
+  "491018": {
+    "raceId": 491018,
+    "name": "Warrior Corgi (Event)"
+  },
+  "491019": {
+    "raceId": 491019,
+    "name": "Warrior Corgi (Event)"
+  },
+  "491020": {
+    "raceId": 491020,
+    "name": "Wizard Corgi (Event)"
+  },
+  "491021": {
+    "raceId": 491021,
+    "name": "Wizard Corgi (Event)"
+  },
+  "491022": {
+    "raceId": 491022,
+    "name": "Prestige Cwn Annwn"
   },
   "5": {
     "raceId": 5,
@@ -32091,29 +32195,309 @@
     "raceId": 523,
     "name": "Glowing Stone Gargoyle"
   },
+  "5230": {
+    "raceId": 5230,
+    "name": "Fuamnach"
+  },
+  "5231": {
+    "raceId": 5231,
+    "name": "Foinse"
+  },
+  "5232": {
+    "raceId": 5232,
+    "name": "Crioch"
+  },
+  "5233": {
+    "raceId": 5233,
+    "name": "Glanadh 1"
+  },
+  "5234": {
+    "raceId": 5234,
+    "name": "Glanadh 2"
+  },
+  "5235": {
+    "raceId": 5235,
+    "name": "Glanadh 3"
+  },
+  "5236": {
+    "raceId": 5236,
+    "name": "Scuab 1"
+  },
+  "5237": {
+    "raceId": 5237,
+    "name": "Scuab 2"
+  },
+  "5238": {
+    "raceId": 5238,
+    "name": "Scuab 3"
+  },
+  "5239": {
+    "raceId": 5239,
+    "name": "Scamall 1"
+  },
   "524": {
     "raceId": 524,
     "name": "Shamala"
+  },
+  "5240": {
+    "raceId": 5240,
+    "name": "Scamall 2"
+  },
+  "5241": {
+    "raceId": 5241,
+    "name": "Scamall 3"
+  },
+  "5242": {
+    "raceId": 5242,
+    "name": "Insect"
+  },
+  "5243": {
+    "raceId": 5243,
+    "name": "Lepidopteran Divine Beast"
+  },
+  "5244": {
+    "raceId": 5244,
+    "name": "Lepidopteran Divine Beast"
+  },
+  "5245": {
+    "raceId": 5245,
+    "name": "Lepidopteran Divine Beast"
+  },
+  "5246": {
+    "raceId": 5246,
+    "name": "Piscine Divine Beast"
+  },
+  "5247": {
+    "raceId": 5247,
+    "name": "Piscine Divine Beast"
+  },
+  "5248": {
+    "raceId": 5248,
+    "name": "Piscine Divine Beast"
+  },
+  "5249": {
+    "raceId": 5249,
+    "name": "Avian Divine Beast"
   },
   "525": {
     "raceId": 525,
     "name": "Akule"
   },
+  "5250": {
+    "raceId": 5250,
+    "name": "Avian Divine Beast"
+  },
+  "5251": {
+    "raceId": 5251,
+    "name": "Avian Divine Beast"
+  },
+  "5252": {
+    "raceId": 5252,
+    "name": "Round Symbol"
+  },
+  "5253": {
+    "raceId": 5253,
+    "name": "Cross Symbol"
+  },
+  "5254": {
+    "raceId": 5254,
+    "name": "Divine Beast Defense Force Desk 1"
+  },
+  "5255": {
+    "raceId": 5255,
+    "name": "Divine Beast Defense Force Desk 2"
+  },
+  "5256": {
+    "raceId": 5256,
+    "name": "Divine Beast Defense Force Weapon Crate 1"
+  },
+  "5257": {
+    "raceId": 5257,
+    "name": "Divine Beast Defense Force Weapon Crate 2"
+  },
+  "5258": {
+    "raceId": 5258,
+    "name": "Divine Beast Defense Force Wooden Box 1"
+  },
+  "5259": {
+    "raceId": 5259,
+    "name": "Divine Beast Defense Force Wooden Box 2"
+  },
   "526": {
     "raceId": 526,
     "name": "Black Dragon Knight"
+  },
+  "5260": {
+    "raceId": 5260,
+    "name": "Boy Crioch"
+  },
+  "5261": {
+    "raceId": 5261,
+    "name": "Adelia"
+  },
+  "5262": {
+    "raceId": 5262,
+    "name": "Adelia"
+  },
+  "5263": {
+    "raceId": 5263,
+    "name": "Isla"
+  },
+  "5264": {
+    "raceId": 5264,
+    "name": "Isla"
+  },
+  "5265": {
+    "raceId": 5265,
+    "name": "Fuamnach"
+  },
+  "5266": {
+    "raceId": 5266,
+    "name": "Diligent Tara Relief Soldier"
+  },
+  "5267": {
+    "raceId": 5267,
+    "name": "Calm Tara Relief Soldier"
+  },
+  "5268": {
+    "raceId": 5268,
+    "name": "Timid Tara Relief Soldier"
+  },
+  "5269": {
+    "raceId": 5269,
+    "name": "Fordyce"
   },
   "527": {
     "raceId": 527,
     "name": "White Dragon"
   },
+  "5270": {
+    "raceId": 5270,
+    "name": "Nerys"
+  },
+  "5271": {
+    "raceId": 5271,
+    "name": "Manus"
+  },
+  "5272": {
+    "raceId": 5272,
+    "name": "Manus NA"
+  },
+  "5273": {
+    "raceId": 5273,
+    "name": "Walter"
+  },
+  "5274": {
+    "raceId": 5274,
+    "name": "Stewart"
+  },
+  "5275": {
+    "raceId": 5275,
+    "name": "Aeira"
+  },
+  "5276": {
+    "raceId": 5276,
+    "name": "Austeyn"
+  },
+  "5277": {
+    "raceId": 5277,
+    "name": "Kristell"
+  },
+  "5278": {
+    "raceId": 5278,
+    "name": "Aranwen"
+  },
+  "5279": {
+    "raceId": 5279,
+    "name": "Melwyn"
+  },
   "528": {
     "raceId": 528,
     "name": "Blade Wyvern"
   },
+  "5280": {
+    "raceId": 5280,
+    "name": "Eavan"
+  },
+  "5281": {
+    "raceId": 5281,
+    "name": "Pile of Rocks"
+  },
+  "5282": {
+    "raceId": 5282,
+    "name": "Foinse"
+  },
+  "5283": {
+    "raceId": 5283,
+    "name": "Dispatched Eccentric Scholar"
+  },
+  "5284": {
+    "raceId": 5284,
+    "name": "Dispatched Assistant Scholar"
+  },
+  "5285": {
+    "raceId": 5285,
+    "name": "Dispatched Royal Scholar"
+  },
+  "5286": {
+    "raceId": 5286,
+    "name": "Gorias Grass"
+  },
+  "5287": {
+    "raceId": 5287,
+    "name": "_LT[xml.race.13460]"
+  },
+  "5288": {
+    "raceId": 5288,
+    "name": "_LT[xml.race.13461]"
+  },
+  "5289": {
+    "raceId": 5289,
+    "name": "Blunt Vales Royal Guard"
+  },
   "529": {
     "raceId": 529,
     "name": "Snowfield Slayer"
+  },
+  "5290": {
+    "raceId": 5290,
+    "name": "Cold Vales Royal Guard"
+  },
+  "5291": {
+    "raceId": 5291,
+    "name": "Hostile Vales Royal Guard"
+  },
+  "5292": {
+    "raceId": 5292,
+    "name": "Aine"
+  },
+  "5293": {
+    "raceId": 5293,
+    "name": "Delga"
+  },
+  "5294": {
+    "raceId": 5294,
+    "name": "Declan"
+  },
+  "5295": {
+    "raceId": 5295,
+    "name": "Aine"
+  },
+  "5296": {
+    "raceId": 5296,
+    "name": "Seafra"
+  },
+  "5297": {
+    "raceId": 5297,
+    "name": "Skirmisher"
+  },
+  "5298": {
+    "raceId": 5298,
+    "name": "Archer"
+  },
+  "5299": {
+    "raceId": 5299,
+    "name": "Alchemist"
   },
   "53": {
     "raceId": 53,
@@ -32122,6 +32506,10 @@
   "530": {
     "raceId": 530,
     "name": "Korsek Raptor"
+  },
+  "5300": {
+    "raceId": 5300,
+    "name": "Foinse"
   },
   "530001": {
     "raceId": 530001,
@@ -32187,6 +32575,10 @@
     "raceId": 530018,
     "name": "Shadow Lancer"
   },
+  "5301": {
+    "raceId": 5301,
+    "name": "Crioch"
+  },
   "530101": {
     "raceId": 530101,
     "name": "Bone Lancer"
@@ -32230,6 +32622,10 @@
   "530111": {
     "raceId": 530111,
     "name": "Small Bone Lancer"
+  },
+  "5302": {
+    "raceId": 5302,
+    "name": "Crioch"
   },
   "530201": {
     "raceId": 530201,
@@ -32283,13 +32679,85 @@
     "raceId": 530213,
     "name": "Zombie Soldier"
   },
+  "5303": {
+    "raceId": 5303,
+    "name": "Lepidopteran Divine Beast"
+  },
+  "5304": {
+    "raceId": 5304,
+    "name": "Piscine Divine Beast"
+  },
+  "5305": {
+    "raceId": 5305,
+    "name": "Avian Divine Beast"
+  },
+  "5306": {
+    "raceId": 5306,
+    "name": "Defense Line"
+  },
+  "5307": {
+    "raceId": 5307,
+    "name": "Mission Invisible Man"
+  },
+  "5308": {
+    "raceId": 5308,
+    "name": "Veteran Skirmisher"
+  },
+  "5309": {
+    "raceId": 5309,
+    "name": "Veteran Archer"
+  },
   "531": {
     "raceId": 531,
     "name": "Snowfield Slayer"
   },
+  "5310": {
+    "raceId": 5310,
+    "name": "Veteran Alchemist"
+  },
+  "5311": {
+    "raceId": 5311,
+    "name": "Elite Skirmisher"
+  },
+  "5312": {
+    "raceId": 5312,
+    "name": "Elite Archer"
+  },
+  "5313": {
+    "raceId": 5313,
+    "name": "Elite Alchemist"
+  },
+  "5314": {
+    "raceId": 5314,
+    "name": "Defense Commander"
+  },
+  "5315": {
+    "raceId": 5315,
+    "name": "Crioch"
+  },
+  "5316": {
+    "raceId": 5316,
+    "name": "Declan"
+  },
+  "5317": {
+    "raceId": 5317,
+    "name": "Seafra"
+  },
+  "5318": {
+    "raceId": 5318,
+    "name": "Crioch"
+  },
+  "5319": {
+    "raceId": 5319,
+    "name": "Small Brazier Flame"
+  },
   "532": {
     "raceId": 532,
     "name": "Black Dragon"
+  },
+  "5320": {
+    "raceId": 5320,
+    "name": "Administrative Sector Flame"
   },
   "533": {
     "raceId": 533,
@@ -34987,17 +35455,37 @@
     "raceId": 805120,
     "name": "Snorkeling Pup Doll Bag"
   },
+  "805121": {
+    "raceId": 805121,
+    "name": "Rowan Doll"
+  },
   "805122": {
     "raceId": 805122,
-    "name": "_LT[xml.race.13066]"
+    "name": "Loiscneach Doll"
+  },
+  "805123": {
+    "raceId": 805123,
+    "name": "Iolar Doll"
+  },
+  "805124": {
+    "raceId": 805124,
+    "name": "Matthias Doll"
+  },
+  "805125": {
+    "raceId": 805125,
+    "name": "Morrighan Doll"
   },
   "805126": {
     "raceId": 805126,
-    "name": "_LT[xml.race.13070]"
+    "name": "Cichol Doll"
+  },
+  "805127": {
+    "raceId": 805127,
+    "name": "Neamhain Doll"
   },
   "805128": {
     "raceId": 805128,
-    "name": "_LT[xml.race.13072]"
+    "name": "Macha Doll"
   },
   "80601": {
     "raceId": 80601,
@@ -35703,13 +36191,33 @@
     "raceId": 810157,
     "name": "Flying High Bear Doll"
   },
+  "810158": {
+    "raceId": 810158,
+    "name": "_LT[xml.race.13361]"
+  },
   "810159": {
     "raceId": 810159,
     "name": "_LT[xml.race.13362]"
   },
+  "810160": {
+    "raceId": 810160,
+    "name": "_LT[xml.race.13363]"
+  },
+  "810161": {
+    "raceId": 810161,
+    "name": "_LT[xml.race.13364]"
+  },
+  "810162": {
+    "raceId": 810162,
+    "name": "_LT[xml.race.13365]"
+  },
   "810163": {
     "raceId": 810163,
     "name": "_LT[xml.race.13366]"
+  },
+  "810164": {
+    "raceId": 810164,
+    "name": "_LT[xml.race.13367]"
   },
   "810165": {
     "raceId": 810165,
@@ -39251,6 +39759,30 @@
     "raceId": 990211,
     "name": "Soul Liberator Colossus Marionette"
   },
+  "990212": {
+    "raceId": 990212,
+    "name": "Human"
+  },
+  "990213": {
+    "raceId": 990213,
+    "name": "Human"
+  },
+  "990214": {
+    "raceId": 990214,
+    "name": "Elf"
+  },
+  "990215": {
+    "raceId": 990215,
+    "name": "Elf"
+  },
+  "990216": {
+    "raceId": 990216,
+    "name": "Giant"
+  },
+  "990217": {
+    "raceId": 990217,
+    "name": "Giant"
+  },
   "990300": {
     "raceId": 990300,
     "name": "무한궁술 더미"
@@ -39614,6 +40146,10 @@
   "990419": {
     "raceId": 990419,
     "name": "_LT[xml.race.13287]"
+  },
+  "990420": {
+    "raceId": 990420,
+    "name": "Papillon Waltz Pierrot Marionette"
   },
   "990422": {
     "raceId": 990422,

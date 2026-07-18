@@ -280,10 +280,10 @@
                 <template v-slot:prepend>
                   <v-icon icon="mdi-palette"></v-icon>
                 </template>
-                <v-list-item-title>Use Class Colors for Visible Players</v-list-item-title>
+                <v-list-item-title>Use Arcana Colors for Visible Players</v-list-item-title>
                 <v-list-item-subtitle class="mt-1">
                   If enabled, visible players will be colored based on their active Talent/Arcana instead of a random color.
-                  Hidden players always use Class Colors.
+                  Hidden players always use Arcana Colors.
                 </v-list-item-subtitle>
                 <template v-slot:append>
                   <v-switch
@@ -321,6 +321,8 @@
             <v-divider class="my-4"></v-divider>
             
             <ColorSettings />
+            <v-divider class="my-4"></v-divider>
+            <ClassColorSettings />
           </v-window-item>
         </v-window>
       </v-card-text>
@@ -424,11 +426,13 @@
 import { defineComponent, computed, ref, onMounted, onUnmounted } from "vue";
 import { showClassColorsForVisiblePlayers, dpsMeterFillMode, socket, fightSummary } from "@/store";
 import ColorSettings from "./ColorSettings.vue";
+import ClassColorSettings from "./ClassColorSettings.vue";
 
 export default defineComponent({
   name: "SettingsView",
   components: {
     ColorSettings,
+    ClassColorSettings,
   },
   setup() {
     const activeTab = ref("capture");

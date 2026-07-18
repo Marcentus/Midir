@@ -199,6 +199,7 @@ export const dpsMeterFillMode = ref<"column" | "full">("full");
 export const nameColorSaturation = ref<[number, number]>([50, 90]); // [Min, Max]
 export const nameColorLightness = ref<[number, number]>([30, 50]); // [Min, Max]
 export const nameColorSeed = ref<string>("T0F89V"); // Default seed
+export const customClassColors = ref<Record<string, string>>({});
 
 export interface MetricPref {
   key: string;
@@ -250,6 +251,9 @@ try {
     if (Array.isArray(parsed.cardSkillMetrics) && parsed.cardSkillMetrics.length > 0) {
       cardSkillMetrics.value = parsed.cardSkillMetrics;
     }
+    if (parsed.customClassColors && typeof parsed.customClassColors === 'object') {
+      customClassColors.value = parsed.customClassColors;
+    }
   }
 } catch (e) {
   console.error("Failed to load settings", e);
@@ -265,6 +269,7 @@ export function saveSettings() {
       nameColorSeed: nameColorSeed.value,
       listSkillMetrics: listSkillMetrics.value,
       cardSkillMetrics: cardSkillMetrics.value,
+      customClassColors: customClassColors.value,
     };
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(data));
   } catch (e) {
@@ -272,7 +277,7 @@ export function saveSettings() {
   }
 }
 
-watch([showClassColorsForVisiblePlayers, dpsMeterFillMode, nameColorSaturation, nameColorLightness, nameColorSeed, listSkillMetrics, cardSkillMetrics], () => {
+watch([showClassColorsForVisiblePlayers, dpsMeterFillMode, nameColorSaturation, nameColorLightness, nameColorSeed, listSkillMetrics, cardSkillMetrics, customClassColors], () => {
   saveSettings();
 }, { deep: true });
 

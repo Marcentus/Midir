@@ -248,7 +248,7 @@
       "talents": ["Cleric", "Bard"],
       "talent_icon": "/images/talents/gui_icon_name_multi_class_0_1.png",
       "icon": "/images/skills/gui_icon_skill_005_7_3.png",
-      "color": "#2E7D32"
+      "color": "#dc8484"
     },
     "Alchemic Sharpshooter": {
       "arcana_name": "Alchemic Sharpshooter",
@@ -280,7 +280,7 @@
       "talents": ["Knight", "Gunslinger"],
       "talent_icon": "/images/talents/gui_icon_name_multi_class_1_1.png",
       "icon": "/images/skills/gui_icon_skill_AR_BL_6_0.png",
-      "color": "#007270"
+      "color": "#008f8c"
     },
     "Forbidden Alchemist": {
       "arcana_name": "Forbidden Alchemist",
@@ -296,7 +296,23 @@
       "talents": ["Battle Alchemist", "Apothecary"],
       "talent_icon": "/images/talents/gui_icon_name_multi_class_1_2.png",
       "icon": "/images/skills/gui_icon_skill_005_5_15.png",
-      "color": "#CCB400"
+      "color": "#e5d036"
+    },
+    "Blazing Brawler": {
+      "arcana_name": "Blazing Brawler",
+      "related_skill_ids": [59180, 59181, 59182, 59183, 59184, 59185, 59186, 59187],
+      "talents": ["Fighter", "Warrior"],
+      "talent_icon": "",
+      "icon": "/images/skills/gui_icon_skill_AR_FF_2_0.png",
+      "color": "#678091"
+    },
+    "Melodic Puppeteer": {
+      "arcana_name": "Melodic Puppeteer",
+      "related_skill_ids": [59160, 59161, 59162, 59163, 59164, 59165, 59166, 59167, 59168, 59169],
+      "talents": ["Puppeteer", "Bard"],
+      "talent_icon": "",
+      "icon": "/images/skills/gui_icon_skill_AR_MP_2_0.png",
+      "color": "#d6425c"
     }
   }
 }
