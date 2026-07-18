@@ -529,8 +529,8 @@ func ParseEntityAppearPacket(msg Message) (*EntityInfo, error) {
 
 	// 펫 / 마리오네트 관련
 	if IsMarionetteRace(v.RaceId) {
-		if len(origMsg) > 148 && origMsg[148].Type() == MessageElemTypeLong {
-			v.OwnerId = origMsg[148].Data().(uint64)
+		if len(msg) > 49 && msg[49].Type() == MessageElemTypeLong {
+			v.OwnerId = msg[49].Data().(uint64)
 		}
 		// For marionettes, still advance the pet-related fields if they exist to keep the message slice consistent,
 		// but ignore errors if this sub-block is missing/short.
