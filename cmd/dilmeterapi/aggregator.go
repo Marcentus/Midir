@@ -945,6 +945,7 @@ func (a *Aggregator) GetSummary() FightSummary {
 			SecondaryOwnerID:   secOwnerIDStr,
 			SecondaryOwnerName: secOwnerName,
 			EntityType:         entity.EntityType,
+			EntityTypeStr:      a.GetEntityTypeString(entity),
 		})
 	}
 
@@ -982,11 +983,16 @@ func getEntityCategory(entity *packet.EntityInfo) string {
 			return "Pets"
 		case 6:
 			return "Dollbags"
+		case 7:
+			return "Mini-Gems"
 		case 8:
 			return "Golems"
-		case 11:
+		case 5, 11, 12:
 			return "Marionettes"
 		default:
+			if entity.EntityType != 0 {
+				return "Unknown Summons"
+			}
 			isMarionette := packet.IsMarionetteRace(entity.RaceId)
 			if !isMarionette {
 				if _, err := strconv.Atoi(entity.Name); err == nil {
@@ -1372,11 +1378,16 @@ func (a *Aggregator) GetEntityTypeString(entity *packet.EntityInfo) string {
 			return "Pet"
 		case 6:
 			return "Dollbag"
+		case 7:
+			return "Mini-Gem"
 		case 8:
 			return "Golem"
-		case 11:
+		case 5, 11, 12:
 			return "Marionette (Puppet)"
 		default:
+			if entity.EntityType != 0 {
+				return fmt.Sprintf("Unknown Summon (Type: %d)", entity.EntityType)
+			}
 			isMarionette := packet.IsMarionetteRace(entity.RaceId)
 			if !isMarionette {
 				if _, err := strconv.Atoi(entity.Name); err == nil {

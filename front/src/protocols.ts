@@ -126,6 +126,7 @@ export interface EntityState {
   secondaryOwnerId?: string;
   secondaryOwnerName?: string;
   entityType?: number;
+  entityTypeStr?: string;
 }
 
 export interface FightSummary {

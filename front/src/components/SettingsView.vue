@@ -388,8 +388,8 @@
                   <div class="text-subtitle-2 text-white font-weight-bold" style="word-break: break-word; overflow-wrap: anywhere; line-height: 1.2;">
                     {{ entity.name }}
                   </div>
-                  <v-chip :color="getCategoryBadge(entity.category).color" size="x-small" label class="text-uppercase font-weight-black ml-2 flex-shrink-0">
-                    {{ getCategoryBadge(entity.category).text }}
+                  <v-chip :color="getCategoryBadge(entity).color" size="x-small" label class="text-uppercase font-weight-black ml-2 flex-shrink-0">
+                    {{ getCategoryBadge(entity).text }}
                   </v-chip>
                 </div>
 
@@ -476,7 +476,7 @@ export default defineComponent({
       if (activeEntityTab.value === "Players") {
         list = list.filter(e => e.category === "Players");
       } else if (activeEntityTab.value === "Summons") {
-        list = list.filter(e => ["Marionettes", "Pets", "Dollbags", "Golems"].includes(e.category));
+        list = list.filter(e => ["Marionettes", "Pets", "Dollbags", "Golems", "Mini-Gems", "Unknown Summons"].includes(e.category));
       } else if (activeEntityTab.value === "Enemies") {
         list = list.filter(e => e.category === "Enemies");
       } else if (activeEntityTab.value === "NPCs") {
@@ -499,7 +499,9 @@ export default defineComponent({
       return list;
     });
 
-    const getCategoryBadge = (category: string) => {
+    const getCategoryBadge = (entity: any) => {
+      if (!entity) return { text: "Unknown", color: "grey" };
+      const category = entity.category;
       switch (category) {
         case "Players":
           return { text: "Player", color: "green" };
@@ -509,12 +511,16 @@ export default defineComponent({
           return { text: "Pet", color: "blue" };
         case "Dollbags":
           return { text: "Dollbag", color: "pink" };
+        case "Mini-Gems":
+          return { text: "Mini-Gem", color: "indigo" };
         case "Golems":
           return { text: "Golem", color: "orange" };
         case "NPCs":
           return { text: "NPC", color: "teal" };
         case "Enemies":
           return { text: "Enemy", color: "red" };
+        case "Unknown Summons":
+          return { text: entity.entityTypeStr || "Unknown Summon", color: "deep-orange-darken-2" };
         default:
           return { text: category, color: "grey" };
       }

@@ -164,6 +164,7 @@ type EntityState struct {
 	SecondaryOwnerID     string                     `json:"secondaryOwnerId,omitempty"`
 	SecondaryOwnerName   string                     `json:"secondaryOwnerName,omitempty"`
 	EntityType           uint8                      `json:"entityType"`
+	EntityTypeStr        string                     `json:"entityTypeStr,omitempty"`
 }
 
 // FightSummary's EncounterDuration now represents the time from the first to last damage event.
