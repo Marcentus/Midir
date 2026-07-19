@@ -914,20 +914,37 @@ func (a *Aggregator) GetSummary() FightSummary {
 		category := getEntityCategory(entity)
 
 		ownerIDStr := ""
+		ownerName := ""
 		if entity.OwnerId != 0 {
 			ownerIDStr = strconv.FormatUint(entity.OwnerId, 10)
+			if player, ok := playerCache.Get(entity.OwnerId); ok {
+				ownerName = player.Name
+			}
+		}
+
+		secOwnerIDStr := ""
+		secOwnerName := ""
+		if entity.SecondaryOwnerId != 0 {
+			secOwnerIDStr = strconv.FormatUint(entity.SecondaryOwnerId, 10)
+			if player, ok := playerCache.Get(entity.SecondaryOwnerId); ok {
+				secOwnerName = player.Name
+			}
 		}
 
 		summary.CurrentEntities = append(summary.CurrentEntities, EntityState{
-			ID:         strconv.FormatUint(entityID, 10),
-			Name:       entity.Name,
-			RaceID:     entity.RaceId,
-			RaceName:   getRaceName(entity.RaceId),
-			Conditions: conditions,
-			CurrentHP:  entity.CurrentHP,
-			MaxHP:      entity.MaxHP,
-			Category:   category,
-			OwnerID:    ownerIDStr,
+			ID:                 strconv.FormatUint(entityID, 10),
+			Name:               entity.Name,
+			RaceID:             entity.RaceId,
+			RaceName:           getRaceName(entity.RaceId),
+			Conditions:         conditions,
+			CurrentHP:          entity.CurrentHP,
+			MaxHP:              entity.MaxHP,
+			Category:           category,
+			OwnerID:            ownerIDStr,
+			OwnerName:          ownerName,
+			SecondaryOwnerID:   secOwnerIDStr,
+			SecondaryOwnerName: secOwnerName,
+			EntityType:         entity.EntityType,
 		})
 	}
 
@@ -944,35 +961,46 @@ func (a *Aggregator) GetSummary() FightSummary {
 	return summary
 }
 
-// getEntityCategory classifies an entity into categorized groups: Players, Enemies, Pets, NPCs, or Other.
+// getEntityCategory classifies an entity into categorized groups: Players, Marionettes, Pets, Dollbags, Golems, NPCs, Enemies, or Other.
 func getEntityCategory(entity *packet.EntityInfo) string {
-	// 1. Pets / Summons: OwnerId != 0
-	if entity.OwnerId != 0 {
-		return "Pets"
-	}
-
-	// 2. NPCs: Name starts with "_"
 	if strings.HasPrefix(entity.Name, "_") {
 		return "NPCs"
 	}
 
-	// 3. Enemies: Name is numeric
-	if _, err := strconv.Atoi(entity.Name); err == nil {
-		return "Enemies"
-	}
-
-	// 4. Players: Human, Elf, Giant
-	switch entity.RaceId {
-	case 8001, 8002, 9001, 9002, 10001, 10002:
+	if isPlayerInfo(entity.Name, entity.RaceId, entity.OwnerId) {
 		return "Players"
 	}
 
-	// Fallback check using player criteria
-	if isPlayerEntity(entity) {
-		return "Players"
+	effectiveOwner := entity.OwnerId
+	if effectiveOwner == 0 {
+		effectiveOwner = entity.SecondaryOwnerId
 	}
 
-	return "Other"
+	if effectiveOwner != 0 {
+		switch entity.EntityType {
+		case 2:
+			return "Pets"
+		case 6:
+			return "Dollbags"
+		case 8:
+			return "Golems"
+		case 11:
+			return "Marionettes"
+		default:
+			isMarionette := packet.IsMarionetteRace(entity.RaceId)
+			if !isMarionette {
+				if _, err := strconv.Atoi(entity.Name); err == nil {
+					isMarionette = true
+				}
+			}
+			if isMarionette {
+				return "Marionettes"
+			}
+			return "Pets"
+		}
+	}
+
+	return "Enemies"
 }
 
 // isPlayerEntity determines if an entity is a player based on Name and OwnerId.
