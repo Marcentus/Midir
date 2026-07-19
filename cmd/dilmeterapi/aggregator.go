@@ -309,6 +309,7 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 			}
 			a.mu.Unlock()
 			playerCache.Update(entity)
+			a.logEntityOwnerAndType("Appear", entity)
 		}
 		return
 	}
@@ -345,6 +346,7 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 					}
 				}
 				playerCache.Update(entity)
+				a.logEntityOwnerAndType("MultiAppear", entity)
 			}
 			a.mu.Unlock()
 		}
@@ -1316,4 +1318,55 @@ func (a *Aggregator) processDeadFeather(p *packet.GamePacket) {
 	}
 	a.seenDead[entityID] = false
 	a.startPresenceInterval(entityID, p.At.Unix())
+}
+
+func (a *Aggregator) GetEntityTypeString(entity *packet.EntityInfo) string {
+	if entity == nil {
+		return "Unknown"
+	}
+
+	if strings.HasPrefix(entity.Name, "_") {
+		return "NPC"
+	}
+
+	if isPlayerInfo(entity.Name, entity.RaceId, entity.OwnerId) {
+		return "Player"
+	}
+
+	effectiveOwner := entity.OwnerId
+	if effectiveOwner == 0 {
+		effectiveOwner = entity.SecondaryOwnerId
+	}
+
+	if effectiveOwner != 0 {
+		switch entity.EntityType {
+		case 2:
+			return "Pet"
+		case 6:
+			return "Dollbag"
+		case 8:
+			return "Golem"
+		case 11:
+			return "Marionette (Puppet)"
+		default:
+			isMarionette := packet.IsMarionetteRace(entity.RaceId)
+			if !isMarionette {
+				if _, err := strconv.Atoi(entity.Name); err == nil {
+					isMarionette = true
+				}
+			}
+			if isMarionette {
+				return "Marionette (Puppet)"
+			}
+			return "Pet/Summon"
+		}
+	}
+
+	return "Monster/Enemy"
+}
+
+func (a *Aggregator) logEntityOwnerAndType(context string, entity *packet.EntityInfo) {
+	entityTypeStr := a.GetEntityTypeString(entity)
+	logger.Printf("[DEBUG-ENTITY-TYPE] Context: %s, EntityName: %s, ID: %d, Type: %s (Owner: %d, SecondaryOwner: %d, TypeByte: %d)",
+		context, entity.Name, entity.Id, entityTypeStr, entity.OwnerId, entity.SecondaryOwnerId, entity.EntityType)
 }

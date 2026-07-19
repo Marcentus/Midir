@@ -28,6 +28,10 @@ type EntityInfo struct {
 	CharacterConditionMap map[uint32]*EntityCharacterCondition
 	GuildName             string
 	OwnerId               uint64 // 펫, 마리오네트 등
+	EntityType            uint8  // 2: pet, 11: puppet, 6: dollbag, 8: golem, etc.
+	SecondaryOwnerId      uint64 // secondary owner ID parsed from appearance block
+
+
 
 	CombatPower       float32 // From element[26]
 	CurrentLevel      uint16  // From element[30]
@@ -528,6 +532,7 @@ func ParseEntityAppearPacket(msg Message) (*EntityInfo, error) {
 	msg = msg[19:]
 
 	// 펫 / 마리오네트 관련
+	debugMsg := msg
 	if IsMarionetteRace(v.RaceId) {
 		if len(msg) > 49 && msg[49].Type() == MessageElemTypeLong {
 			v.OwnerId = msg[49].Data().(uint64)
@@ -552,6 +557,36 @@ func ParseEntityAppearPacket(msg Message) (*EntityInfo, error) {
 
 		v.OwnerId = msg[1].Data().(uint64)
 		msg = msg[2:]
+	}
+	if len(debugMsg) >= 51 {
+		var ownerIdx, typeIdx int
+		if debugMsg[39].Type() == MessageElemTypeString {
+			ownerIdx = 49
+			typeIdx = 50
+		} else {
+			ownerIdx = 43
+			typeIdx = 44
+		}
+
+		ownerIdElem := debugMsg[ownerIdx]
+		typeByteElem := debugMsg[typeIdx]
+
+		if ownerIdElem.Type() == MessageElemTypeLong {
+			v.SecondaryOwnerId = ownerIdElem.Data().(uint64)
+		} else {
+			logger.Printf("[PARSER-DEBUG] EntityName: %s, expected Long at ownerIdx %d, got %s (val=%v)",
+				v.Name, ownerIdx, getElemTypeName(ownerIdElem.Type()), ownerIdElem.Data())
+		}
+
+		if typeByteElem.Type() == MessageElemTypeByte {
+			v.EntityType = typeByteElem.Data().(uint8)
+		} else {
+			logger.Printf("[PARSER-DEBUG] EntityName: %s, expected Byte at typeIdx %d, got %s (val=%v)",
+				v.Name, typeIdx, getElemTypeName(typeByteElem.Type()), typeByteElem.Data())
+		}
+	} else {
+		logger.Printf("[PARSER-DEBUG] EntityName: %s, debugMsg too short for secondary owner parsing (len=%d)",
+			v.Name, len(debugMsg))
 	}
 
 	// --- LOGGING ---

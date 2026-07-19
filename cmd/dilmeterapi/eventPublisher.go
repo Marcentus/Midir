@@ -841,9 +841,11 @@ func newEventFromEntity(entity *packet.EntityInfo, at time.Time) iEvent {
 		},
 		Name:       entity.Name,
 		RaceId:     entity.RaceId,
-		OwnerId:    strconv.FormatUint(entity.OwnerId, 10),
-		CurrentHP:  entity.CurrentHP,
-		MaxHP:      entity.MaxHP,
+		OwnerId:          strconv.FormatUint(entity.OwnerId, 10),
+		EntityType:       entity.EntityType,
+		SecondaryOwnerId: strconv.FormatUint(entity.SecondaryOwnerId, 10),
+		CurrentHP:        entity.CurrentHP,
+		MaxHP:            entity.MaxHP,
 		Conditions: cond,
 	}
 }
