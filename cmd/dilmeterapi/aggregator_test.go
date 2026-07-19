@@ -868,7 +868,7 @@ func TestProcessEventsForSummary_PetAndPuppetDamage(t *testing.T) {
 			if entity.OwnerId != "" && entity.OwnerId != "0" {
 				ownerIdVal := parseUint64(entity.OwnerId)
 				if ownerIdVal != 0 {
-					isMarionette := packet.IsMarionetteRace(entity.RaceId)
+					isMarionette := entity.EntityType == 5 || entity.EntityType == 11 || entity.EntityType == 12
 					if !isMarionette {
 						if _, err := strconv.Atoi(entity.Name); err == nil {
 							isMarionette = true

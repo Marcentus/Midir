@@ -533,7 +533,8 @@ func ParseEntityAppearPacket(msg Message) (*EntityInfo, error) {
 
 	// 펫 / 마리오네트 관련
 	debugMsg := msg
-	if IsMarionetteRace(v.RaceId) {
+	isPuppetStructure := len(msg) >= 40 && msg[39].Type() == MessageElemTypeString
+	if isPuppetStructure {
 		if len(msg) > 49 && msg[49].Type() == MessageElemTypeLong {
 			v.OwnerId = msg[49].Data().(uint64)
 		}
@@ -695,8 +696,4 @@ func getElemTypeName(t MessageElemType) string {
 	default:
 		return "Unknown"
 	}
-}
-
-func IsMarionetteRace(raceId uint32) bool {
-	return (raceId >= 990100 && raceId <= 990199) || (raceId >= 990200 && raceId <= 990299)
 }

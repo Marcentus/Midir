@@ -222,7 +222,7 @@ func (a *Aggregator) resolveAndCacheName(entityID uint64) {
 func (a *Aggregator) resolveAttacker(attackerId uint64) uint64 {
 	if entity, ok := a.entityCache[attackerId]; ok {
 		if entity.OwnerId != 0 {
-			isMarionette := packet.IsMarionetteRace(entity.RaceId)
+			isMarionette := entity.EntityType == 5 || entity.EntityType == 11 || entity.EntityType == 12
 			if !isMarionette {
 				if _, err := strconv.Atoi(entity.Name); err == nil {
 					isMarionette = true
@@ -242,7 +242,7 @@ func (a *Aggregator) resolveAttacker(attackerId uint64) uint64 {
 func (a *Aggregator) resolveAttackerAndSkill(attackerId uint64, skillId uint16) (uint64, uint16) {
 	if entity, ok := a.entityCache[attackerId]; ok {
 		if entity.OwnerId != 0 {
-			isMarionette := packet.IsMarionetteRace(entity.RaceId)
+			isMarionette := entity.EntityType == 5 || entity.EntityType == 11 || entity.EntityType == 12
 			if !isMarionette {
 				if _, err := strconv.Atoi(entity.Name); err == nil {
 					isMarionette = true
@@ -993,7 +993,7 @@ func getEntityCategory(entity *packet.EntityInfo) string {
 			if entity.EntityType != 0 {
 				return "Unknown Summons"
 			}
-			isMarionette := packet.IsMarionetteRace(entity.RaceId)
+			isMarionette := entity.EntityType == 5 || entity.EntityType == 11 || entity.EntityType == 12
 			if !isMarionette {
 				if _, err := strconv.Atoi(entity.Name); err == nil {
 					isMarionette = true
@@ -1388,7 +1388,7 @@ func (a *Aggregator) GetEntityTypeString(entity *packet.EntityInfo) string {
 			if entity.EntityType != 0 {
 				return fmt.Sprintf("Unknown Summon (Type: %d)", entity.EntityType)
 			}
-			isMarionette := packet.IsMarionetteRace(entity.RaceId)
+			isMarionette := entity.EntityType == 5 || entity.EntityType == 11 || entity.EntityType == 12
 			if !isMarionette {
 				if _, err := strconv.Atoi(entity.Name); err == nil {
 					isMarionette = true

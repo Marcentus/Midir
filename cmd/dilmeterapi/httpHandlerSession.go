@@ -243,7 +243,7 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 						ownerIdVal := parseUint64(entity.OwnerId)
 						if ownerIdVal != 0 {
 							// Check if it's a marionette
-							isMarionette := packet.IsMarionetteRace(entity.RaceId)
+							isMarionette := entity.EntityType == 5 || entity.EntityType == 11 || entity.EntityType == 12
 							if !isMarionette {
 								if _, err := strconv.Atoi(entity.Name); err == nil {
 									isMarionette = true
