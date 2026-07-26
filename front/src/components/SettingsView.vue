@@ -4,12 +4,12 @@
       <v-toolbar color="surface" flat>
         <v-toolbar-title class="text-h5">Settings</v-toolbar-title>
       </v-toolbar>
-      
+
       <v-tabs v-model="activeTab" bg-color="surface">
         <v-tab value="capture"><v-icon start>mdi-lan</v-icon> Capture</v-tab>
         <v-tab value="appearance"><v-icon start>mdi-palette</v-icon> Appearance</v-tab>
       </v-tabs>
-      
+
       <v-card-text>
         <v-window v-model="activeTab">
           <!-- CAPTURE TAB -->
@@ -22,7 +22,7 @@
                     <v-icon start size="small" color="primary" class="mr-2">mdi-cog</v-icon>
                     Capture Configuration
                   </v-card-title>
-                  
+
                   <v-chip
                     v-if="captureStatus.is_running"
                     color="success"
@@ -34,6 +34,7 @@
                     <v-icon start size="12" class="mr-1">mdi-radiobox-marked</v-icon>
                     Running: {{ captureStatus.nic || 'File/Unknown' }}
                     <span v-if="captureStatus.exitlag" class="ml-1 text-grey-lighten-2">(ExitLag)</span>
+                    <span v-if="captureStatus.mudfish" class="ml-1 text-grey-lighten-2">(Mudfish)</span>
                   </v-chip>
                   <v-chip
                     v-else
@@ -91,9 +92,38 @@
                     color="primary"
                     hide-details
                     inset
-                    class="mb-4"
+                    class="mb-2"
+                    @update:model-value="onExitLagToggle"
                   ></v-switch>
-                  
+                  <v-expand-transition>
+                    <div
+                      v-show="captureConfig.exitlag"
+                      class="text-caption text-grey-lighten-2 mb-4 ml-14"
+                    >
+                      ExitLag mode captures TCP on the selected interface and follows decoded game packets automatically.
+                    </div>
+                  </v-expand-transition>
+
+                  <v-switch
+                    v-model="captureConfig.mudfish"
+                    label="Enable Mudfish Routing"
+                    color="primary"
+                    hide-details
+                    inset
+                    class="mb-2"
+                    @update:model-value="onMudfishToggle"
+                  ></v-switch>
+                  <v-expand-transition>
+                    <div
+                      v-show="captureConfig.mudfish"
+                      class="text-caption text-grey-lighten-2 mb-4 ml-14"
+                    >
+                      Select your normal Ethernet NIC (mirrored switch port, or the game PC's physical NIC for same-PC capture).
+                      Do not select Mudfish's virtual adapter. Enable Mudfish mode so Midir unwraps game TCP from Mudfish's outer UDP/TCP tunnel.
+                      Outer Connection Protocol can stay UDP.
+                    </div>
+                  </v-expand-transition>
+
                   <div class="d-flex ga-2 mt-4">
                     <v-btn
                       v-if="!captureStatus.is_running"
@@ -104,7 +134,7 @@
                     >
                       Start Capture
                     </v-btn>
-                    
+
                     <v-btn
                       v-if="captureStatus.is_running"
                       color="primary"
@@ -140,7 +170,7 @@
                   </v-card-title>
                 </div>
               </v-card-item>
-              
+
               <v-card-text class="pb-3">
                 <v-row dense>
                   <!-- Col 1: Decoded Packets -->
@@ -159,9 +189,9 @@
                   <!-- Col 2: Dropped Packets -->
                   <v-col cols="12" sm="6" class="py-1">
                     <div class="d-flex align-center">
-                      <v-icon 
-                        :color="((packetStatus.pcapDrops || 0) + (packetStatus.parserErrors || 0) + (packetStatus.networkLoss || 0) + (packetStatus.queueDrops || 0) > 0) ? 'red-lighten-1' : 'grey-lighten-1'" 
-                        size="small" 
+                      <v-icon
+                        :color="((packetStatus.pcapDrops || 0) + (packetStatus.parserErrors || 0) + (packetStatus.networkLoss || 0) + (packetStatus.queueDrops || 0) > 0) ? 'red-lighten-1' : 'grey-lighten-1'"
+                        size="small"
                         class="mr-2"
                       >
                         mdi-alert-circle
@@ -230,10 +260,10 @@
                 <v-row dense class="mt-1">
                   <!-- Col 1: Core Combat & Entity Presence -->
                   <v-col cols="12" sm="4" class="py-1 px-2">
-                    <div 
+                    <div
                       v-for="eventName in ['Damage', 'Entity Appear', 'Entity Disappear']"
                       :key="eventName"
-                      class="d-flex justify-space-between align-center py-1 border-b" 
+                      class="d-flex justify-space-between align-center py-1 border-b"
                       style="border-color: rgba(255, 255, 255, 0.08) !important; font-size: 0.75rem;"
                     >
                       <span class="text-grey-lighten-2 text-truncate mr-1">{{ eventName }}</span>
@@ -243,10 +273,10 @@
 
                   <!-- Col 2: Vitality & Status States -->
                   <v-col cols="12" sm="4" class="py-1 px-2">
-                    <div 
+                    <div
                       v-for="eventName in ['HP Update', 'Entity Death', 'Entity Revive']"
                       :key="eventName"
-                      class="d-flex justify-space-between align-center py-1 border-b" 
+                      class="d-flex justify-space-between align-center py-1 border-b"
                       style="border-color: rgba(255, 255, 255, 0.08) !important; font-size: 0.75rem;"
                     >
                       <span class="text-grey-lighten-2 text-truncate mr-1">{{ eventName }}</span>
@@ -258,10 +288,10 @@
                   <v-col cols="12" sm="4" class="py-1 px-2">
                     <!-- Blank first row for vertical alignment -->
                     <div class="py-1" style="font-size: 0.75rem; border-bottom: 1px solid transparent;">&nbsp;</div>
-                    <div 
+                    <div
                       v-for="eventName in ['Condition Enable', 'Condition Disable']"
                       :key="eventName"
-                      class="d-flex justify-space-between align-center py-1 border-b" 
+                      class="d-flex justify-space-between align-center py-1 border-b"
                       style="border-color: rgba(255, 255, 255, 0.08) !important; font-size: 0.75rem;"
                     >
                       <span class="text-grey-lighten-2 text-truncate mr-1">{{ eventName }}</span>
@@ -317,9 +347,9 @@
                 </template>
               </v-list-item>
             </v-list>
-            
+
             <v-divider class="my-4"></v-divider>
-            
+
             <ColorSettings />
             <v-divider class="my-4"></v-divider>
             <ClassColorSettings />
@@ -339,17 +369,17 @@
         </div>
         <v-btn icon="mdi-close" variant="text" size="small" color="grey" @click="showEntitiesDialog = false"></v-btn>
       </v-card-title>
-      
+
       <v-card-text class="pa-4" style="max-height: 800px; overflow-y: auto;">
         <div v-if="!fightSummary.currentEntities || fightSummary.currentEntities.length === 0" class="text-center text-grey py-8">
           <v-icon size="large" class="mb-2">mdi-alert-circle-outline</v-icon>
           <div>No active entities tracked in the current area.</div>
         </div>
-        
+
         <div v-else>
           <v-row dense class="align-stretch">
-            <v-col 
-              v-for="(entities, category) in categorizedEntities" 
+            <v-col
+              v-for="(entities, category) in categorizedEntities"
               :key="category"
               v-show="entities.length > 0"
               class="py-2 px-2 d-flex flex-column"
@@ -359,10 +389,10 @@
                 <span>{{ category }}</span>
                 <span class="text-grey">({{ entities.length }})</span>
               </div>
-              
+
               <div class="flex-grow-1" style="max-height: 650px; overflow-y: auto;">
-                <div 
-                  v-for="entity in entities" 
+                <div
+                  v-for="entity in entities"
                   :key="entity.id"
                   class="px-3 py-2 rounded mb-2"
                   style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.05); min-height: 52px;"
@@ -379,8 +409,8 @@
 
                   <!-- Thin HP Bar (spanning all the way across, below the name) -->
                   <div v-if="entity.maxHp > 0" class="mt-1.5 mb-2 w-100" style="height: 3px; background: rgba(255, 255, 255, 0.05); border-radius: 1.5px; overflow: hidden;">
-                    <div 
-                      :style="{ width: (entity.currentHp / entity.maxHp) * 100 + '%' }" 
+                    <div
+                      :style="{ width: (entity.currentHp / entity.maxHp) * 100 + '%' }"
                       style="height: 100%; background: #4caf50; transition: width 0.3s ease;"
                     ></div>
                   </div>
@@ -414,7 +444,7 @@
           </v-row>
         </div>
       </v-card-text>
-      
+
       <v-card-actions class="justify-end py-2 px-4" style="border-top: 1px solid rgba(255,255,255,0.08) !important;">
         <v-btn color="primary" variant="text" @click="showEntitiesDialog = false">Close</v-btn>
       </v-card-actions>
@@ -446,7 +476,7 @@ export default defineComponent({
         NPCs: [],
         Other: [],
       };
-      
+
       if (fightSummary && fightSummary.currentEntities) {
         fightSummary.currentEntities.forEach((entity: any) => {
           const cat = entity.category || "Other";
@@ -457,13 +487,13 @@ export default defineComponent({
           }
         });
       }
-      
+
       return groups;
     });
-    
+
     // --- CAPTURE SETTINGS ---
     const nics = ref<any[]>([]);
-    const captureStatus = ref({ is_running: false, nic: '', exitlag: false, promiscuous: false });
+    const captureStatus = ref({ is_running: false, nic: '', exitlag: false, mudfish: false, promiscuous: false });
     const packetStatus = ref<{
       total: number;
       perSecond: number;
@@ -505,8 +535,21 @@ export default defineComponent({
     const captureConfig = ref({
       nicName: "",
       exitlag: false,
+      mudfish: false,
       promiscuous: false
     });
+
+    const onExitLagToggle = (enabled: boolean | null) => {
+      if (enabled) {
+        captureConfig.value.mudfish = false;
+      }
+    };
+
+    const onMudfishToggle = (enabled: boolean | null) => {
+      if (enabled) {
+        captureConfig.value.exitlag = false;
+      }
+    };
 
     const fetchNics = async () => {
       try {
@@ -525,9 +568,10 @@ export default defineComponent({
         if (res.ok) {
           const data = await res.json();
           captureStatus.value = data;
-          
+
           if (data.nic) captureConfig.value.nicName = data.nic;
           captureConfig.value.exitlag = data.exitlag || false;
+          captureConfig.value.mudfish = data.mudfish || false;
           captureConfig.value.promiscuous = data.promiscuous || false;
         }
       } catch (err) {
@@ -611,17 +655,17 @@ export default defineComponent({
       if (!captureConfig.value.nicName) return;
       isAutodetecting.value = true;
       autodetectProgress.value = 0;
-      
+
       try {
         const res = await fetch("/api/setup/autodetect", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             nicName: captureConfig.value.nicName,
             promiscuous: captureConfig.value.promiscuous
           })
         });
-        
+
         if (!res.ok) {
           isAutodetecting.value = false;
           alert("Failed to start auto-detect: " + await res.text());
@@ -651,7 +695,7 @@ export default defineComponent({
             captureConfig.value.nicName = "";
           }
         }
-       
+
        socket.onPacketStatus = (status) => {
          packetStatus.value = { ...status, topOps: status.topOps || [] };
        };
@@ -661,7 +705,7 @@ export default defineComponent({
            autodetectProgress.value = progress.current;
          }
        };
-       
+
        socket.onAutodetectDone = (result) => {
          if (isAutodetecting.value) {
            isAutodetecting.value = false;
@@ -669,7 +713,7 @@ export default defineComponent({
          }
        };
     });
-    
+
     onUnmounted(() => {
        socket.onPacketStatus = undefined;
        socket.onAutodetectProgress = undefined;
@@ -695,7 +739,7 @@ export default defineComponent({
       activeTab,
       showClassColorsForVisiblePlayers,
       dpsMeterFillMode,
-      
+
       // Capture
       nics,
       captureStatus,
@@ -707,7 +751,9 @@ export default defineComponent({
       applyCaptureSettings,
       restartCaptureKeepSession,
       stopCapture,
-      
+      onExitLagToggle,
+      onMudfishToggle,
+
       // Autodetect
       isAutodetecting,
       autodetectProgress,

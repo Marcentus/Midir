@@ -59,7 +59,7 @@ var globalSm *SessionManager
 var globalReader *packet.GameServerPacketReader
 var captureDone chan struct{}
 
-func buildPcapFilter(ips, ports string, exitlagEnabled bool) string {
+func buildPcapFilter(ips, ports string, exitlagEnabled, mudfishEnabled bool) string {
 	if exitlagEnabled {
 		// ExitLag can change both relay IP and relay port mid-session. In ExitLag
 		// mode we capture all TCP on the selected interface, then follow valid
@@ -67,6 +67,11 @@ func buildPcapFilter(ips, ports string, exitlagEnabled bool) string {
 		// We exclude common non-game ports like our own UI server (8030) and HTTP/HTTPS (80/443)
 		// to reduce noise, CPU usage, and prevent false TCP Recovery warnings on unrelated streams.
 		return fmt.Sprintf("tcp and port not %d and port not 80 and port not 443", port)
+	}
+	if mudfishEnabled {
+		// Mudfish connection protocols support either UDP or TCP, so need to be able to capture both
+		// types of protocols.
+		return "udp or tcp"
 	}
 
 	ipList := constants.DefaultGameserverNet
@@ -105,6 +110,7 @@ func setupDebugLogging() {
 
 func main() {
 	exitlag := flag.Bool("exitlag", false, "Enable if you are using ExitLag.")
+	mudfish := flag.Bool("mudfish", false, "Enable if you are using Mudfish.")
 	ip := flag.String("ip", "", "Comma-separated list of game server IPs to capture from.")
 	portFlag := flag.String("port", "", "Comma-separated list of game server ports to capture from.")
 	recordPcap := flag.Bool("record-pcap", false, "Enable to record raw packet capture (.pcapng) files for sessions.")
@@ -136,7 +142,7 @@ func main() {
 
 	mode := flag.Arg(0)
 	logger.Println("* Midir", mode)
-	pcapFilter := buildPcapFilter(*ip, *portFlag, *exitlag)
+	pcapFilter := buildPcapFilter(*ip, *portFlag, *exitlag, *mudfish)
 
 	switch mode {
 	// ... (the entire switch block remains unchanged)
@@ -163,10 +169,10 @@ func main() {
 		if fileName == "" {
 			logger.Fatalln("file mode requires a filename")
 		}
-		run(ctx, "", fileName, *exitlag, pcapFilter, *recordPcap)
+		run(ctx, "", fileName, *exitlag, *mudfish, pcapFilter, *recordPcap)
 	case "":
 		logger.Println("Starting web server without initial packet capture config...")
-		run(ctx, "", "", *exitlag, pcapFilter, *recordPcap)
+		run(ctx, "", "", *exitlag, *mudfish, pcapFilter, *recordPcap)
 	default:
 		_, err := os.Stat(mode)
 		fileExists := err == nil
@@ -176,7 +182,7 @@ func main() {
 		} else {
 			nicName = mode
 		}
-		run(ctx, nicName, fileName, *exitlag, pcapFilter, *recordPcap)
+		run(ctx, nicName, fileName, *exitlag, *mudfish, pcapFilter, *recordPcap)
 	}
 
 	for {
@@ -184,7 +190,7 @@ func main() {
 	}
 }
 
-func run(ctx context.Context, nicName string, fileName string, exitlagEnabled bool, filter string, recordPcap bool) {
+func run(ctx context.Context, nicName string, fileName string, exitlagEnabled, mudfishEnabled bool, filter string, recordPcap bool) {
 	activePcapRecord = recordPcap
 
 	sm, err := NewSessionManager("logs", recordPcap)
@@ -208,7 +214,7 @@ func run(ctx context.Context, nicName string, fileName string, exitlagEnabled bo
 	playerCache.OnPlayerUpdate = pub.QueuePlayerUpdate
 
 	if nicName != "" || fileName != "" {
-		err := startPacketCapture(nicName, fileName, exitlagEnabled, filter, true, true)
+		err := startPacketCapture(nicName, fileName, exitlagEnabled, mudfishEnabled, filter, true, true)
 		if err != nil {
 			logger.Println("Failed to start capture from CLI arguments:", err)
 		}

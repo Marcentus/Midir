@@ -18,6 +18,7 @@ import (
 )
 
 var activeExitlag bool
+var activeMudfish bool
 var activePromiscuous bool
 var autodetectCancel context.CancelFunc
 var autodetectMu sync.Mutex
@@ -27,6 +28,7 @@ const configFile = "settings.json"
 type CaptureConfig struct {
 	NicName     string `json:"nicName"`
 	ExitLag     bool   `json:"exitlag"`
+	Mudfish     bool   `json:"mudfish"`
 	Promiscuous bool   `json:"promiscuous"`
 }
 
@@ -58,6 +60,7 @@ func setupRouter() http.Handler {
 
 		nic := activeNicName
 		exitlag := activeExitlag
+		mudfish := activeMudfish
 		promiscuous := activePromiscuous
 
 		cfg := loadConfig()
@@ -65,6 +68,7 @@ func setupRouter() http.Handler {
 			if !isCaptureRunning {
 				nic = cfg.NicName
 				exitlag = cfg.ExitLag
+				mudfish = cfg.Mudfish
 				promiscuous = cfg.Promiscuous
 			}
 		}
@@ -73,6 +77,7 @@ func setupRouter() http.Handler {
 			"is_running":  isCaptureRunning,
 			"nic":         nic,
 			"exitlag":     exitlag,
+			"mudfish":     mudfish,
 			"promiscuous": promiscuous,
 		})
 	})
@@ -113,12 +118,17 @@ func setupRouter() http.Handler {
 			return
 		}
 
+		if config.ExitLag && config.Mudfish {
+			http.Error(w, "ExitLag and Mudfish modes are mutually exclusive", http.StatusBadRequest)
+			return
+		}
+
 		// Save the requested settings permanently
 		saveConfig(&config)
 
-		filter := buildPcapFilter("", "", config.ExitLag)
+		filter := buildPcapFilter("", "", config.ExitLag, config.Mudfish)
 
-		err := startPacketCapture(config.NicName, "", config.ExitLag, filter, config.Promiscuous, true)
+		err := startPacketCapture(config.NicName, "", config.ExitLag, config.Mudfish, filter, config.Promiscuous, true)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -134,12 +144,17 @@ func setupRouter() http.Handler {
 			return
 		}
 
+		if config.ExitLag && config.Mudfish {
+			http.Error(w, "ExitLag and Mudfish modes are mutually exclusive", http.StatusBadRequest)
+			return
+		}
+
 		// Save settings, but preserve current aggregator/session data.
 		saveConfig(&config)
 
-		filter := buildPcapFilter("", "", config.ExitLag)
+		filter := buildPcapFilter("", "", config.ExitLag, config.Mudfish)
 
-		err := startPacketCapture(config.NicName, "", config.ExitLag, filter, config.Promiscuous, false)
+		err := startPacketCapture(config.NicName, "", config.ExitLag, config.Mudfish, filter, config.Promiscuous, false)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -296,10 +311,11 @@ func stopPacketCaptureSync() {
 	isCaptureRunning = false
 	activeNicName = ""
 	activeExitlag = false
+	activeMudfish = false
 	activePromiscuous = false
 }
 
-func startPacketCapture(nicName string, fileName string, exitlagEnabled bool, filter string, promiscuous bool, clearSession bool) error {
+func startPacketCapture(nicName string, fileName string, exitlagEnabled, mudfishEnabled bool, filter string, promiscuous bool, clearSession bool) error {
 	captureMu.Lock()
 	defer captureMu.Unlock()
 
@@ -320,6 +336,7 @@ func startPacketCapture(nicName string, fileName string, exitlagEnabled bool, fi
 		FileName:        fileName,
 		Sm:              globalSm,
 		ExitLagEnabled:  exitlagEnabled,
+		MudfishEnabled:  mudfishEnabled,
 		Filter:          filter,
 		PromiscuousMode: promiscuous,
 	})
@@ -337,6 +354,7 @@ func startPacketCapture(nicName string, fileName string, exitlagEnabled bool, fi
 	isCaptureRunning = true
 	activeNicName = nicName
 	activeExitlag = exitlagEnabled
+	activeMudfish = mudfishEnabled
 	activePromiscuous = promiscuous
 
 	go func() {
