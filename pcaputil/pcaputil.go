@@ -7,14 +7,14 @@ import (
 	"os"
 	"time"
 
-	"github.com/gopacket/gopacket/pcap"
 	"github.com/Marcentus/Midir/packet"
+	"github.com/gopacket/gopacket/pcap"
 )
 
 var logger = log.New(os.Stdout, "pcaputil ", log.LstdFlags|log.Lshortfile)
 
-// FindNic now accepts the BPF filter and exitlag status to use when searching.
-func FindNic(filter string, exitlagEnabled bool) (string, error) {
+// FindNic now accepts the BPF filter and ExitLag/Mudfish status to use when searching.
+func FindNic(filter string, exitlagEnabled, mudfishEnabled bool) (string, error) {
 	// 게임 서버 패킷이 수신되는 네트워크 인터페이스를 찾는다.
 	packetWaitTime := time.Second * 5
 
@@ -28,12 +28,13 @@ func FindNic(filter string, exitlagEnabled bool) (string, error) {
 	for _, nic := range nics {
 		ctx, cancel := context.WithCancel(context.Background())
 
-		// Pass the dynamic filter and exitlag status to the packet reader
+		// Pass the dynamic filter and mode flags to the packet reader
 		r, err := packet.NewGameServerPacketReader(&packet.GameServerPacketReaderOpt{
 			Ctx:            ctx,
 			NicName:        nic.Name,
 			Filter:         filter,
 			ExitLagEnabled: exitlagEnabled,
+			MudfishEnabled: mudfishEnabled,
 		})
 
 		if err != nil {

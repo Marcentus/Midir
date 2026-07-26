@@ -29,6 +29,7 @@ type GameServerPacketReader struct {
 	packetCh chan *GamePacket
 	sm       pcapWriter
 	exitlag  bool
+	mudfish  bool
 
 	// mutable
 	handle *pcap.Handle
@@ -47,9 +48,10 @@ type GameServerPacketReaderOpt struct {
 	NicName         string
 	ClientIp        string
 	Sm              pcapWriter
-	ExitLagEnabled  bool   // New: To control ExitLag processing
-	Filter          string // New: To pass in the dynamic BPF filter
-	PromiscuousMode bool   // New: To control Promiscuous capture
+	ExitLagEnabled  bool // Unwrap ExitLag framing before Mabi parse
+	MudfishEnabled  bool // Unwrap Mudfish UDP/TCP tunnels
+	Filter          string
+	PromiscuousMode bool
 }
 
 type tcpFlowKey string
@@ -89,6 +91,12 @@ type gamePacketAssemblerState struct {
 	lastAt     time.Time
 	payloads   []gamePacketPayload
 	flowKey    tcpFlowKey
+
+	// Mudfish captures every inbound flow to the game client, so a flow is only
+	// known to carry Mabinogi traffic once it yields one valid packet.
+	verified      bool
+	rejected      bool
+	parseFailures int
 }
 
 type dedupeKey struct {
@@ -115,6 +123,9 @@ const pcapSnapLen = 65536
 const pcapBufferSize = 32 * 1024 * 1024
 const packetQueueSize = 4096
 const parsedPacketDedupeTTL = 3 * time.Second
+const maxAssemblerFlows = 64
+const maxAssemblerBufferSize = 0x100_0000
+const maxUnverifiedFlowParseFailures = 32
 
 var ErrTooShortPacket = errors.New("too short packet")
 
@@ -381,6 +392,7 @@ func NewGameServerPacketReader(opt *GameServerPacketReaderOpt) (*GameServerPacke
 		packetCh: make(chan *GamePacket, packetQueueSize),
 		sm:       opt.Sm,
 		exitlag:  opt.ExitLagEnabled,
+		mudfish:  opt.MudfishEnabled,
 	}
 
 	rawPayloadCh, err := (<-chan gamePacketPayload)(nil), (error)(nil)
@@ -408,8 +420,11 @@ func NewGameServerPacketReader(opt *GameServerPacketReaderOpt) (*GameServerPacke
 		go v.exitLagPacketLoop(rawPayloadCh, mabiPayloadCh)
 		finalPayloadCh = mabiPayloadCh
 	} else {
-		logger.Println("ExitLag mode disabled. Bypassing ExitLag stripper.")
-		// If ExitLag is disabled, bypass the stripping loop.
+		if opt.MudfishEnabled {
+			logger.Println("Mudfish mode enabled. Capturing UDP/TCP tunnels (no ExitLag unwrap); follow inbound to client.")
+		} else {
+			logger.Println("ExitLag/Mudfish unwrap disabled. Using raw TCP payloads.")
+		}
 		finalPayloadCh = rawPayloadCh
 	}
 
@@ -474,6 +489,18 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 				}
 				st := assemblers[key]
 				if st == nil {
+					if len(assemblers) >= maxAssemblerFlows {
+						var oldestKey tcpFlowKey
+						var oldestAt time.Time
+						for candidateKey, candidate := range assemblers {
+							if oldestAt.IsZero() || candidate.lastAt.Before(oldestAt) {
+								oldestKey = candidateKey
+								oldestAt = candidate.lastAt
+							}
+						}
+						delete(assemblers, oldestKey)
+						logger.Printf("[Packet Assembler] evicted oldest flow %s after reaching the %d-flow limit", oldestKey, maxAssemblerFlows)
+					}
 					st = &gamePacketAssemblerState{
 						buffer:   bytes.NewBuffer(nil),
 						lastAt:   time.Now(),
@@ -529,6 +556,12 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 				}
 				st.payloads = append(st.payloads, payloadData)
 				st.buffer.Write(payloadData.data)
+				if st.buffer.Len() > maxAssemblerBufferSize {
+					atomic.AddUint32(&t.parserErrors, 1)
+					logger.Printf("[Packet Assembler] discarded flow %s after buffered data exceeded %d bytes", st.flowKey, maxAssemblerBufferSize)
+					st.buffer = bytes.NewBuffer(nil)
+					st.payloads = st.payloads[:0]
+				}
 			}
 
 			// Inner processing loop
@@ -542,6 +575,9 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 						return
 					}
 					st = getAssembler(payloadData.flowKey)
+					if st.rejected {
+						continue
+					}
 					pushPayload(st, payloadData)
 				}
 
@@ -552,17 +588,39 @@ func (t *GameServerPacketReader) packetLoop(payloadCh <-chan gamePacketPayload) 
 						if err == io.EOF {
 							break readerLoop
 						}
+						// An unverified Mudfish flow may simply be non-game traffic
+						// routed to the same client, so failures there are expected
+						// until the flow proves itself.
+						if t.mudfish && !st.verified {
+							st.parseFailures++
+							if st.parseFailures >= maxUnverifiedFlowParseFailures {
+								st.rejected = true
+								st.buffer = bytes.NewBuffer(nil)
+								st.payloads = st.payloads[:0]
+								logger.Printf("[Mudfish] ignoring flow %s: no valid game packet after %d attempts", st.flowKey, st.parseFailures)
+								break readerLoop
+							}
+							nextPayload(st)
+							continue
+						}
 						atomic.AddUint32(&t.parserErrors, 1)
 						b := st.buffer.Bytes()
 						note := ""
 						if len(b) >= 5 && b[0] == 0x01 && (b[4] == 0x05 || b[4] == 0x03) {
 							note = fmt.Sprintf(" [NOTE: MATCHES EXITLAG SIGNATURE! Byte 0: 0x%02x, Byte 4: 0x%02x]", b[0], b[4])
 						}
-						logger.Printf("[Parse Error] game packet parse error %v %v%s", st.lastRelSeq, err, note)
+						logger.Printf("[Parse Error] game packet parse error %v %v%s on flow %s", st.lastRelSeq, err, note, st.flowKey)
 						nextPayload(st)
 						continue
 					}
 					if msg != nil {
+						if !st.verified {
+							st.verified = true
+							st.parseFailures = 0
+							if t.mudfish {
+								logger.Printf("[Mudfish] flow %s verified as game traffic", st.flowKey)
+							}
+						}
 						msg.PacketFlowKey = string(st.flowKey)
 						if t.exitlag && parsedPacketDedupe.IsDuplicate(msg, st.flowKey) {
 							skipPayload(st, len(msg.RawPacket))
@@ -631,6 +689,16 @@ func (t *GameServerPacketReader) openNic(nic string, filter string, promiscuous 
 		return nil, err
 	}
 
+	logger.Printf(
+		"pcap open nic=%q linkType=%v (%d) filter=%q exitlag=%v mudfish=%v",
+		nic,
+		handle.LinkType().String(),
+		handle.LinkType(),
+		filter,
+		t.exitlag,
+		t.mudfish,
+	)
+
 	ch := make(chan gamePacketPayload, pcapQueueSize)
 	go t.readPacketLoop(ch)
 	return ch, nil
@@ -668,23 +736,78 @@ func (t *GameServerPacketReader) openFile(file string, filter string) (<-chan ga
 	return ch, nil
 }
 
+func looksLikeIPv4Header(b []byte) bool {
+	if len(b) < 20 {
+		return false
+	}
+	version := b[0] >> 4
+	ihl := b[0] & 0x0f
+	return version == 4 && ihl >= 5
+}
+
+// findInnerIPv4Packet scans an outer tunnel payload for an embedded IPv4 datagram.
+// Mudfish does not encrypt its tunnel; mirrored ISP/Ethernet traffic is often UDP
+// (or TCP) to a Mudfish node with the original game IP packet inside.
+func findInnerIPv4Packet(b []byte) []byte {
+	for off := 0; off+20 <= len(b); off++ {
+		if !looksLikeIPv4Header(b[off:]) {
+			continue
+		}
+		total := int(binary.BigEndian.Uint16(b[off+2 : off+4]))
+		if total < 20 || off+total > len(b) {
+			continue
+		}
+		proto := b[off+9]
+		if proto != 6 && proto != 17 { // TCP or UDP
+			continue
+		}
+		return b[off : off+total]
+	}
+	return nil
+}
+
+func isLikelyMudfishInbound(tcp layers.TCP) bool {
+	return tcp.SrcPort < tcp.DstPort
+}
+
 func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 	defer close(ch)
 	ethLayer := layers.Ethernet{}
 	ip4Layer := layers.IPv4{}
 	tcpLayer := layers.TCP{}
+	udpLayer := layers.UDP{}
 	payload := gopacket.Payload{}
 
-	layerParser := gopacket.NewDecodingLayerParser(layers.LayerTypeEthernet, &ethLayer, &ip4Layer, &tcpLayer, &payload)
+	linkType := layers.LinkTypeEthernet
+	if t.handle != nil {
+		linkType = t.handle.LinkType()
+	}
+
+	// Some virtual adapters expose raw IP (DLT_RAW / DLT_IPV4), not Ethernet.
+	useRawIP := linkType == layers.LinkTypeRaw ||
+		linkType == layers.LinkTypeIPv4 ||
+		linkType == layers.LinkTypeIPv6
+	if t.mudfish && !useRawIP {
+		logger.Printf(
+			"Mudfish mode on linkType=%v (typical for switch mirror). Will unwrap UDP/TCP tunnels and follow inner game TCP.",
+			linkType,
+		)
+	}
+
+	ethParser := gopacket.NewDecodingLayerParser(layers.LayerTypeEthernet, &ethLayer, &ip4Layer, &tcpLayer, &udpLayer, &payload)
+	rawParser := gopacket.NewDecodingLayerParser(layers.LayerTypeIPv4, &ip4Layer, &tcpLayer, &udpLayer, &payload)
+	ethParser.IgnoreUnsupported = true
+	rawParser.IgnoreUnsupported = true
+
+	primaryRaw := useRawIP
 	packetLayers := []gopacket.LayerType(nil)
 	streams := make(map[tcpFlowKey]*tcpStreamState)
 	const streamTTL = 30 * time.Second
-	// ExitLag dynamic mode still needs a direction guard. We first identify the
-	// game client LAN IP from a public relay -> private client packet, then allow
-	// any TCP source inbound to that client. This keeps local/private ExitLag
-	// metadata streams while excluding client -> relay traffic that corrupts
-	// Mabinogi packet framing.
-	var exitLagClientIP string
+	// Direction guard: identify the game client LAN IP, then allow any TCP source
+	// inbound to that client. ExitLag/direct expect public relay -> private client.
+	// Mudfish tunnels often show private->private or public mudfish node IPs.
+	var followedClientIP string
+	var loggedMudfishUnwrap bool
 
 	flowKeyFor := func(ip layers.IPv4, tcp layers.TCP) tcpFlowKey {
 		return tcpFlowKey(fmt.Sprintf("%s:%d>%s:%d", ip.SrcIP, tcp.SrcPort, ip.DstIP, tcp.DstPort))
@@ -732,6 +855,207 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 		}
 	}
 
+	decodePacket := func(b []byte) bool {
+		packetLayers = packetLayers[:0]
+		if primaryRaw || (t.mudfish && looksLikeIPv4Header(b)) {
+			if err := rawParser.DecodeLayers(b, &packetLayers); err == nil {
+				return true
+			}
+			if primaryRaw {
+				return false
+			}
+		}
+		if err := ethParser.DecodeLayers(b, &packetLayers); err != nil {
+			if t.mudfish && looksLikeIPv4Header(b) {
+				packetLayers = packetLayers[:0]
+				return rawParser.DecodeLayers(b, &packetLayers) == nil
+			}
+			return false
+		}
+		return true
+	}
+
+	handleTCPSegment := func(ci gopacket.CaptureInfo, ip layers.IPv4, tcp layers.TCP) {
+		// We must process control packets (SYN, FIN, RST) even if they have no payload.
+		isControl := tcp.SYN || tcp.FIN || tcp.RST
+		if len(tcp.Payload) < 1 && !isControl {
+			return
+		}
+
+		if followedClientIP == "" {
+			if !ip.DstIP.IsPrivate() {
+				return
+			}
+			if !t.mudfish && (ip.SrcIP.IsPrivate() || ip.SrcIP.IsLoopback()) {
+				return
+			}
+			if t.mudfish && ip.SrcIP.IsLoopback() {
+				return
+			}
+			// Mudfish can expose both tunnel directions as private-to-private
+			// traffic. Client ephemeral ports are higher than the service port,
+			// so ignore the client-to-server direction while learning the client.
+			if t.mudfish && !isLikelyMudfishInbound(tcp) {
+				return
+			}
+			followedClientIP = ip.DstIP.String()
+			logger.Printf(
+				"[Dynamic Follow] inbound traffic to game client %s (exitlag=%v mudfish=%v linkType=%v)",
+				followedClientIP,
+				t.exitlag,
+				t.mudfish,
+				linkType,
+			)
+		} else if ip.DstIP.String() != followedClientIP {
+			return
+		}
+
+		key := flowKeyFor(ip, tcp)
+		for streamKey, st := range streams {
+			if !st.lastSeen.IsZero() && ci.Timestamp.Sub(st.lastSeen) > streamTTL {
+				delete(streams, streamKey)
+			}
+		}
+
+		st := streams[key]
+
+		if tcp.FIN || tcp.RST {
+			if st != nil {
+				delete(streams, key)
+			}
+			return
+		}
+
+		if tcp.SYN {
+			if st != nil {
+				st.baseSeq = tcp.Seq + 1
+				st.nextSeq = tcp.Seq + 1
+				st.pending = st.pending[:0]
+			} else {
+				st = &tcpStreamState{
+					baseSeq:  tcp.Seq + 1,
+					nextSeq:  tcp.Seq + 1,
+					pending:  make([]pendingTcpLayer, 0, packetQueueSize),
+					lastSeen: ci.Timestamp,
+				}
+				streams[key] = st
+			}
+			return
+		}
+
+		if st == nil {
+			st = &tcpStreamState{
+				baseSeq:  tcp.Seq,
+				nextSeq:  tcp.Seq,
+				pending:  make([]pendingTcpLayer, 0, packetQueueSize),
+				lastSeen: ci.Timestamp,
+			}
+			streams[key] = st
+		}
+		st.lastSeen = ci.Timestamp
+
+		if st.nextSeq != 0 && tcp.Seq != st.nextSeq {
+			if tcp.Seq < st.nextSeq {
+				if int32(tcp.Seq-st.nextSeq) > 0 {
+					logger.Printf("[TCP Recovery Anomaly] Packet on %s is in the future but treated as past. Seq: %d, NextSeq: %d, PayloadLen: %d (Potential Wrap-around Bug)", key, tcp.Seq, st.nextSeq, len(tcp.Payload))
+				}
+				if tcp.Seq+uint32(len(tcp.Payload)) >= st.nextSeq {
+					seg := tcp.Payload[st.nextSeq-tcp.Seq:]
+					if len(seg) > 0 {
+						ch <- gamePacketPayload{
+							relSeq:  st.nextSeq - st.baseSeq,
+							data:    seg,
+							at:      ci.Timestamp,
+							flowKey: key,
+						}
+					}
+					st.nextSeq = tcp.Seq + uint32(len(tcp.Payload))
+				}
+				return
+			}
+
+			st.pending = append(st.pending, pendingTcpLayer{
+				tcpLayer: tcp,
+				ci:       ci,
+			})
+
+			if len(st.pending) > 300 {
+				minIdx := findMinSeqIdx(st.pending)
+				if minIdx != -1 {
+					targetLayer := st.pending[minIdx]
+					skippedBytes := targetLayer.tcpLayer.Seq - st.nextSeq
+					warningMsg := fmt.Sprintf("Network packet loss detected on %s (Gap: %d bytes). Skipping to resume.", key, skippedBytes)
+					atomic.AddUint32(&t.networkLoss, 1)
+
+					logger.Printf("[TCP Recovery] %s OldNext: %d, NewNext: %d (Active Streams: %d, Pending Count: %d)",
+						warningMsg, st.nextSeq, targetLayer.tcpLayer.Seq, len(streams), len(st.pending))
+
+					st.nextSeq = targetLayer.tcpLayer.Seq
+
+					select {
+					case t.packetCh <- &GamePacket{
+						At:        time.Now(),
+						Op:        OpCodeSystemWarning,
+						RawPacket: []byte(warningMsg),
+					}:
+					default:
+						atomic.AddUint32(&t.queueDrops, 1)
+						logger.Println("Packet channel full, dropped warning packet.")
+					}
+				}
+			}
+
+			drainReadyPending(st, key)
+			return
+		}
+
+		ch <- gamePacketPayload{
+			relSeq:  tcp.Seq - st.baseSeq,
+			data:    tcp.Payload,
+			at:      ci.Timestamp,
+			flowKey: key,
+		}
+		st.nextSeq = tcp.Seq + uint32(len(tcp.Payload))
+		drainReadyPending(st, key)
+	}
+
+	tryHandleInnerIPv4 := func(ci gopacket.CaptureInfo, outer []byte) {
+		inner := findInnerIPv4Packet(outer)
+		if inner == nil {
+			return
+		}
+		var innerIP layers.IPv4
+		var innerTCP layers.TCP
+		var innerPayload gopacket.Payload
+		innerLayers := []gopacket.LayerType(nil)
+		innerParser := gopacket.NewDecodingLayerParser(layers.LayerTypeIPv4, &innerIP, &innerTCP, &innerPayload)
+		innerParser.IgnoreUnsupported = true
+		if err := innerParser.DecodeLayers(inner, &innerLayers); err != nil {
+			return
+		}
+		hasTCP := false
+		for _, lt := range innerLayers {
+			if lt == layers.LayerTypeTCP {
+				hasTCP = true
+				break
+			}
+		}
+		if !hasTCP || len(innerTCP.Payload) < 1 {
+			return
+		}
+		if t.mudfish && !isLikelyMudfishInbound(innerTCP) {
+			return
+		}
+		if !loggedMudfishUnwrap {
+			loggedMudfishUnwrap = true
+			logger.Printf(
+				"[Mudfish] unwrapped inner TCP %s:%d -> %s:%d from tunnel payload",
+				innerIP.SrcIP, innerTCP.SrcPort, innerIP.DstIP, innerTCP.DstPort,
+			)
+		}
+		handleTCPSegment(ci, innerIP, innerTCP)
+	}
+
 	for i := 0; t.ctx.Err() == nil; i++ {
 		b, ci, err := t.handle.ReadPacketData()
 		if err != nil {
@@ -747,149 +1071,53 @@ func (t *GameServerPacketReader) readPacketLoop(ch chan<- gamePacketPayload) {
 			t.sm.WritePacketToLog(ci, b)
 		}
 
-		if err := layerParser.DecodeLayers(b, &packetLayers); err != nil {
+		if !decodePacket(b) {
 			continue
 		}
 
 		hasIPv4 := false
+		hasTCP := false
+		hasUDP := false
 		for _, layer := range packetLayers {
-			if layer == layers.LayerTypeIPv4 {
+			switch layer {
+			case layers.LayerTypeIPv4:
 				hasIPv4 = true
-				break
+			case layers.LayerTypeTCP:
+				hasTCP = true
+			case layers.LayerTypeUDP:
+				hasUDP = true
 			}
 		}
 		if !hasIPv4 {
 			continue
 		}
 
-		for _, layer := range packetLayers {
-			if layer != layers.LayerTypeTCP {
-				continue
-			}
+		if t.mudfish && hasUDP && len(udpLayer.Payload) > 0 {
+			tryHandleInnerIPv4(ci, udpLayer.Payload)
+			continue
+		}
 
-			// We must process control packets (SYN, FIN, RST) even if they have no payload.
-			isControl := tcpLayer.SYN || tcpLayer.FIN || tcpLayer.RST
-			if len(tcpLayer.Payload) < 1 && !isControl {
-				continue
-			}
-
-			if exitLagClientIP == "" {
-				if ip4Layer.SrcIP.IsPrivate() || ip4Layer.SrcIP.IsLoopback() || !ip4Layer.DstIP.IsPrivate() {
+		if hasTCP {
+			if t.mudfish {
+				if len(tcpLayer.Payload) > 0 {
+					// Some Mudfish connection modes use TCP tunnels; try unwrap first.
+					if findInnerIPv4Packet(tcpLayer.Payload) != nil {
+						tryHandleInnerIPv4(ci, tcpLayer.Payload)
+						continue
+					}
+					// On Ethernet mirrors, drop opaque Mudfish TCP tunnel bytes.
+					// On raw-IP adapters, fall through to direct game TCP handling.
+					if !useRawIP {
+						continue
+					}
+				} else if !useRawIP {
+					// Ignore outer TCP control/empty segments on Ethernet so they
+					// cannot lock followedClientIP to the LAN address before
+					// inner Mudfish VIP traffic is seen.
 					continue
 				}
-				exitLagClientIP = ip4Layer.DstIP.String()
-				logger.Printf("[ExitLag Dynamic] following inbound traffic to game client %s", exitLagClientIP)
-			} else if ip4Layer.DstIP.String() != exitLagClientIP {
-				continue
 			}
-
-			key := flowKeyFor(ip4Layer, tcpLayer)
-			for streamKey, st := range streams {
-				if !st.lastSeen.IsZero() && ci.Timestamp.Sub(st.lastSeen) > streamTTL {
-					delete(streams, streamKey)
-				}
-			}
-
-			st := streams[key]
-
-			if tcpLayer.FIN || tcpLayer.RST {
-				if st != nil {
-					delete(streams, key)
-				}
-				continue
-			}
-
-			if tcpLayer.SYN {
-				if st != nil {
-					st.baseSeq = tcpLayer.Seq + 1
-					st.nextSeq = tcpLayer.Seq + 1
-					st.pending = st.pending[:0]
-				} else {
-					st = &tcpStreamState{
-						baseSeq:  tcpLayer.Seq + 1,
-						nextSeq:  tcpLayer.Seq + 1,
-						pending:  make([]pendingTcpLayer, 0, packetQueueSize),
-						lastSeen: ci.Timestamp,
-					}
-					streams[key] = st
-				}
-				continue
-			}
-
-			if st == nil {
-				st = &tcpStreamState{
-					baseSeq:  tcpLayer.Seq,
-					nextSeq:  tcpLayer.Seq,
-					pending:  make([]pendingTcpLayer, 0, packetQueueSize),
-					lastSeen: ci.Timestamp,
-				}
-				streams[key] = st
-			}
-			st.lastSeen = ci.Timestamp
-
-			if st.nextSeq != 0 && tcpLayer.Seq != st.nextSeq {
-				if tcpLayer.Seq < st.nextSeq {
-					if int32(tcpLayer.Seq-st.nextSeq) > 0 {
-						logger.Printf("[TCP Recovery Anomaly] Packet on %s is in the future but treated as past. Seq: %d, NextSeq: %d, PayloadLen: %d (Potential Wrap-around Bug)", key, tcpLayer.Seq, st.nextSeq, len(tcpLayer.Payload))
-					}
-					if tcpLayer.Seq+uint32(len(tcpLayer.Payload)) >= st.nextSeq {
-						payload := tcpLayer.Payload[st.nextSeq-tcpLayer.Seq:]
-						if len(payload) > 0 {
-							ch <- gamePacketPayload{
-								relSeq:  st.nextSeq - st.baseSeq,
-								data:    payload,
-								at:      ci.Timestamp,
-								flowKey: key,
-							}
-						}
-						st.nextSeq = tcpLayer.Seq + uint32(len(tcpLayer.Payload))
-					}
-					continue
-				}
-
-				st.pending = append(st.pending, pendingTcpLayer{
-					tcpLayer: tcpLayer,
-					ci:       ci,
-				})
-
-				if len(st.pending) > 300 {
-					minIdx := findMinSeqIdx(st.pending)
-					if minIdx != -1 {
-						targetLayer := st.pending[minIdx]
-						skippedBytes := targetLayer.tcpLayer.Seq - st.nextSeq
-						warningMsg := fmt.Sprintf("Network packet loss detected on %s (Gap: %d bytes). Skipping to resume.", key, skippedBytes)
-						atomic.AddUint32(&t.networkLoss, 1)
-
-						logger.Printf("[TCP Recovery] %s OldNext: %d, NewNext: %d (Active Streams: %d, Pending Count: %d)",
-							warningMsg, st.nextSeq, targetLayer.tcpLayer.Seq, len(streams), len(st.pending))
-
-						st.nextSeq = targetLayer.tcpLayer.Seq
-
-						select {
-						case t.packetCh <- &GamePacket{
-							At:        time.Now(),
-							Op:        OpCodeSystemWarning,
-							RawPacket: []byte(warningMsg),
-						}:
-						default:
-							atomic.AddUint32(&t.queueDrops, 1)
-							logger.Println("Packet channel full, dropped warning packet.")
-						}
-					}
-				}
-
-				drainReadyPending(st, key)
-				continue
-			}
-
-			ch <- gamePacketPayload{
-				relSeq:  tcpLayer.Seq - st.baseSeq,
-				data:    tcpLayer.Payload,
-				at:      ci.Timestamp,
-				flowKey: key,
-			}
-			st.nextSeq = tcpLayer.Seq + uint32(len(tcpLayer.Payload))
-			drainReadyPending(st, key)
+			handleTCPSegment(ci, ip4Layer, tcpLayer)
 		}
 	}
 }

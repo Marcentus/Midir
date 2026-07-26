@@ -80,6 +80,22 @@ ExitLag Parse Error: Unreasonable sequence length: ...
 
 If they happen constantly and no DPS data appears, re-run auto-detect and confirm the mirrored interface is seeing the correct TCP stream.
 
+## Mudfish notes
+
+If Mudfish is running on the gaming PC:
+
+- Select your normal Ethernet NIC (the mirrored switch port on a capture Mac, or the game PC's physical NIC for same-PC capture). Do not select Mudfish's virtual adapter.
+- In Midir, enable Mudfish mode so outer UDP/TCP tunnel payloads are unwrapped to inner game TCP.
+- Mudfish Connection Protocol can stay UDP.
+- ExitLag and Mudfish modes are mutually exclusive.
+
+Useful capture check for Mudfish tunnels:
+
+```bash
+# Mirrored Ethernet: look for UDP/TCP to Mudfish nodes carrying game traffic.
+sudo tcpdump -i en0 -nn -e 'udp or tcp and host <gaming-pc-ip>'
+```
+
 ## Troubleshooting
 
 If no packets appear:
