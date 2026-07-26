@@ -309,7 +309,6 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 			}
 			a.mu.Unlock()
 			playerCache.Update(entity)
-			a.logEntityOwnerAndType("Appear", entity)
 		}
 		return
 	}
@@ -346,7 +345,6 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 					}
 				}
 				playerCache.Update(entity)
-				a.logEntityOwnerAndType("MultiAppear", entity)
 			}
 			a.mu.Unlock()
 		}
@@ -1402,10 +1400,4 @@ func (a *Aggregator) GetEntityTypeString(entity *packet.EntityInfo) string {
 	}
 
 	return "Monster/Enemy"
-}
-
-func (a *Aggregator) logEntityOwnerAndType(context string, entity *packet.EntityInfo) {
-	entityTypeStr := a.GetEntityTypeString(entity)
-	logger.Printf("[DEBUG-ENTITY-TYPE] Context: %s, EntityName: %s, ID: %d, Type: %s (Owner: %d, SecondaryOwner: %d, TypeByte: %d)",
-		context, entity.Name, entity.Id, entityTypeStr, entity.OwnerId, entity.SecondaryOwnerId, entity.EntityType)
 }

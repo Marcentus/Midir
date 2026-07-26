@@ -574,20 +574,11 @@ func ParseEntityAppearPacket(msg Message) (*EntityInfo, error) {
 
 		if ownerIdElem.Type() == MessageElemTypeLong {
 			v.SecondaryOwnerId = ownerIdElem.Data().(uint64)
-		} else {
-			logger.Printf("[PARSER-DEBUG] EntityName: %s, expected Long at ownerIdx %d, got %s (val=%v)",
-				v.Name, ownerIdx, getElemTypeName(ownerIdElem.Type()), ownerIdElem.Data())
 		}
 
 		if typeByteElem.Type() == MessageElemTypeByte {
 			v.EntityType = typeByteElem.Data().(uint8)
-		} else {
-			logger.Printf("[PARSER-DEBUG] EntityName: %s, expected Byte at typeIdx %d, got %s (val=%v)",
-				v.Name, typeIdx, getElemTypeName(typeByteElem.Type()), typeByteElem.Data())
 		}
-	} else {
-		logger.Printf("[PARSER-DEBUG] EntityName: %s, debugMsg too short for secondary owner parsing (len=%d)",
-			v.Name, len(debugMsg))
 	}
 
 	// --- LOGGING ---

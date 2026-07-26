@@ -106,13 +106,27 @@
 
                   <v-switch
                     v-model="captureConfig.mudfish"
-                    label="Enable Mudfish Routing"
                     color="primary"
                     hide-details
                     inset
                     class="mb-2"
                     @update:model-value="onMudfishToggle"
-                  ></v-switch>
+                  >
+                    <template v-slot:label>
+                      <span class="d-inline-flex align-center ga-2">
+                        <span>Enable Mudfish Routing</span>
+                        <v-chip
+                          color="warning"
+                          size="x-small"
+                          variant="tonal"
+                          class="font-weight-bold px-1.5"
+                          style="height: 18px; font-size: 9px;"
+                        >
+                          BETA
+                        </v-chip>
+                      </span>
+                    </template>
+                  </v-switch>
                   <v-expand-transition>
                     <div
                       v-show="captureConfig.mudfish"
@@ -434,10 +448,6 @@
                   <div class="w-100" style="height: 4px; background: rgba(255, 255, 255, 0.05); border-radius: 2px; overflow: hidden;">
                     <div 
                       :style="{ width: (entity.currentHp / entity.maxHp) * 100 + '%' }" 
-                      style="height: 100%; background: #4caf50; transition: width 0.3s ease;"
-                    ></div>
-                  </div>
-                </div>
                       style="height: 100%; background: #4caf50; transition: width 0.3s ease;"
                     ></div>
                   </div>
