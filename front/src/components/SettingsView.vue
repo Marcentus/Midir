@@ -377,66 +377,96 @@
         </div>
 
         <div v-else>
-          <v-row dense class="align-stretch">
-            <v-col
-              v-for="(entities, category) in categorizedEntities"
-              :key="category"
-              v-show="entities.length > 0"
-              class="py-2 px-2 d-flex flex-column"
-              style="min-width: 300px; flex: 1 1 300px; max-width: 100%;"
+          <!-- Search and Tab bar -->
+          <div class="d-flex flex-column flex-sm-row justify-space-between align-stretch align-sm-center mb-4 gap-3">
+            <v-tabs v-model="activeEntityTab" bg-color="transparent" color="blue-lighten-2" density="compact">
+              <v-tab value="Players" class="text-none">Players</v-tab>
+              <v-tab value="Summons" class="text-none">Summons</v-tab>
+              <v-tab value="Enemies" class="text-none">Enemies</v-tab>
+              <v-tab value="NPCs" class="text-none">NPCs</v-tab>
+              <v-tab value="All" class="text-none">All</v-tab>
+            </v-tabs>
+            <v-text-field
+              v-model="searchQuery"
+              prepend-inner-icon="mdi-magnify"
+              placeholder="Search by name, ID, or owner..."
+              density="compact"
+              hide-details
+              variant="solo-filled"
+              style="max-width: 320px;"
+              clearable
+            ></v-text-field>
+          </div>
+
+          <!-- Entities List -->
+          <div v-if="filteredEntities.length === 0" class="text-center text-grey py-8">
+            <v-icon size="large" class="mb-2">mdi-magnify-close</v-icon>
+            <div>No matching entities found.</div>
+          </div>
+          <v-row v-else dense class="align-stretch">
+            <v-col 
+              v-for="entity in filteredEntities" 
+              :key="entity.id"
+              cols="12"
+              sm="6"
+              md="4"
+              class="py-2 px-2"
             >
-              <div class="text-caption font-weight-bold text-blue-lighten-2 pb-1 mb-2 d-flex justify-space-between" style="border-bottom: 1px solid rgba(255,255,255,0.08) !important;">
-                <span>{{ category }}</span>
-                <span class="text-grey">({{ entities.length }})</span>
-              </div>
-
-              <div class="flex-grow-1" style="max-height: 650px; overflow-y: auto;">
-                <div
-                  v-for="entity in entities"
-                  :key="entity.id"
-                  class="px-3 py-2 rounded mb-2"
-                  style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.05); min-height: 52px;"
-                >
-                  <!-- Header: Name & HP -->
-                  <div class="d-flex justify-space-between align-center">
-                    <div class="text-subtitle-2 text-white font-weight-bold" style="word-break: break-word; overflow-wrap: anywhere; line-height: 1.2;">
-                      {{ entity.name }}
-                    </div>
-                    <div v-if="entity.maxHp > 0" class="text-caption font-weight-bold text-green-lighten-2 flex-shrink-0 ml-2" style="font-size: 0.7rem;">
-                      {{ formatNumber(Math.round(entity.currentHp)) }} / {{ formatNumber(Math.round(entity.maxHp)) }}
-                    </div>
+              <div class="px-3 py-3 rounded d-flex flex-column h-100 entity-card">
+                <!-- Name & Category Badge -->
+                <div class="d-flex justify-space-between align-start mb-1">
+                  <div class="text-subtitle-2 text-white font-weight-bold" style="word-break: break-word; overflow-wrap: anywhere; line-height: 1.2;">
+                    {{ entity.name }}
                   </div>
+                  <v-chip :color="getCategoryBadge(entity).color" size="x-small" label class="text-uppercase font-weight-black ml-2 flex-shrink-0">
+                    {{ getCategoryBadge(entity).text }}
+                  </v-chip>
+                </div>
 
-                  <!-- Thin HP Bar (spanning all the way across, below the name) -->
-                  <div v-if="entity.maxHp > 0" class="mt-1.5 mb-2 w-100" style="height: 3px; background: rgba(255, 255, 255, 0.05); border-radius: 1.5px; overflow: hidden;">
-                    <div
-                      :style="{ width: (entity.currentHp / entity.maxHp) * 100 + '%' }"
+                <!-- Thin HP Bar (if maxHp > 0) -->
+                <div v-if="entity.maxHp > 0" class="mt-1 mb-2">
+                  <div class="d-flex justify-space-between text-caption text-grey mb-1" style="font-size: 0.65rem;">
+                    <span>HP</span>
+                    <span class="text-green-lighten-2 font-weight-bold">
+                      {{ formatNumber(Math.round(entity.currentHp)) }} / {{ formatNumber(Math.round(entity.maxHp)) }}
+                    </span>
+                  </div>
+                  <div class="w-100" style="height: 4px; background: rgba(255, 255, 255, 0.05); border-radius: 2px; overflow: hidden;">
+                    <div 
+                      :style="{ width: (entity.currentHp / entity.maxHp) * 100 + '%' }" 
                       style="height: 100%; background: #4caf50; transition: width 0.3s ease;"
                     ></div>
                   </div>
-                  <div v-else class="mb-2"></div>
+                </div>
+                      style="height: 100%; background: #4caf50; transition: width 0.3s ease;"
+                    ></div>
+                  </div>
+                </div>
+                <div v-else class="mb-2"></div>
 
-                  <!-- Structured Key-Value Fields -->
-                  <div class="d-flex flex-column" style="gap: 3px;">
-                    <!-- Row: Entity ID -->
-                    <div class="d-flex justify-space-between text-caption text-grey" style="font-size: 0.68rem; line-height: 1.2;">
-                      <span class="font-weight-medium">Entity ID</span>
-                      <span style="font-family: monospace;" class="text-white">{{ entity.id }}</span>
-                    </div>
+                <!-- Structured Key-Value Fields -->
+                <div class="d-flex flex-column flex-grow-1 justify-end" style="gap: 4px;">
+                  <!-- Row: Entity ID -->
+                  <div class="d-flex justify-space-between text-caption text-grey" style="font-size: 0.68rem; line-height: 1.2;">
+                    <span class="font-weight-medium">Entity ID</span>
+                    <span style="font-family: monospace;" class="text-white">{{ entity.id }}</span>
+                  </div>
 
-                    <!-- Row: Owner ID (Only shown if available) -->
-                    <div v-if="entity.ownerId" class="d-flex justify-space-between text-caption text-grey" style="font-size: 0.68rem; line-height: 1.2;">
-                      <span class="font-weight-medium">Owner ID</span>
-                      <span style="font-family: monospace;" class="text-white">{{ entity.ownerId }}</span>
-                    </div>
+                  <!-- Row: Owner Info (if Pet, Golem, Marionette, Dollbag) -->
+                  <div v-if="entity.ownerId || entity.secondaryOwnerId" class="d-flex justify-space-between text-caption text-grey" style="font-size: 0.68rem; line-height: 1.2;">
+                    <span class="font-weight-medium">Owner</span>
+                    <span class="text-white text-right font-weight-bold" style="word-break: break-word; overflow-wrap: anywhere; max-width: 70%;">
+                      {{ entity.ownerName || entity.secondaryOwnerName || 'Unknown Player' }} 
+                      <span style="font-family: monospace; font-size: 0.6rem;" class="text-grey ml-1">({{ entity.ownerId || entity.secondaryOwnerId }})</span>
+                    </span>
+                  </div>
 
-                    <!-- Row: Race (Translated + RaceID in parentheses) -->
-                    <div class="d-flex justify-space-between text-caption text-grey" style="font-size: 0.68rem; line-height: 1.2;">
-                      <span class="font-weight-medium">Race</span>
-                      <span class="text-white text-right font-weight-bold" style="word-break: break-word; overflow-wrap: anywhere; max-width: 70%;">
-                        {{ entity.raceName }} <span class="text-grey ml-1 font-weight-normal">({{ entity.raceId }})</span>
-                      </span>
-                    </div>
+                  <!-- Row: Race -->
+                  <div class="d-flex justify-space-between text-caption text-grey" style="font-size: 0.68rem; line-height: 1.2;">
+                    <span class="font-weight-medium">Race</span>
+                    <span class="text-white text-right" style="word-break: break-word; overflow-wrap: anywhere; max-width: 70%;">
+                      {{ entity.raceName }} <span class="text-grey ml-1 font-weight-normal">({{ entity.raceId }})</span>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -468,29 +498,67 @@ export default defineComponent({
     const activeTab = ref("capture");
     const showEntitiesDialog = ref(false);
 
-    const categorizedEntities = computed(() => {
-      const groups: Record<string, any[]> = {
-        Players: [],
-        Pets: [],
-        Enemies: [],
-        NPCs: [],
-        Other: [],
-      };
+    const searchQuery = ref("");
+    const activeEntityTab = ref("Players");
 
-      if (fightSummary && fightSummary.currentEntities) {
-        fightSummary.currentEntities.forEach((entity: any) => {
-          const cat = entity.category || "Other";
-          if (groups[cat]) {
-            groups[cat].push(entity);
-          } else {
-            groups["Other"].push(entity);
-          }
-        });
+    const filteredEntities = computed(() => {
+      if (!fightSummary || !fightSummary.currentEntities) {
+        return [];
       }
 
-      return groups;
+      let list = fightSummary.currentEntities;
+      if (activeEntityTab.value === "Players") {
+        list = list.filter(e => e.category === "Players");
+      } else if (activeEntityTab.value === "Summons") {
+        list = list.filter(e => ["Marionettes", "Pets", "Dollbags", "Golems", "Mini-Gems", "Unknown Summons"].includes(e.category));
+      } else if (activeEntityTab.value === "Enemies") {
+        list = list.filter(e => e.category === "Enemies");
+      } else if (activeEntityTab.value === "NPCs") {
+        list = list.filter(e => e.category === "NPCs");
+      }
+
+      const query = searchQuery.value ? searchQuery.value.trim().toLowerCase() : "";
+      if (query) {
+        list = list.filter(e => 
+          e.name.toLowerCase().includes(query) ||
+          e.id.includes(query) ||
+          (e.raceName && e.raceName.toLowerCase().includes(query)) ||
+          (e.ownerName && e.ownerName.toLowerCase().includes(query)) ||
+          (e.ownerId && e.ownerId.includes(query)) ||
+          (e.secondaryOwnerName && e.secondaryOwnerName.toLowerCase().includes(query)) ||
+          (e.secondaryOwnerId && e.secondaryOwnerId.includes(query))
+        );
+      }
+
+      return list;
     });
 
+    const getCategoryBadge = (entity: any) => {
+      if (!entity) return { text: "Unknown", color: "grey" };
+      const category = entity.category;
+      switch (category) {
+        case "Players":
+          return { text: "Player", color: "green" };
+        case "Marionettes":
+          return { text: "Puppet", color: "purple" };
+        case "Pets":
+          return { text: "Pet", color: "blue" };
+        case "Dollbags":
+          return { text: "Dollbag", color: "pink" };
+        case "Mini-Gems":
+          return { text: "Mini-Gem", color: "indigo" };
+        case "Golems":
+          return { text: "Golem", color: "orange" };
+        case "NPCs":
+          return { text: "NPC", color: "teal" };
+        case "Enemies":
+          return { text: "Enemy", color: "red" };
+        case "Unknown Summons":
+          return { text: entity.entityTypeStr || "Unknown Summon", color: "deep-orange-darken-2" };
+        default:
+          return { text: category, color: "grey" };
+      }
+    };
     // --- CAPTURE SETTINGS ---
     const nics = ref<any[]>([]);
     const captureStatus = ref({ is_running: false, nic: '', exitlag: false, mudfish: false, promiscuous: false });
@@ -767,13 +835,26 @@ export default defineComponent({
       // Entities Dialog
       fightSummary,
       showEntitiesDialog,
-      categorizedEntities
+      searchQuery,
+      activeEntityTab,
+      filteredEntities,
+      getCategoryBadge
     };
   },
 });
 </script>
 
 <style scoped>
+.entity-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.entity-card:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
 :deep(.v-list-item-title) {
     white-space: normal !important;
 }

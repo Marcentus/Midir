@@ -222,7 +222,7 @@ func (a *Aggregator) resolveAndCacheName(entityID uint64) {
 func (a *Aggregator) resolveAttacker(attackerId uint64) uint64 {
 	if entity, ok := a.entityCache[attackerId]; ok {
 		if entity.OwnerId != 0 {
-			isMarionette := packet.IsMarionetteRace(entity.RaceId)
+			isMarionette := entity.EntityType == 5 || entity.EntityType == 11 || entity.EntityType == 12
 			if !isMarionette {
 				if _, err := strconv.Atoi(entity.Name); err == nil {
 					isMarionette = true
@@ -242,7 +242,7 @@ func (a *Aggregator) resolveAttacker(attackerId uint64) uint64 {
 func (a *Aggregator) resolveAttackerAndSkill(attackerId uint64, skillId uint16) (uint64, uint16) {
 	if entity, ok := a.entityCache[attackerId]; ok {
 		if entity.OwnerId != 0 {
-			isMarionette := packet.IsMarionetteRace(entity.RaceId)
+			isMarionette := entity.EntityType == 5 || entity.EntityType == 11 || entity.EntityType == 12
 			if !isMarionette {
 				if _, err := strconv.Atoi(entity.Name); err == nil {
 					isMarionette = true
@@ -309,6 +309,7 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 			}
 			a.mu.Unlock()
 			playerCache.Update(entity)
+			a.logEntityOwnerAndType("Appear", entity)
 		}
 		return
 	}
@@ -345,6 +346,7 @@ func (a *Aggregator) ProcessPacket(p *packet.GamePacket) {
 					}
 				}
 				playerCache.Update(entity)
+				a.logEntityOwnerAndType("MultiAppear", entity)
 			}
 			a.mu.Unlock()
 		}
@@ -912,20 +914,38 @@ func (a *Aggregator) GetSummary() FightSummary {
 		category := getEntityCategory(entity)
 
 		ownerIDStr := ""
+		ownerName := ""
 		if entity.OwnerId != 0 {
 			ownerIDStr = strconv.FormatUint(entity.OwnerId, 10)
+			if player, ok := playerCache.Get(entity.OwnerId); ok {
+				ownerName = player.Name
+			}
+		}
+
+		secOwnerIDStr := ""
+		secOwnerName := ""
+		if entity.SecondaryOwnerId != 0 {
+			secOwnerIDStr = strconv.FormatUint(entity.SecondaryOwnerId, 10)
+			if player, ok := playerCache.Get(entity.SecondaryOwnerId); ok {
+				secOwnerName = player.Name
+			}
 		}
 
 		summary.CurrentEntities = append(summary.CurrentEntities, EntityState{
-			ID:         strconv.FormatUint(entityID, 10),
-			Name:       entity.Name,
-			RaceID:     entity.RaceId,
-			RaceName:   getRaceName(entity.RaceId),
-			Conditions: conditions,
-			CurrentHP:  entity.CurrentHP,
-			MaxHP:      entity.MaxHP,
-			Category:   category,
-			OwnerID:    ownerIDStr,
+			ID:                 strconv.FormatUint(entityID, 10),
+			Name:               entity.Name,
+			RaceID:             entity.RaceId,
+			RaceName:           getRaceName(entity.RaceId),
+			Conditions:         conditions,
+			CurrentHP:          entity.CurrentHP,
+			MaxHP:              entity.MaxHP,
+			Category:           category,
+			OwnerID:            ownerIDStr,
+			OwnerName:          ownerName,
+			SecondaryOwnerID:   secOwnerIDStr,
+			SecondaryOwnerName: secOwnerName,
+			EntityType:         entity.EntityType,
+			EntityTypeStr:      a.GetEntityTypeString(entity),
 		})
 	}
 
@@ -942,35 +962,51 @@ func (a *Aggregator) GetSummary() FightSummary {
 	return summary
 }
 
-// getEntityCategory classifies an entity into categorized groups: Players, Enemies, Pets, NPCs, or Other.
+// getEntityCategory classifies an entity into categorized groups: Players, Marionettes, Pets, Dollbags, Golems, NPCs, Enemies, or Other.
 func getEntityCategory(entity *packet.EntityInfo) string {
-	// 1. Pets / Summons: OwnerId != 0
-	if entity.OwnerId != 0 {
-		return "Pets"
-	}
-
-	// 2. NPCs: Name starts with "_"
 	if strings.HasPrefix(entity.Name, "_") {
 		return "NPCs"
 	}
 
-	// 3. Enemies: Name is numeric
-	if _, err := strconv.Atoi(entity.Name); err == nil {
-		return "Enemies"
-	}
-
-	// 4. Players: Human, Elf, Giant
-	switch entity.RaceId {
-	case 8001, 8002, 9001, 9002, 10001, 10002:
+	if isPlayerInfo(entity.Name, entity.RaceId, entity.OwnerId) {
 		return "Players"
 	}
 
-	// Fallback check using player criteria
-	if isPlayerEntity(entity) {
-		return "Players"
+	effectiveOwner := entity.OwnerId
+	if effectiveOwner == 0 {
+		effectiveOwner = entity.SecondaryOwnerId
 	}
 
-	return "Other"
+	if effectiveOwner != 0 {
+		switch entity.EntityType {
+		case 2:
+			return "Pets"
+		case 6:
+			return "Dollbags"
+		case 7:
+			return "Mini-Gems"
+		case 8:
+			return "Golems"
+		case 5, 11, 12:
+			return "Marionettes"
+		default:
+			if entity.EntityType != 0 {
+				return "Unknown Summons"
+			}
+			isMarionette := entity.EntityType == 5 || entity.EntityType == 11 || entity.EntityType == 12
+			if !isMarionette {
+				if _, err := strconv.Atoi(entity.Name); err == nil {
+					isMarionette = true
+				}
+			}
+			if isMarionette {
+				return "Marionettes"
+			}
+			return "Pets"
+		}
+	}
+
+	return "Enemies"
 }
 
 // isPlayerEntity determines if an entity is a player based on Name and OwnerId.
@@ -1316,4 +1352,60 @@ func (a *Aggregator) processDeadFeather(p *packet.GamePacket) {
 	}
 	a.seenDead[entityID] = false
 	a.startPresenceInterval(entityID, p.At.Unix())
+}
+
+func (a *Aggregator) GetEntityTypeString(entity *packet.EntityInfo) string {
+	if entity == nil {
+		return "Unknown"
+	}
+
+	if strings.HasPrefix(entity.Name, "_") {
+		return "NPC"
+	}
+
+	if isPlayerInfo(entity.Name, entity.RaceId, entity.OwnerId) {
+		return "Player"
+	}
+
+	effectiveOwner := entity.OwnerId
+	if effectiveOwner == 0 {
+		effectiveOwner = entity.SecondaryOwnerId
+	}
+
+	if effectiveOwner != 0 {
+		switch entity.EntityType {
+		case 2:
+			return "Pet"
+		case 6:
+			return "Dollbag"
+		case 7:
+			return "Mini-Gem"
+		case 8:
+			return "Golem"
+		case 5, 11, 12:
+			return "Marionette (Puppet)"
+		default:
+			if entity.EntityType != 0 {
+				return fmt.Sprintf("Unknown Summon (Type: %d)", entity.EntityType)
+			}
+			isMarionette := entity.EntityType == 5 || entity.EntityType == 11 || entity.EntityType == 12
+			if !isMarionette {
+				if _, err := strconv.Atoi(entity.Name); err == nil {
+					isMarionette = true
+				}
+			}
+			if isMarionette {
+				return "Marionette (Puppet)"
+			}
+			return "Pet/Summon"
+		}
+	}
+
+	return "Monster/Enemy"
+}
+
+func (a *Aggregator) logEntityOwnerAndType(context string, entity *packet.EntityInfo) {
+	entityTypeStr := a.GetEntityTypeString(entity)
+	logger.Printf("[DEBUG-ENTITY-TYPE] Context: %s, EntityName: %s, ID: %d, Type: %s (Owner: %d, SecondaryOwner: %d, TypeByte: %d)",
+		context, entity.Name, entity.Id, entityTypeStr, entity.OwnerId, entity.SecondaryOwnerId, entity.EntityType)
 }

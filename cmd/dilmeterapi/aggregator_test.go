@@ -673,7 +673,7 @@ func TestAggregator_MarionetteDamageAttribution(t *testing.T) {
 
 	// Add player and puppet to entityCache
 	agg.entityCache[playerID] = &packet.EntityInfo{Id: playerID, Name: "Bob", RaceId: 8001}
-	agg.entityCache[puppetID] = &packet.EntityInfo{Id: puppetID, Name: "987654", RaceId: 990104, OwnerId: playerID}
+	agg.entityCache[puppetID] = &packet.EntityInfo{Id: puppetID, Name: "987654", RaceId: 990104, OwnerId: playerID, EntityType: 11}
 	agg.entityCache[enemyID] = &packet.EntityInfo{Id: enemyID, Name: "99999", RaceId: 2000}
 
 	// Process Effect packet from puppet
@@ -747,7 +747,7 @@ func TestAggregator_PetDamageAttribution(t *testing.T) {
 
 	// Add player and pet to entityCache
 	agg.entityCache[playerID] = &packet.EntityInfo{Id: playerID, Name: "Bob", RaceId: 8001}
-	agg.entityCache[petID] = &packet.EntityInfo{Id: petID, Name: "Annwnaa", RaceId: 491006, OwnerId: playerID}
+	agg.entityCache[petID] = &packet.EntityInfo{Id: petID, Name: "Annwnaa", RaceId: 491006, OwnerId: playerID, EntityType: 2}
 	agg.entityCache[enemyID] = &packet.EntityInfo{Id: enemyID, Name: "99999", RaceId: 2000}
 
 	// Process Effect packet from pet (e.g. Smash, skill ID 100)
@@ -868,7 +868,7 @@ func TestProcessEventsForSummary_PetAndPuppetDamage(t *testing.T) {
 			if entity.OwnerId != "" && entity.OwnerId != "0" {
 				ownerIdVal := parseUint64(entity.OwnerId)
 				if ownerIdVal != 0 {
-					isMarionette := packet.IsMarionetteRace(entity.RaceId)
+					isMarionette := entity.EntityType == 5 || entity.EntityType == 11 || entity.EntityType == 12
 					if !isMarionette {
 						if _, err := strconv.Atoi(entity.Name); err == nil {
 							isMarionette = true

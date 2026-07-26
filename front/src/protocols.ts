@@ -122,6 +122,11 @@ export interface EntityState {
   maxHp: number;
   category: string;
   ownerId?: string;
+  ownerName?: string;
+  secondaryOwnerId?: string;
+  secondaryOwnerName?: string;
+  entityType?: number;
+  entityTypeStr?: string;
 }
 
 export interface FightSummary {

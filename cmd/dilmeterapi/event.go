@@ -52,9 +52,12 @@ type EventConditionData struct {
 
 type eventEntityAppear struct {
 	eventBase
-	Name    string
-	RaceId  uint32
-	OwnerId string
+	Name       string
+	RaceId     uint32
+	OwnerId          string
+	EntityType       uint8  `json:"entityType,omitempty"`
+	SecondaryOwnerId string `json:"secondaryOwnerId,omitempty"`
+
 
 	CurrentHP float32 `json:"currentHp"`
 	MaxHP     float32 `json:"maxHp"`
