@@ -72,7 +72,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { OverlaySettings, TargetStats } from "../types";
+import { OverlaySettings, TargetStats, PlayerStats } from "../types";
 
 const props = defineProps<{
   isConnected: boolean;
@@ -80,6 +80,7 @@ const props = defineProps<{
   targets: { [targetId: string]: TargetStats };
   settings: OverlaySettings;
   showSettings: boolean;
+  selectedPlayer?: PlayerStats | null;
 }>();
 
 defineEmits<{
@@ -87,6 +88,7 @@ defineEmits<{
   (e: "clear-session"): void;
   (e: "toggle-settings"): void;
   (e: "update-target", targetId: string): void;
+  (e: "back"): void;
 }>();
 
 const formattedTimer = computed(() => {
@@ -113,6 +115,21 @@ const formattedTimer = computed(() => {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--accent-primary);
+  font-weight: 700;
+  font-size: 0.85em;
+  padding: 2px 6px;
+}
+
+.back-btn:hover {
+  color: #ffffff;
+  background: rgba(129, 138, 248, 0.25);
 }
 
 .header-center {

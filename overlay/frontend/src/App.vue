@@ -11,19 +11,34 @@
       :targets="summary?.targets || {}"
       :settings="settings"
       :show-settings="showSettings"
+      :selected-player="selectedPlayer"
       @save-session="handleSaveSession"
       @clear-session="handleClearSession"
       @toggle-settings="toggleSettings"
       @update-target="handleTargetUpdate"
+      @back="clearSelectedPlayer"
     />
 
-    <!-- DPS List View -->
+    <!-- Player Skill Breakdown View (when a player row is clicked) -->
+    <PlayerBreakdown
+      v-if="selectedPlayer"
+      :player="selectedPlayer"
+      :target-id="settings.selectedTargetId"
+      :hide-names="settings.hideNames"
+      :server-url="settings.serverUrl"
+      :encounter-duration="summary?.encounterDuration || 0"
+      @back="clearSelectedPlayer"
+    />
+
+    <!-- Main DPS List View -->
     <DpsList
+      v-else
       :players="summary?.players || {}"
       :target-id="settings.selectedTargetId"
       :total-damage="summary?.totalDamage || 0"
       :hide-names="settings.hideNames"
       :server-url="settings.serverUrl"
+      @select-player="handleSelectPlayer"
     />
 
     <!-- Settings Modal -->
@@ -52,6 +67,7 @@
 import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
 import HeaderBar from "./components/HeaderBar.vue";
 import DpsList from "./components/DpsList.vue";
+import PlayerBreakdown from "./components/PlayerBreakdown.vue";
 import SettingsModal from "./components/SettingsModal.vue";
 import { OverlaySocketClient } from "./socketClient";
 import { FightSummary, OverlaySettings } from "./types";
@@ -77,6 +93,20 @@ declare global {
 const isConnected = ref(false);
 const showSettings = ref(false);
 const summary = ref<FightSummary | null>(null);
+const selectedPlayerId = ref<string | null>(null);
+
+const selectedPlayer = computed(() => {
+  if (!selectedPlayerId.value || !summary.value?.players) return null;
+  return summary.value.players[selectedPlayerId.value] || null;
+});
+
+const handleSelectPlayer = (playerId: string) => {
+  selectedPlayerId.value = playerId;
+};
+
+const clearSelectedPlayer = () => {
+  selectedPlayerId.value = null;
+};
 
 const settings = reactive<OverlaySettings>({
   serverUrl: "http://localhost:8030",
@@ -225,6 +255,7 @@ const handleClearSession = async () => {
     const ok = await socketClient.clearSession();
     if (ok) {
       summary.value = null;
+      selectedPlayerId.value = null;
     }
   }
 };

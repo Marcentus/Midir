@@ -8,7 +8,8 @@
       <div 
         v-for="(player, idx) in sortedPlayers" 
         :key="player.id" 
-        class="player-row"
+        class="player-row clickable"
+        @click="$emit('select-player', player.id)"
       >
         <!-- Background Damage Bar -->
         <div 
@@ -58,6 +59,10 @@ const props = defineProps<{
   totalDamage: number;
   hideNames?: boolean;
   serverUrl?: string;
+}>();
+
+defineEmits<{
+  (e: "select-player", playerId: string): void;
 }>();
 
 const defaultColors = [
@@ -179,6 +184,16 @@ const formatNumber = (num: number): string => {
   overflow: hidden;
   display: flex;
   align-items: center;
+}
+
+.player-row.clickable {
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.player-row.clickable:hover {
+  border-color: var(--accent-primary);
+  background: rgba(23, 27, 36, 0.95);
 }
 
 .damage-bar {
