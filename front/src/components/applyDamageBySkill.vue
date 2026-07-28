@@ -927,12 +927,18 @@ const playerDisplayData = computed(() => {
 });
 
 const totalDamageForView = computed(() => {
+  if (selectedTargetId.value && fightSummary.targets && fightSummary.targets[selectedTargetId.value] && fightSummary.targets[selectedTargetId.value].totalDamage) {
+    return fightSummary.targets[selectedTargetId.value].totalDamage || 0;
+  }
   return playerDisplayData.value.reduce((sum, p) => sum + p.totalDamage, 0);
 });
 
 const currentEncounterDuration = computed(() => {
   if (!selectedTargetId.value) {
     return fightSummary.encounterDuration;
+  }
+  if (fightSummary.targets && fightSummary.targets[selectedTargetId.value] && fightSummary.targets[selectedTargetId.value].encounterDuration) {
+    return fightSummary.targets[selectedTargetId.value].encounterDuration || 0;
   }
   let earliestStart = Infinity;
   let latestEnd = 0;

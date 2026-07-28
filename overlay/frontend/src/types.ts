@@ -32,6 +32,8 @@ export interface PlayerStats {
 export interface TargetStats {
   name: string;
   raceId?: number;
+  totalDamage?: number;
+  encounterDuration?: number;
   seenDead?: boolean;
   seenAppear?: boolean;
   disappeared?: boolean;

@@ -856,6 +856,14 @@ func (a *Aggregator) GetSummary() FightSummary {
 		summary.DamageTaken[dtStats.PlayerID] = *dtStats
 	}
 
+	// Pre-calculate total damage per target across all players
+	targetTotalDamageMap := make(map[string]float32)
+	for _, pStats := range a.playerStats {
+		for targetIdStr, breakdown := range pStats.DamageByTarget {
+			targetTotalDamageMap[targetIdStr] += breakdown.TotalDamage
+		}
+	}
+
 	for targetId := range uniqueTargets {
 		targetIdStr := strconv.FormatUint(targetId, 10)
 		var name string
@@ -885,15 +893,17 @@ func (a *Aggregator) GetSummary() FightSummary {
 		}
 
 		summary.Targets[targetIdStr] = TargetStats{
-			Name:        name,
-			RaceID:      raceId,
-			Conditions:  conditions,
-			SeenDead:    a.seenDead[targetId],
-			SeenAppear:  a.seenAppear[targetId],
-			Disappeared: a.disappeared[targetId],
-			StartTime:   targetTimes.StartTime,
-			EndTime:     targetTimes.EndTime,
-			HPHistory:   hpHistory,
+			Name:              name,
+			RaceID:            raceId,
+			TotalDamage:       targetTotalDamageMap[targetIdStr],
+			EncounterDuration: targetDuration,
+			Conditions:        conditions,
+			SeenDead:          a.seenDead[targetId],
+			SeenAppear:        a.seenAppear[targetId],
+			Disappeared:       a.disappeared[targetId],
+			StartTime:         targetTimes.StartTime,
+			EndTime:           targetTimes.EndTime,
+			HPHistory:         hpHistory,
 		}
 	}
 

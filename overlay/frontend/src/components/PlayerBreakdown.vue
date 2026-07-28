@@ -97,11 +97,12 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted } from "vue";
-import { PlayerStats, DamageBreakdown, SkillStats } from "../types";
+import { PlayerStats, DamageBreakdown, SkillStats, TargetStats } from "../types";
 
 const props = defineProps<{
   player: PlayerStats;
   targetId: string;
+  targets?: { [targetId: string]: TargetStats };
   hideNames?: boolean;
   serverUrl?: string;
   encounterDuration?: number;
@@ -167,8 +168,21 @@ const getDamagePercent = (damage: number) => {
   return ((damage / total) * 100).toFixed(1);
 };
 
+const targetEncounterDuration = computed(() => {
+  if (props.targetId) {
+    if (props.targets && props.targets[props.targetId] && props.targets[props.targetId].encounterDuration) {
+      return props.targets[props.targetId].encounterDuration || 0;
+    }
+    const stats = activeStats.value;
+    if (stats && stats.startTime && stats.endTime && stats.endTime > stats.startTime) {
+      return stats.endTime - stats.startTime;
+    }
+  }
+  return props.encounterDuration || 0;
+});
+
 const getSkillDps = (damage: number) => {
-  const dur = props.encounterDuration || 0;
+  const dur = targetEncounterDuration.value;
   if (dur > 0) {
     return damage / dur;
   }

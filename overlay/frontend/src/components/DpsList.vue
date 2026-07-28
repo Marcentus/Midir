@@ -51,12 +51,13 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { PlayerStats, DamageBreakdown } from "../types";
+import { PlayerStats, DamageBreakdown, TargetStats } from "../types";
 
 const props = defineProps<{
   players: { [id: string]: PlayerStats };
   targetId: string;
   totalDamage: number;
+  targets?: { [targetId: string]: TargetStats };
   hideNames?: boolean;
   serverUrl?: string;
 }>();
@@ -134,8 +135,18 @@ const getBarWidth = (damage: number) => {
   return Math.min(100, Math.max(2, (damage / topDamage.value) * 100));
 };
 
+const totalTargetDamage = computed(() => {
+  if (props.targetId) {
+    if (props.targets && props.targets[props.targetId] && props.targets[props.targetId].totalDamage) {
+      return props.targets[props.targetId].totalDamage || 0;
+    }
+    return sortedPlayers.value.reduce((sum, p) => sum + p.stats.totalDamage, 0);
+  }
+  return props.totalDamage;
+});
+
 const getDamagePercent = (damage: number) => {
-  const total = props.totalDamage || topDamage.value || 1;
+  const total = totalTargetDamage.value || topDamage.value || 1;
   if (total <= 0) return "0.0";
   return ((damage / total) * 100).toFixed(1);
 };

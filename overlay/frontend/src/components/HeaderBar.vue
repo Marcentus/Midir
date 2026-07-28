@@ -48,8 +48,8 @@
         title="Select combat target"
       >
         <option value="">All Targets</option>
-        <option v-for="(target, id) in targets" :key="id" :value="id">
-          {{ target.name || id }}
+        <option v-for="target in sortedTargets" :key="target.id" :value="target.id">
+          {{ target.name || target.id }}{{ formatCompact(target.totalDamage) }}
         </option>
       </select>
 
@@ -96,6 +96,34 @@ const formattedTimer = computed(() => {
   const mins = Math.floor(dur / 60);
   const secs = Math.floor(dur % 60);
   return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+});
+
+const formatCompact = (num?: number): string => {
+  if (!num || isNaN(num)) return "";
+  if (num >= 1000000) return ` (${(num / 1000000).toFixed(1)}M)`;
+  if (num >= 1000) return ` (${(num / 1000).toFixed(0)}k)`;
+  return ` (${num.toFixed(0)})`;
+};
+
+interface TargetItem extends TargetStats {
+  id: string;
+}
+
+const sortedTargets = computed<TargetItem[]>(() => {
+  if (!props.targets) return [];
+  const list: TargetItem[] = Object.entries(props.targets).map(([id, t]) => ({
+    id,
+    ...t,
+  }));
+
+  return list.sort((a, b) => {
+    const startA = a.startTime || 0;
+    const startB = b.startTime || 0;
+    if (startB !== startA) {
+      return startB - startA; // 1. Most recent spawn time first
+    }
+    return (b.totalDamage || 0) - (a.totalDamage || 0); // 2. Highest damage first
+  });
 });
 </script>
 

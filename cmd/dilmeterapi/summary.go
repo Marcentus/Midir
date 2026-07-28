@@ -138,15 +138,17 @@ type TargetHPPoint struct {
 
 // TargetStats holds information about a specific target, including active conditions.
 type TargetStats struct {
-	Name        string                     `json:"name"`
-	RaceID      uint32                     `json:"raceId"`
-	Conditions  map[uint32]*ConditionStats `json:"conditions,omitempty"`
-	SeenDead    bool                       `json:"seenDead"`
-	SeenAppear  bool                       `json:"seenAppear"`
-	Disappeared bool                       `json:"disappeared"`
-	StartTime   int64                      `json:"startTime"`
-	EndTime     int64                      `json:"endTime"`
-	HPHistory   []TargetHPPoint            `json:"hpHistory,omitempty"`
+	Name              string                     `json:"name"`
+	RaceID            uint32                     `json:"raceId"`
+	TotalDamage       float32                    `json:"totalDamage"`       // Total damage dealt by all players to this target
+	EncounterDuration float64                    `json:"encounterDuration"` // Active duration for this target (EndTime - StartTime)
+	Conditions        map[uint32]*ConditionStats `json:"conditions,omitempty"`
+	SeenDead          bool                       `json:"seenDead"`
+	SeenAppear        bool                       `json:"seenAppear"`
+	Disappeared       bool                       `json:"disappeared"`
+	StartTime         int64                      `json:"startTime"`
+	EndTime           int64                      `json:"endTime"`
+	HPHistory         []TargetHPPoint            `json:"hpHistory,omitempty"`
 }
 
 // NEW: EntityState represents an entity currently in the area.

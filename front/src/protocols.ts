@@ -94,6 +94,8 @@ export interface TargetHPPoint {
 export interface TargetStats {
   name: string;
   raceId?: number;
+  totalDamage?: number;
+  encounterDuration?: number;
   conditions?: { [id: number]: ConditionStats };
   seenDead?: boolean;
   seenAppear?: boolean;
