@@ -294,6 +294,7 @@ func (sm *SessionManager) GetAllSessions() ([]*Session, error) {
 		logFile, err := os.Open(filepath.Join(sm.logDirectory, file.Name()))
 		if err == nil {
 			scanner := bufio.NewScanner(logFile)
+			scanner.Buffer(make([]byte, 64*1024), 10*1024*1024)
 			if scanner.Scan() {
 				var summaryEvent eventSessionSummary
 				if err := json.Unmarshal(scanner.Bytes(), &summaryEvent); err == nil && summaryEvent.EventId == eventIdSessionSummary {
@@ -397,6 +398,7 @@ func updateSessionHeaderName(filePath string, newName string) error {
 
 	var lines []string
 	scanner := bufio.NewScanner(f)
+	scanner.Buffer(make([]byte, 64*1024), 10*1024*1024)
 	if scanner.Scan() {
 		firstLine := scanner.Text()
 		var summaryEvent eventSessionSummary
@@ -487,6 +489,7 @@ func (sm *SessionManager) RenameSession(sessionID, newName string) (*Session, er
 	logFile, err := os.Open(filepath.Join(sm.logDirectory, newNdjsonFilename))
 	if err == nil {
 		scanner := bufio.NewScanner(logFile)
+		scanner.Buffer(make([]byte, 64*1024), 10*1024*1024)
 		if scanner.Scan() {
 			var summaryEvent eventSessionSummary
 			if err := json.Unmarshal(scanner.Bytes(), &summaryEvent); err == nil && summaryEvent.EventId == eventIdSessionSummary {
@@ -593,6 +596,7 @@ func (sm *SessionManager) runMigration() error {
 				continue
 			}
 			scanner := bufio.NewScanner(f)
+			scanner.Buffer(make([]byte, 64*1024), 10*1024*1024)
 			if scanner.Scan() {
 				var firstEvent eventBaseForMigration
 				if err := json.Unmarshal(scanner.Bytes(), &firstEvent); err == nil {
@@ -660,6 +664,7 @@ func (sm *SessionManager) MigrateSession(sessionID string) error {
 	}
 
 	scanner := bufio.NewScanner(oldF)
+	scanner.Buffer(make([]byte, 64*1024), 10*1024*1024)
 	hasOldSummary := false
 	if scanner.Scan() {
 		var firstEvent eventBase
@@ -742,6 +747,7 @@ func (sm *SessionManager) MigrateSession(sessionID string) error {
 
 	oldF.Seek(0, 0)
 	oldScanner := bufio.NewScanner(oldF)
+	oldScanner.Buffer(make([]byte, 64*1024), 10*1024*1024)
 	isFirstLine := true
 	for oldScanner.Scan() {
 		if isFirstLine {

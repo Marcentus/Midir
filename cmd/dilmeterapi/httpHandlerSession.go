@@ -179,6 +179,7 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 	// PASS 1: Get all entity appearances for name/race lookups later.
 	entitiesInLog := make(map[string]eventEntityAppear)
 	scanner := bufio.NewScanner(file)
+	scanner.Buffer(make([]byte, 64*1024), 10*1024*1024)
 	for scanner.Scan() {
 		var event eventBase
 		if err := json.Unmarshal(scanner.Bytes(), &event); err != nil {
@@ -197,6 +198,7 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 	// Reset file reader to the beginning for the next pass.
 	file.Seek(0, 0)
 	scanner = bufio.NewScanner(file)
+	scanner.Buffer(make([]byte, 64*1024), 10*1024*1024)
 
 	// PASS 2: Collect all damage events AND track condition history
 	var allDamageEvents []eventDamage
