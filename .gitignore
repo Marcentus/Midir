@@ -21,3 +21,4 @@ tools/data/
 *.db-wal
 live-session.ndjson
 settings.json
+overlay_settings.json
