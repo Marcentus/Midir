@@ -33,6 +33,38 @@
         <span class="hint">0% = Completely Transparent, 100% = Solid Dark Blue</span>
       </div>
 
+      <!-- Custom Background Image -->
+      <div class="setting-item">
+        <label>Custom Background Image</label>
+        <input 
+          type="file" 
+          ref="fileInputRef" 
+          accept="image/*" 
+          style="display: none" 
+          @change="handleImageUpload" 
+        />
+
+        <div v-if="settings.bgImage" class="bg-image-preview-row">
+          <div class="bg-thumbnail" :style="{ backgroundImage: `url(${settings.bgImage})` }"></div>
+          <div class="bg-image-actions">
+            <select 
+              :value="settings.bgImageFit || 'cover'" 
+              @change="updateSetting('bgImageFit', ($event.target as HTMLSelectElement).value)"
+              class="fit-select"
+            >
+              <option value="cover">Fit: Cover</option>
+              <option value="contain">Fit: Contain</option>
+              <option value="tile">Fit: Tile</option>
+            </select>
+            <button class="btn-remove-img" @click="removeImage">Remove</button>
+          </div>
+        </div>
+        <button v-else class="btn-choose-img" @click="triggerFileSelect">
+          🖼️ Choose Image...
+        </button>
+        <span class="hint">Upload custom background image. Opacity slider above adjusts text-contrast tint.</span>
+      </div>
+
       <!-- Font Size Slider -->
       <div class="setting-item">
         <div class="setting-label-row">
@@ -117,10 +149,12 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, onMounted } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import { OverlaySettings } from "../types";
 
 const channel = new BroadcastChannel("midir_overlay_settings_channel");
+
+const fileInputRef = ref<HTMLInputElement | null>(null);
 
 const settings = reactive<OverlaySettings>({
   serverUrl: "http://localhost:8030",
@@ -134,7 +168,63 @@ const settings = reactive<OverlaySettings>({
   autoSwapEnabled: false,
   autoSwapRaceIds: [],
   autoSwapRaceIdsInput: "",
+  bgImage: "",
+  bgImageFit: "cover",
 });
+
+const triggerFileSelect = () => {
+  fileInputRef.value?.click();
+};
+
+const handleImageUpload = (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  if (!target.files || target.files.length === 0) return;
+  const file = target.files[0];
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const rawDataUrl = event.target?.result as string;
+    if (!rawDataUrl) return;
+
+    const img = new Image();
+    img.onload = () => {
+      const maxDim = 1280;
+      let w = img.width;
+      let h = img.height;
+
+      if (w > maxDim || h > maxDim) {
+        if (w > h) {
+          h = Math.round((h * maxDim) / w);
+          w = maxDim;
+        } else {
+          w = Math.round((w * maxDim) / h);
+          h = maxDim;
+        }
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, w, h);
+        const optimizedUrl = canvas.toDataURL("image/webp", 0.85);
+        updateSetting("bgImage", optimizedUrl);
+      } else {
+        updateSetting("bgImage", rawDataUrl);
+      }
+    };
+    img.onerror = () => {
+      updateSetting("bgImage", rawDataUrl);
+    };
+    img.src = rawDataUrl;
+  };
+  reader.readAsDataURL(file);
+};
+
+const removeImage = () => {
+  updateSetting("bgImage", "");
+};
 
 const handleRaceIdsInputChange = (inputStr: string) => {
   const parsed = inputStr

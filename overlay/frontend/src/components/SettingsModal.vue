@@ -35,6 +35,38 @@
           <span class="hint">0% = Completely Transparent, 100% = Solid Dark Blue.</span>
         </div>
 
+        <!-- Custom Background Image -->
+        <div class="setting-item">
+          <label>Custom Background Image</label>
+          <input 
+            type="file" 
+            ref="fileInputRef" 
+            accept="image/*" 
+            style="display: none" 
+            @change="handleImageUpload" 
+          />
+
+          <div v-if="settings.bgImage" class="bg-image-preview-row">
+            <div class="bg-thumbnail" :style="{ backgroundImage: `url(${settings.bgImage})` }"></div>
+            <div class="bg-image-actions">
+              <select 
+                :value="settings.bgImageFit || 'cover'" 
+                @change="updateSetting('bgImageFit', ($event.target as HTMLSelectElement).value)"
+                class="fit-select"
+              >
+                <option value="cover">Fit: Cover</option>
+                <option value="contain">Fit: Contain</option>
+                <option value="tile">Fit: Tile</option>
+              </select>
+              <button class="btn-remove-img" @click="removeImage">Remove</button>
+            </div>
+          </div>
+          <button v-else class="btn-choose-img" @click="triggerFileSelect">
+            🖼️ Choose Image...
+          </button>
+          <span class="hint">Upload custom background image. Opacity slider above adjusts text-contrast tint.</span>
+        </div>
+
         <!-- Font Size Slider -->
         <div class="setting-item">
           <div class="setting-label-row">
@@ -191,6 +223,7 @@ const emit = defineEmits<{
   (e: "close"): void;
 }>();
 
+const fileInputRef = ref<HTMLInputElement | null>(null);
 const selectedActiveRaceId = ref<number | "">("");
 const showCustomInput = ref(false);
 const customRaceId = ref<number | "">("");
@@ -198,6 +231,61 @@ const customRaceName = ref("");
 
 const updateSetting = (key: keyof OverlaySettings, value: any) => {
   emit("update-setting", key, value);
+};
+
+const triggerFileSelect = () => {
+  fileInputRef.value?.click();
+};
+
+const handleImageUpload = (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  if (!target.files || target.files.length === 0) return;
+  const file = target.files[0];
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const rawDataUrl = event.target?.result as string;
+    if (!rawDataUrl) return;
+
+    // Optimize image via Canvas to prevent bloated settings JSON
+    const img = new Image();
+    img.onload = () => {
+      const maxDim = 1280;
+      let w = img.width;
+      let h = img.height;
+
+      if (w > maxDim || h > maxDim) {
+        if (w > h) {
+          h = Math.round((h * maxDim) / w);
+          w = maxDim;
+        } else {
+          w = Math.round((w * maxDim) / h);
+          h = maxDim;
+        }
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, w, h);
+        const optimizedUrl = canvas.toDataURL("image/webp", 0.85);
+        updateSetting("bgImage", optimizedUrl);
+      } else {
+        updateSetting("bgImage", rawDataUrl);
+      }
+    };
+    img.onerror = () => {
+      updateSetting("bgImage", rawDataUrl);
+    };
+    img.src = rawDataUrl;
+  };
+  reader.readAsDataURL(file);
+};
+
+const removeImage = () => {
+  updateSetting("bgImage", "");
 };
 
 // Filter active session targets that have a valid raceId and aren't already added
@@ -352,6 +440,75 @@ const removeTarget = (index: number) => {
 .hint {
   font-size: 0.7em;
   color: var(--text-dim);
+}
+
+.bg-image-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #14171f;
+  border: 1px solid var(--border-color);
+  padding: 6px;
+  border-radius: 4px;
+}
+
+.bg-thumbnail {
+  width: 50px;
+  height: 32px;
+  border-radius: 3px;
+  background-size: cover;
+  background-position: center;
+  border: 1px solid var(--border-highlight);
+  flex-shrink: 0;
+}
+
+.bg-image-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex: 1;
+}
+
+.fit-select {
+  background: #171b24;
+  border: 1px solid var(--border-color);
+  color: #ffffff;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 0.78em;
+  outline: none;
+}
+
+.btn-choose-img {
+  background: #14171f;
+  border: 1px dashed var(--border-highlight);
+  color: var(--accent-primary);
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.82em;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.btn-choose-img:hover {
+  background: rgba(129, 138, 248, 0.15);
+  border-color: var(--accent-primary);
+}
+
+.btn-remove-img {
+  background: transparent;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  color: var(--accent-rose);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.75em;
+  cursor: pointer;
+}
+
+.btn-remove-img:hover {
+  background: rgba(248, 113, 113, 0.15);
 }
 
 .setting-grid {

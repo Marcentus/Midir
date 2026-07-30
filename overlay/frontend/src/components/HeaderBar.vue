@@ -35,12 +35,8 @@
       </div>
     </div>
 
-    <!-- Center Drag Handle Space -->
-    <div class="header-center drag-region"></div>
-
-    <!-- Right Section: Target Selector & 3-Dot Settings -->
-    <div class="header-right no-drag">
-      <!-- Target Selector Dropdown -->
+    <!-- Center Section: Expanded Target Selector -->
+    <div class="header-center no-drag">
       <select 
         class="target-select" 
         :value="settings.selectedTargetId" 
@@ -52,7 +48,10 @@
           {{ target.name || target.id }}<template v-if="target.raceId"> (ID: {{ target.raceId }})</template>
         </option>
       </select>
+    </div>
 
+    <!-- Right Section: 3-Dot Settings Button -->
+    <div class="header-right no-drag">
       <!-- 3-Dot Settings Button -->
       <button 
         class="seamless-btn" 
@@ -137,12 +136,16 @@ const sortedTargets = computed<TargetItem[]>(() => {
   border-bottom: 1px solid var(--border-color);
   min-height: 32px;
   gap: 8px;
+  position: relative;
+  z-index: 10;
+  flex-shrink: 0;
 }
 
 .header-left {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .back-btn {
@@ -162,14 +165,16 @@ const sortedTargets = computed<TargetItem[]>(() => {
 
 .header-center {
   flex: 1;
-  height: 100%;
-  min-width: 16px;
+  display: flex;
+  align-items: center;
+  min-width: 0;
 }
 
 .header-right {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 /* Seamless Header Button Styling */
@@ -217,17 +222,20 @@ const sortedTargets = computed<TargetItem[]>(() => {
   padding: 2px 4px;
 }
 
-/* Seamless Target Dropdown */
+/* Seamless Target Dropdown - Expanded */
 .target-select {
+  width: 100%;
   background: rgba(23, 27, 36, 0.9);
   border: 1px solid var(--border-color);
   color: #f8fafc;
-  padding: 2px 6px;
+  padding: 3px 8px;
   border-radius: 4px;
   font-size: 0.8em;
   outline: none;
   cursor: pointer;
-  max-width: 130px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .target-select:hover {

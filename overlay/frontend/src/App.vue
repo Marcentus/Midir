@@ -4,6 +4,9 @@
     :class="{ unlocked: !settings.isDragLocked }"
     :style="appStyle"
   >
+    <!-- Background Layer (Opacity & Image Layer) -->
+    <div class="app-background" :style="bgLayerStyle"></div>
+
     <!-- Header Bar -->
     <HeaderBar
       :is-connected="isConnected"
@@ -125,19 +128,50 @@ const settings = reactive<OverlaySettings>({
   autoSwapTargets: [],
   autoSwapRaceIds: [],
   autoSwapRaceIdsInput: "",
+  bgImage: "",
+  bgImageFit: "cover",
 });
 
 let socketClient: OverlaySocketClient | null = null;
 let savedDimensions: { w: number; h: number } | null = null;
 
 const appStyle = computed(() => {
-  const isZeroOpacity = settings.bgOpacity <= 0.02;
   return {
     "--bg-opacity": settings.bgOpacity,
-    backgroundColor: isZeroOpacity ? "transparent" : `rgba(20, 23, 31, ${settings.bgOpacity})`,
+    backgroundColor: "transparent",
     border: "none",
     boxShadow: "none",
     "--font-scale": settings.fontSize / 13,
+  };
+});
+
+const bgLayerStyle = computed(() => {
+  const opacity = settings.bgOpacity;
+  if (opacity <= 0.02) {
+    return {
+      opacity: 0,
+      display: "none",
+    };
+  }
+
+  if (settings.bgImage) {
+    const fit = settings.bgImageFit || "cover";
+    const repeat = fit === "tile" ? "repeat" : "no-repeat";
+    const size = fit === "tile" ? "auto" : fit;
+
+    return {
+      opacity: opacity,
+      backgroundColor: "#14171f",
+      backgroundImage: `linear-gradient(rgba(20, 23, 31, 0.4), rgba(20, 23, 31, 0.4)), url("${settings.bgImage}")`,
+      backgroundSize: size,
+      backgroundPosition: "center",
+      backgroundRepeat: repeat,
+    };
+  }
+
+  return {
+    opacity: opacity,
+    backgroundColor: "#14171f",
   };
 });
 
@@ -338,6 +372,17 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.app-background {
+  position: absolute;
+  top: 32px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 0.1s ease;
+}
+
 .resize-handle {
   position: absolute;
   right: 2px;

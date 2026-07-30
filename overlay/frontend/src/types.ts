@@ -74,4 +74,6 @@ export interface OverlaySettings {
   autoSwapTargets?: AutoSwapTarget[];
   autoSwapRaceIds?: number[];
   autoSwapRaceIdsInput?: string;
+  bgImage?: string;
+  bgImageFit?: "cover" | "contain" | "tile";
 }
