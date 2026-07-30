@@ -47,6 +47,7 @@
     <SettingsModal
       v-if="showSettings"
       :settings="settings"
+      :targets="summary?.targets || {}"
       @update-setting="handleUpdateSetting"
       @close="toggleSettings"
     />
@@ -120,6 +121,10 @@ const settings = reactive<OverlaySettings>({
   isResizeLocked: false,
   alwaysOnTop: true,
   selectedTargetId: "",
+  autoSwapEnabled: false,
+  autoSwapTargets: [],
+  autoSwapRaceIds: [],
+  autoSwapRaceIdsInput: "",
 });
 
 let socketClient: OverlaySocketClient | null = null;
@@ -149,6 +154,14 @@ const loadSettings = async () => {
     if (raw) {
       const parsed = JSON.parse(raw);
       Object.assign(settings, parsed);
+
+      // Migrate legacy autoSwapRaceIds to autoSwapTargets if needed
+      if (parsed.autoSwapRaceIds && parsed.autoSwapRaceIds.length > 0 && (!parsed.autoSwapTargets || parsed.autoSwapTargets.length === 0)) {
+        settings.autoSwapTargets = parsed.autoSwapRaceIds.map((id: number) => ({
+          raceId: id,
+          name: `Race ${id}`,
+        }));
+      }
     }
   } catch (e) {
     console.error("Failed to load overlay settings", e);
@@ -252,12 +265,49 @@ const handleSaveSession = async () => {
   }
 };
 
+const processedEntityIds = new Set<string>();
+
+const checkAutoSwap = (summaryData: FightSummary) => {
+  if (!settings.autoSwapEnabled) return;
+
+  const configuredRaceIds = new Set<number>();
+  if (settings.autoSwapTargets && settings.autoSwapTargets.length > 0) {
+    for (const t of settings.autoSwapTargets) {
+      if (t.raceId) configuredRaceIds.add(t.raceId);
+    }
+  }
+  if (settings.autoSwapRaceIds && settings.autoSwapRaceIds.length > 0) {
+    for (const id of settings.autoSwapRaceIds) {
+      configuredRaceIds.add(id);
+    }
+  }
+
+  if (configuredRaceIds.size === 0) return;
+
+  if (!summaryData?.targets || Object.keys(summaryData.targets).length === 0) {
+    processedEntityIds.clear();
+    return;
+  }
+
+  for (const [targetId, targetStats] of Object.entries(summaryData.targets)) {
+    if (!processedEntityIds.has(targetId)) {
+      processedEntityIds.add(targetId);
+      if (targetStats.raceId && configuredRaceIds.has(targetStats.raceId)) {
+        settings.selectedTargetId = targetId;
+        saveSettings();
+        break;
+      }
+    }
+  }
+};
+
 const handleClearSession = async () => {
   if (socketClient) {
     const ok = await socketClient.clearSession();
     if (ok) {
       summary.value = null;
       selectedPlayerId.value = null;
+      processedEntityIds.clear();
     }
   }
 };
@@ -271,6 +321,7 @@ onMounted(async () => {
   };
   socketClient.onSummary = (data) => {
     summary.value = data;
+    checkAutoSwap(data);
   };
 
   socketClient.connect();

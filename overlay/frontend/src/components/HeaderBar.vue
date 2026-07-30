@@ -49,7 +49,7 @@
       >
         <option value="">All Targets</option>
         <option v-for="target in sortedTargets" :key="target.id" :value="target.id">
-          {{ target.name || target.id }}{{ formatCompact(target.totalDamage) }}
+          {{ target.name || target.id }}<template v-if="target.raceId"> (ID: {{ target.raceId }})</template>
         </option>
       </select>
 

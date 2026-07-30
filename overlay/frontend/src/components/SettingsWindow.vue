@@ -86,6 +86,27 @@
           />
           <span>Always on Top</span>
         </label>
+
+        <label class="toggle-item">
+          <input 
+            type="checkbox" 
+            v-model="settings.autoSwapEnabled" 
+            @change="updateSetting('autoSwapEnabled', settings.autoSwapEnabled)"
+          />
+          <span>Auto Swap Target on First Hit</span>
+        </label>
+      </div>
+
+      <!-- Auto Swap Target Race IDs -->
+      <div v-if="settings.autoSwapEnabled" class="setting-item" style="margin-top: 10px;">
+        <label>Target Race IDs (comma-separated)</label>
+        <input 
+          type="text" 
+          :value="settings.autoSwapRaceIdsInput ?? (settings.autoSwapRaceIds?.join(', ') || '')" 
+          @change="handleRaceIdsInputChange(($event.target as HTMLInputElement).value)"
+          placeholder="e.g. 7615, 7616"
+        />
+        <span class="hint">Enter Race IDs separated by commas. Find Race IDs in the target dropdown (ID: XXXX).</span>
       </div>
     </div>
 
@@ -110,7 +131,19 @@ const settings = reactive<OverlaySettings>({
   isResizeLocked: false,
   alwaysOnTop: true,
   selectedTargetId: "",
+  autoSwapEnabled: false,
+  autoSwapRaceIds: [],
+  autoSwapRaceIdsInput: "",
 });
+
+const handleRaceIdsInputChange = (inputStr: string) => {
+  const parsed = inputStr
+    .split(",")
+    .map((s) => parseInt(s.trim(), 10))
+    .filter((n) => !isNaN(n));
+  updateSetting("autoSwapRaceIdsInput", inputStr);
+  updateSetting("autoSwapRaceIds", parsed);
+};
 
 const loadSettings = () => {
   try {

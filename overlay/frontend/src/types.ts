@@ -55,6 +55,11 @@ export interface WebSocketMessage {
   data: any;
 }
 
+export interface AutoSwapTarget {
+  raceId: number;
+  name: string;
+}
+
 export interface OverlaySettings {
   serverUrl: string;
   bgOpacity: number; // 0 to 1
@@ -65,4 +70,8 @@ export interface OverlaySettings {
   isResizeLocked?: boolean;
   alwaysOnTop?: boolean;
   selectedTargetId: string; // "" for All Targets
+  autoSwapEnabled?: boolean;
+  autoSwapTargets?: AutoSwapTarget[];
+  autoSwapRaceIds?: number[];
+  autoSwapRaceIdsInput?: string;
 }

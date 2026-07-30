@@ -98,6 +98,75 @@
             <span>Always on Top</span>
           </label>
 
+          <label class="toggle-item">
+            <input 
+              type="checkbox" 
+              :checked="settings.autoSwapEnabled" 
+              @change="updateSetting('autoSwapEnabled', ($event.target as HTMLInputElement).checked)"
+            />
+            <span>Auto Swap Target on First Hit</span>
+          </label>
+        </div>
+
+        <!-- Auto Swap Section -->
+        <div v-if="settings.autoSwapEnabled" class="auto-swap-container">
+          <label class="section-label">Auto-Swap Targets</label>
+          
+          <!-- Chips List -->
+          <div class="chips-wrapper">
+            <div 
+              v-for="(target, idx) in settings.autoSwapTargets || []" 
+              :key="target.raceId + '-' + idx" 
+              class="target-chip"
+            >
+              <span class="chip-label">🏷️ {{ target.name || ('Race ' + target.raceId) }} <small>(ID: {{ target.raceId }})</small></span>
+              <button class="chip-remove" @click="removeTarget(idx)" title="Remove target">✕</button>
+            </div>
+            <span v-if="!settings.autoSwapTargets || settings.autoSwapTargets.length === 0" class="empty-hint">
+              No auto-swap targets added yet.
+            </span>
+          </div>
+
+          <!-- Add Controls -->
+          <div class="add-controls-row">
+            <!-- 1-Click Select from Session Targets -->
+            <div class="quick-add-group">
+              <select v-model="selectedActiveRaceId" class="session-target-select">
+                <option value="">-- Add Active Target from Fight --</option>
+                <option v-for="t in availableSessionTargets" :key="t.raceId" :value="t.raceId">
+                  {{ t.name }} (ID: {{ t.raceId }})
+                </option>
+              </select>
+              <button 
+                class="btn-add-chip" 
+                :disabled="!selectedActiveRaceId" 
+                @click="addActiveTarget"
+              >
+                + Add
+              </button>
+            </div>
+
+            <!-- Custom Race ID input toggle / inline form -->
+            <div v-if="showCustomInput" class="custom-input-group">
+              <input 
+                type="number" 
+                v-model.number="customRaceId" 
+                placeholder="Race ID" 
+                class="custom-id-input"
+              />
+              <input 
+                type="text" 
+                v-model="customRaceName" 
+                placeholder="Label (optional)" 
+                class="custom-name-input"
+              />
+              <button class="btn-add-chip" :disabled="!customRaceId" @click="addCustomTarget">Save</button>
+              <button class="btn-cancel-custom" @click="showCustomInput = false">Cancel</button>
+            </div>
+            <button v-else class="btn-toggle-custom" @click="showCustomInput = true">
+              + Custom Race ID
+            </button>
+          </div>
         </div>
       </div>
 
@@ -109,10 +178,12 @@
 </template>
 
 <script setup lang="ts">
-import { OverlaySettings } from "../types";
+import { ref, computed } from "vue";
+import { OverlaySettings, TargetStats, AutoSwapTarget } from "../types";
 
 const props = defineProps<{
   settings: OverlaySettings;
+  targets?: { [targetId: string]: TargetStats };
 }>();
 
 const emit = defineEmits<{
@@ -120,8 +191,58 @@ const emit = defineEmits<{
   (e: "close"): void;
 }>();
 
+const selectedActiveRaceId = ref<number | "">("");
+const showCustomInput = ref(false);
+const customRaceId = ref<number | "">("");
+const customRaceName = ref("");
+
 const updateSetting = (key: keyof OverlaySettings, value: any) => {
   emit("update-setting", key, value);
+};
+
+// Filter active session targets that have a valid raceId and aren't already added
+const availableSessionTargets = computed(() => {
+  if (!props.targets) return [];
+  const existingIds = new Set((props.settings.autoSwapTargets || []).map((t) => t.raceId));
+  
+  const map = new Map<number, { raceId: number; name: string }>();
+  for (const t of Object.values(props.targets)) {
+    if (t.raceId && !existingIds.has(t.raceId)) {
+      if (!map.has(t.raceId)) {
+        map.set(t.raceId, { raceId: t.raceId, name: t.name || `Race ${t.raceId}` });
+      }
+    }
+  }
+  return Array.from(map.values());
+});
+
+const addActiveTarget = () => {
+  if (!selectedActiveRaceId.value) return;
+  const targetObj = availableSessionTargets.value.find((t) => t.raceId === selectedActiveRaceId.value);
+  if (targetObj) {
+    const updated = [...(props.settings.autoSwapTargets || []), targetObj];
+    updateSetting("autoSwapTargets", updated);
+    selectedActiveRaceId.value = "";
+  }
+};
+
+const addCustomTarget = () => {
+  if (!customRaceId.value || typeof customRaceId.value !== "number") return;
+  const newTarget: AutoSwapTarget = {
+    raceId: customRaceId.value,
+    name: customRaceName.value.trim() || `Race ${customRaceId.value}`,
+  };
+  const updated = [...(props.settings.autoSwapTargets || []), newTarget];
+  updateSetting("autoSwapTargets", updated);
+  customRaceId.value = "";
+  customRaceName.value = "";
+  showCustomInput.value = false;
+};
+
+const removeTarget = (index: number) => {
+  const updated = [...(props.settings.autoSwapTargets || [])];
+  updated.splice(index, 1);
+  updateSetting("autoSwapTargets", updated);
 };
 </script>
 
@@ -249,23 +370,177 @@ const updateSetting = (key: keyof OverlaySettings, value: any) => {
   color: #e2e8f0;
 }
 
-.toggle-item-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.sub-hint {
-  font-size: 0.72em;
-  color: var(--accent-amber);
-  padding-left: 20px;
-}
-
 .toggle-item input[type="checkbox"] {
   accent-color: var(--accent-primary);
   width: 14px;
   height: 14px;
   cursor: pointer;
+}
+
+.auto-swap-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(20, 23, 31, 0.6);
+  border: 1px solid var(--border-color);
+  padding: 8px;
+  border-radius: 6px;
+  margin-top: 2px;
+}
+
+.section-label {
+  font-size: 0.8em;
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+
+.chips-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 28px;
+  align-items: center;
+  padding: 4px;
+  background: #14171f;
+  border: 1px dashed var(--border-color);
+  border-radius: 4px;
+  max-height: 90px;
+  overflow-y: auto;
+}
+
+.target-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(129, 138, 248, 0.18);
+  border: 1px solid rgba(129, 138, 248, 0.4);
+  color: #f8fafc;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.76em;
+  font-weight: 600;
+}
+
+.chip-label small {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.chip-remove {
+  background: transparent;
+  border: none;
+  color: var(--accent-rose);
+  cursor: pointer;
+  font-size: 0.9em;
+  line-height: 1;
+  padding: 0 2px;
+  border-radius: 50%;
+}
+
+.chip-remove:hover {
+  background: rgba(248, 113, 113, 0.25);
+}
+
+.empty-hint {
+  font-size: 0.75em;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.add-controls-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.quick-add-group {
+  display: flex;
+  gap: 6px;
+}
+
+.session-target-select {
+  flex: 1;
+  background: #14171f;
+  border: 1px solid var(--border-color);
+  color: #f8fafc;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 0.78em;
+  outline: none;
+}
+
+.btn-add-chip {
+  background: var(--accent-primary);
+  color: #ffffff;
+  border: none;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 0.78em;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-add-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-toggle-custom {
+  align-self: flex-start;
+  background: transparent;
+  border: 1px dashed var(--accent-primary);
+  color: var(--accent-primary);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75em;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-toggle-custom:hover {
+  background: rgba(129, 138, 248, 0.15);
+}
+
+.custom-input-group {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.custom-id-input {
+  width: 85px;
+  background: #14171f;
+  border: 1px solid var(--border-color);
+  color: #ffffff;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 0.78em;
+  outline: none;
+}
+
+.custom-name-input {
+  flex: 1;
+  background: #14171f;
+  border: 1px solid var(--border-color);
+  color: #ffffff;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 0.78em;
+  outline: none;
+}
+
+.btn-cancel-custom {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.75em;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.btn-cancel-custom:hover {
+  color: var(--accent-rose);
 }
 
 .card-footer {
