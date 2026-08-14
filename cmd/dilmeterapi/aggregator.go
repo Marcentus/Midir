@@ -452,7 +452,7 @@ func (a *Aggregator) processEffect(p *packet.GamePacket) {
 func (a *Aggregator) processEffectDelayed(p *packet.GamePacket) {
 	if len(p.Msg) < 7 ||
 		p.Msg[1].Type() != packet.MessageElemTypeInt ||
-		p.Msg[1].Data().(uint32) != 318 ||
+		p.Msg[1].Data().(uint32) != 319 ||
 		p.Msg[2].Type() != packet.MessageElemTypeInt ||
 		p.Msg[5].Type() != packet.MessageElemTypeLong ||
 		p.Msg[6].Type() != packet.MessageElemTypeShort {

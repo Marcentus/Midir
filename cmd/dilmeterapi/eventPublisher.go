@@ -519,7 +519,7 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		// NEW: Check against the full, correct packet structure.
 		if len(p.Msg) < 7 ||
 			p.Msg[1].Type() != packet.MessageElemTypeInt ||
-			p.Msg[1].Data().(uint32) != 318 || // Check for the specific sub-ID (this changes value some updates)
+			p.Msg[1].Data().(uint32) != 319 || // Check for the specific sub-ID (this changes value some updates)
 			p.Msg[2].Type() != packet.MessageElemTypeInt ||
 			p.Msg[5].Type() != packet.MessageElemTypeLong ||
 			p.Msg[6].Type() != packet.MessageElemTypeShort {
@@ -839,14 +839,14 @@ func newEventFromEntity(entity *packet.EntityInfo, at time.Time) iEvent {
 			At:      at.Unix(),
 			Id:      strconv.FormatUint(entity.Id, 10),
 		},
-		Name:       entity.Name,
-		RaceId:     entity.RaceId,
+		Name:             entity.Name,
+		RaceId:           entity.RaceId,
 		OwnerId:          strconv.FormatUint(entity.OwnerId, 10),
 		EntityType:       entity.EntityType,
 		SecondaryOwnerId: strconv.FormatUint(entity.SecondaryOwnerId, 10),
 		CurrentHP:        entity.CurrentHP,
 		MaxHP:            entity.MaxHP,
-		Conditions: cond,
+		Conditions:       cond,
 	}
 }
 

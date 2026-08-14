@@ -378,7 +378,7 @@ func TestAggregator_InvincibilityFilter(t *testing.T) {
 		At: time.Now(),
 		Msg: []packet.IMessageElem{
 			packet.NewMessageElemByte(0),
-			packet.NewMessageElemInt(318),  // sub-ID
+			packet.NewMessageElemInt(319),  // sub-ID
 			packet.NewMessageElemInt(5000), // damage = 5000
 			packet.NewMessageElemInt(0),
 			packet.NewMessageElemInt(0),
@@ -601,9 +601,9 @@ func TestAggregator_LiveTargetLastKnownHP(t *testing.T) {
 		Id: enemyID,
 		At: time.Now(),
 		Msg: []packet.IMessageElem{
-			packet.NewMessageElemByte(4), // subType
-			packet.NewMessageElemInt(1),  // count = 1
-			packet.NewMessageElemInt(28), // stat ID = 28 (CurrentHP)
+			packet.NewMessageElemByte(4),      // subType
+			packet.NewMessageElemInt(1),       // count = 1
+			packet.NewMessageElemInt(28),      // stat ID = 28 (CurrentHP)
 			packet.NewMessageElemFloat(500.0), // value = 500.0
 		},
 	}
@@ -756,13 +756,13 @@ func TestAggregator_PetDamageAttribution(t *testing.T) {
 		Id: enemyID, // target ID
 		At: time.Now(),
 		Msg: []packet.IMessageElem{
-			packet.NewMessageElemInt(352),     // type = 352
-			packet.NewMessageElemByte(0),      // skip byte
-			packet.NewMessageElemInt(5000),    // damage = 5000
-			packet.NewMessageElemInt(0),       // skip int
-			packet.NewMessageElemLong(petID),  // attacker ID (pet)
-			packet.NewMessageElemShort(100),   // skill ID (original)
-			packet.NewMessageElemByte(0),      // skip byte
+			packet.NewMessageElemInt(352),    // type = 352
+			packet.NewMessageElemByte(0),     // skip byte
+			packet.NewMessageElemInt(5000),   // damage = 5000
+			packet.NewMessageElemInt(0),      // skip int
+			packet.NewMessageElemLong(petID), // attacker ID (pet)
+			packet.NewMessageElemShort(100),  // skill ID (original)
+			packet.NewMessageElemByte(0),     // skip byte
 		},
 	}
 	agg.ProcessPacket(pEffect)
@@ -938,5 +938,3 @@ func TestProcessEventsForSummary_PetAndPuppetDamage(t *testing.T) {
 		t.Errorf("Expected 1500 damage taken, got %f", takenStats.TotalDamage)
 	}
 }
-
-
