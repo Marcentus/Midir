@@ -721,6 +721,12 @@ import {
   selectedTargetId,
 } from "@/store";
 import { SkillStats, DamageBreakdown } from "@/protocols";
+import {
+  isGroupTargetId,
+  getGroupMemberTargetIds,
+  aggregatePlayerDamageForGroup,
+  getEncounterDurationForTargets,
+} from "@/utils/targetGrouping";
 import TargetConditionView from "./TargetConditionView.vue";
 import { hiddenPlayers, toggleHiddenPlayer, setAllHiddenPlayers, globalHideMode, showClassColorsForVisiblePlayers, listSkillMetrics, cardSkillMetrics, dpsMeterFillMode } from "@/store";
 
@@ -911,16 +917,26 @@ const playerDisplayData = computed(() => {
       .sort((a, b) => b.totalDamage - a.totalDamage);
   } else {
     // Target-specific view
+    const isGroup = isGroupTargetId(selectedTargetId.value);
+    const memberIds = isGroup
+      ? getGroupMemberTargetIds(selectedTargetId.value, fightSummary)
+      : [];
+
     return players
-      .map((p) => ({
-        ...p.damageByTarget[selectedTargetId.value],
-        id: p.id,
-        name: p.name,
-        talentIcon: p.talentIcon,
-        talentName: p.talentName,
-        talentColor: p.talentColor,
-        missingAppearPacket: p.missingAppearPacket,
-      }))
+      .map((p) => {
+        const breakdown = isGroup
+          ? aggregatePlayerDamageForGroup(p, memberIds)
+          : p.damageByTarget[selectedTargetId.value];
+        return {
+          ...breakdown,
+          id: p.id,
+          name: p.name,
+          talentIcon: p.talentIcon,
+          talentName: p.talentName,
+          talentColor: p.talentColor,
+          missingAppearPacket: p.missingAppearPacket,
+        };
+      })
       .filter((p) => p && p.totalDamage > 0)
       .sort((a, b) => b.totalDamage - a.totalDamage);
   }
@@ -933,6 +949,10 @@ const totalDamageForView = computed(() => {
 const currentEncounterDuration = computed(() => {
   if (!selectedTargetId.value) {
     return fightSummary.encounterDuration;
+  }
+  if (isGroupTargetId(selectedTargetId.value)) {
+    const memberIds = getGroupMemberTargetIds(selectedTargetId.value, fightSummary);
+    return getEncounterDurationForTargets(fightSummary.players, memberIds);
   }
   let earliestStart = Infinity;
   let latestEnd = 0;

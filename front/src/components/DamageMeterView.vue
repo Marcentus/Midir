@@ -140,6 +140,30 @@
                     }"
                   >
                     <div class="flex-grow-1 overflow-y-auto pa-0 custom-scrollbar">
+                      <!-- Top Option: Select All Targets in Group -->
+                      <div
+                        class="target-menu-item cursor-pointer position-relative overflow-hidden group-all-item"
+                        :class="[
+                          getTargetClass(expandedGroup.raceId),
+                          selectedTargetId === expandedGroup.id ? 'active-item' : ''
+                        ]"
+                        @click="selectGroupAll(expandedGroup)"
+                      >
+                        <div class="target-item-content d-flex justify-space-between align-center px-4 pt-3 pb-2">
+                          <span class="target-col-name font-weight-bold d-flex align-center text-white">
+                            <span>All Targets ({{ expandedGroup.rawName || expandedGroup.name }})</span>
+                          </span>
+
+                          <div class="d-flex align-center ga-2">
+                            <span class="target-col-damage font-weight-bold text-amber text-right">
+                              {{ formatCompact(expandedGroup.damage) }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <v-divider class="my-1" style="border-color: rgba(255,255,255,0.1);"></v-divider>
+
                       <div
                         v-for="subItem in expandedGroup.targets"
                         :key="subItem.id"
@@ -195,19 +219,16 @@
 
             <!-- Right: Vital Stats -->
             <div class="header-section stats-section">
-              <div class="stat-item">
-                <div class="header-label text-right">TARGET HP</div>
-                <div class="stat-value">
-                  <template v-if="selectedTargetHp">
+              <template v-if="selectedTargetHp">
+                <div class="stat-item">
+                  <div class="header-label text-right">TARGET HP</div>
+                  <div class="stat-value">
                     <span style="color: #ff6e6d;">{{ formatNumber(selectedTargetHp.current) }}/{{ formatNumber(selectedTargetHp.max) }}</span>
                     <span class="text-grey text-caption ml-1">({{ selectedTargetHp.percent.toFixed(1) }}%)</span>
-                  </template>
-                  <template v-else>
-                    N/A
-                  </template>
+                  </div>
                 </div>
-              </div>
-              <div class="stat-divider mx-5"></div>
+                <div class="stat-divider mx-5"></div>
+              </template>
               <div class="stat-item">
                 <div class="header-label text-right">DAMAGE</div>
                 <div class="stat-value">{{ formatNumber(selectedTargetDamage) }}</div>
@@ -372,6 +393,12 @@
 <script lang="ts">
 import { defineComponent, ref, computed, inject, nextTick, onMounted, onBeforeUnmount, watch } from "vue";
 import { fightSummary, selectedTargetId, isNavDrawerOpen, activeSessionId } from "@/store";
+import {
+  isGroupTargetId,
+  getGroupMemberTargetIds,
+  getEncounterDurationForTargets,
+  aggregateGroupConditions,
+} from "@/utils/targetGrouping";
 import SessionPanel from "@/components/SessionPanel.vue";
 import ApplyDamageBySkillComponent from "@/components/applyDamageBySkill.vue";
 import DamageTakenBySourceComponent from "@/components/DamageTakenBySource.vue";
@@ -429,6 +456,10 @@ export default defineComponent({
       if (!selectedTargetId.value) {
         return fightSummary.encounterDuration;
       }
+      if (isGroupTargetId(selectedTargetId.value)) {
+        const memberIds = getGroupMemberTargetIds(selectedTargetId.value, fightSummary);
+        return getEncounterDurationForTargets(fightSummary.players, memberIds);
+      }
       let earliestStart = Infinity;
       let latestEnd = 0;
       let hasData = false;
@@ -460,10 +491,23 @@ export default defineComponent({
 
     const totalPartyDamage = computed(() => {
       let total = 0;
+      const isGroup = isGroupTargetId(selectedTargetId.value);
+      const memberIds = isGroup
+        ? getGroupMemberTargetIds(selectedTargetId.value, fightSummary)
+        : [];
+
       for (const player of Object.values(fightSummary.players)) {
         if (selectedTargetId.value) {
-          if (player.damageByTarget[selectedTargetId.value]) {
-            total += player.damageByTarget[selectedTargetId.value].totalDamage;
+          if (isGroup) {
+            for (const tid of memberIds) {
+              if (player.damageByTarget[tid]) {
+                total += player.damageByTarget[tid].totalDamage;
+              }
+            }
+          } else {
+            if (player.damageByTarget[selectedTargetId.value]) {
+              total += player.damageByTarget[selectedTargetId.value].totalDamage;
+            }
           }
         } else {
           total += player.overallStats.totalDamage;
@@ -780,7 +824,7 @@ export default defineComponent({
     });
 
     const selectedTargetHp = computed(() => {
-      if (!selectedTargetId.value) return null;
+      if (!selectedTargetId.value || isGroupTargetId(selectedTargetId.value)) return null;
       for (const item of targetList.value) {
         if (item.id === selectedTargetId.value) {
           if (!item.hasHpUpdates) return null;
@@ -813,6 +857,11 @@ export default defineComponent({
 
     const selectGroupTarget = (subItem: any) => {
       selectedTargetId.value = subItem.id;
+      isTargetMenuOpen.value = false;
+    };
+
+    const selectGroupAll = (groupItem: any) => {
+      selectedTargetId.value = groupItem.id;
       isTargetMenuOpen.value = false;
     };
 
@@ -908,10 +957,15 @@ export default defineComponent({
       selectedTargetHp,
       handleItemClick,
       selectGroupTarget,
+      selectGroupAll,
 
       menuHeight,
       selectedTargetConditions: computed(() => {
         if (!selectedTargetId.value) return undefined;
+        if (isGroupTargetId(selectedTargetId.value)) {
+          const memberIds = getGroupMemberTargetIds(selectedTargetId.value, fightSummary);
+          return aggregateGroupConditions(fightSummary.targets, memberIds);
+        }
         return fightSummary.targets[selectedTargetId.value]?.conditions;
       }),
       partyBuffs: computed(() => {
