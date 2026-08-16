@@ -79,7 +79,7 @@
                       >
                         <div class="target-item-content d-flex justify-space-between align-center px-4 pt-3 pb-2">
                           <span class="target-col-name font-weight-bold d-flex align-center text-white">
-                            <span>{{ item.rawName || item.name }}</span>
+                            <span>{{ item.rawName || item.name }}<span v-if="item.raceId" class="text-grey font-weight-normal ml-1">({{ item.raceId }})</span></span>
                             <v-tooltip
                               v-if="item.id && item.seenAppear === false"
                               location="top"
@@ -151,7 +151,7 @@
                       >
                         <div class="target-item-content d-flex justify-space-between align-center px-4 pt-3 pb-2">
                           <span class="target-col-name font-weight-bold d-flex align-center text-white">
-                            <span>All Targets ({{ expandedGroup.rawName || expandedGroup.name }})</span>
+                            <span>All Targets ({{ expandedGroup.rawName || expandedGroup.name }})<span v-if="expandedGroup.raceId" class="text-grey font-weight-normal ml-1">({{ expandedGroup.raceId }})</span></span>
                           </span>
 
                           <div class="d-flex align-center ga-2">
@@ -176,7 +176,7 @@
                       >
                         <div class="target-item-content d-flex justify-space-between align-center px-4 pt-3 pb-2">
                           <span class="target-col-name font-weight-bold d-flex align-center text-white">
-                            <span>{{ subItem.rawName || subItem.name }}</span>
+                            <span>{{ subItem.rawName || subItem.name }}<span v-if="subItem.raceId" class="text-grey font-weight-normal ml-1">({{ subItem.raceId }})</span></span>
                             <v-tooltip
                               v-if="subItem.seenAppear === false"
                               location="top"
@@ -785,16 +785,22 @@ export default defineComponent({
       if (!selectedTargetId.value) return "All Targets";
       for (const item of targetList.value) {
         if (item.id === selectedTargetId.value) {
-          return item.rawName || item.name;
+          const name = item.rawName || item.name;
+          return item.raceId ? `${name} (${item.raceId})` : name;
         }
         if (item.isGroup && item.targets) {
           const sub = item.targets.find((t: any) => t.id === selectedTargetId.value);
           if (sub) {
-            return sub.rawName || sub.name;
+            const name = sub.rawName || sub.name;
+            return sub.raceId ? `${name} (${sub.raceId})` : name;
           }
         }
       }
-      return fightSummary.targets[selectedTargetId.value]?.name || "Unknown Target";
+      const target = fightSummary.targets[selectedTargetId.value];
+      if (target) {
+        return target.raceId ? `${target.name} (${target.raceId})` : target.name;
+      }
+      return "Unknown Target";
     });
 
     const selectedTargetSeenAppear = computed(() => {
