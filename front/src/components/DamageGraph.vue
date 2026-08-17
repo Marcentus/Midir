@@ -79,6 +79,12 @@ import {
 } from "chart.js";
 // Import selectedTargetId from the store
 import { fightSummary, selectedTargetId, hiddenPlayers, showClassColorsForVisiblePlayers, globalHideMode } from "@/store";
+import {
+  isGroupTargetId,
+  getGroupMemberTargetIds,
+  aggregateGroupConditions,
+  aggregateGroupGraphData,
+} from "@/utils/targetGrouping";
 import { getMabiNameColor, getClassColor } from "@/util";
 import zoomPlugin from "chartjs-plugin-zoom";
 import annotationPlugin from "chartjs-plugin-annotation";
@@ -179,10 +185,17 @@ export default defineComponent({
       if (!selectedTargetId.value) {
         return fightSummary.startTime || 0;
       }
+      const isGroup = isGroupTargetId(selectedTargetId.value);
+      const memberIds = isGroup
+        ? getGroupMemberTargetIds(selectedTargetId.value, fightSummary)
+        : [selectedTargetId.value];
+
       for (const player of Object.values(fightSummary.players)) {
-        const breakdown = player.damageByTarget[selectedTargetId.value];
-        if (breakdown && breakdown.startTime) {
-          return breakdown.startTime;
+        for (const tid of memberIds) {
+          const breakdown = player.damageByTarget?.[tid];
+          if (breakdown && breakdown.startTime) {
+            return breakdown.startTime;
+          }
         }
       }
       return fightSummary.startTime || 0;
@@ -190,10 +203,10 @@ export default defineComponent({
 
     const conditionItems = computed(() => {
       if (!selectedTargetId.value) return [];
-      const targetStats = fightSummary.targets[selectedTargetId.value];
-      if (!targetStats || !targetStats.conditions) return [];
+      const conditionsMap = selectedTargetConditions.value;
+      if (!conditionsMap) return [];
 
-      return Object.keys(targetStats.conditions)
+      return Object.keys(conditionsMap)
         .map((idStr) => {
           const id = parseInt(idStr, 10);
           const name = condNameMap.value[id]?.name || `Unknown Condition ${id}`;
@@ -209,9 +222,9 @@ export default defineComponent({
 
     const activeIntervals = computed(() => {
       if (!selectedTargetId.value || !selectedConditionId.value) return [];
-      const targetStats = fightSummary.targets[selectedTargetId.value];
-      if (!targetStats || !targetStats.conditions) return [];
-      const cond = targetStats.conditions[selectedConditionId.value];
+      const conditionsMap = selectedTargetConditions.value;
+      if (!conditionsMap) return [];
+      const cond = conditionsMap[selectedConditionId.value];
       if (!cond || !cond.intervals) return [];
 
       return cond.intervals.map((iv, index) => {
@@ -478,7 +491,14 @@ export default defineComponent({
     });
 
     const chartData = computed(() => {
-      const graphDataForView = fightSummary.graphData?.[selectedTargetId.value];
+      const isGroup = isGroupTargetId(selectedTargetId.value);
+      const memberIds = isGroup
+        ? getGroupMemberTargetIds(selectedTargetId.value, fightSummary)
+        : [];
+
+      const graphDataForView = isGroup
+        ? aggregateGroupGraphData(fightSummary.graphData, memberIds)
+        : fightSummary.graphData?.[selectedTargetId.value];
 
       if (!graphDataForView || Object.keys(graphDataForView).length === 0) {
         return { labels: [], datasets: [] };
@@ -490,7 +510,10 @@ export default defineComponent({
 
       // Add Enemy HP dataset if a target is selected and has hpHistory
       if (selectedTargetId.value) {
-        const targetStats = fightSummary.targets[selectedTargetId.value];
+        const targetIdForHp = isGroup
+          ? selectedTargetId.value.replace("group_", "")
+          : selectedTargetId.value;
+        const targetStats = fightSummary.targets[targetIdForHp];
         if (targetStats && targetStats.hpHistory && targetStats.hpHistory.length > 0) {
           const getHPDataPoints = (hpHistory: any[], maxTime: number) => {
             if (!hpHistory || hpHistory.length === 0) return [];
@@ -562,6 +585,10 @@ export default defineComponent({
 
     const selectedTargetConditions = computed(() => {
         if (!selectedTargetId.value) return undefined;
+        if (isGroupTargetId(selectedTargetId.value)) {
+          const memberIds = getGroupMemberTargetIds(selectedTargetId.value, fightSummary);
+          return aggregateGroupConditions(fightSummary.targets, memberIds);
+        }
         return fightSummary.targets[selectedTargetId.value]?.conditions;
     });
 
