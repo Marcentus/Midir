@@ -32,6 +32,7 @@ export const GROUPED_ENCOUNTERS = [
   { bossRaceId: 7615, groupName: "Bri Leith: Gate 4" },
   { bossRaceId: 7603, groupName: "Bri Leith: Gate 3" },
   { bossRaceId: 7600, partnerRaceId: 7601, groupName: "Bri Leith: Gate 1" },
+  { bossRaceId: 193810, groupName: "Crom Bas Abyss" },
 ];
 
 /**

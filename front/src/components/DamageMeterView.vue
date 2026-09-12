@@ -398,6 +398,7 @@ import {
   getGroupMemberTargetIds,
   getEncounterDurationForTargets,
   aggregateGroupConditions,
+  GROUPED_ENCOUNTERS,
 } from "@/utils/targetGrouping";
 import SessionPanel from "@/components/SessionPanel.vue";
 import ApplyDamageBySkillComponent from "@/components/applyDamageBySkill.vue";
@@ -527,12 +528,6 @@ export default defineComponent({
     // Target grouping state
     const isTargetMenuOpen = ref(false);
     const expandedGroup = ref<any>(null);
-
-    const GROUPED_ENCOUNTERS = [
-      { bossRaceId: 7615, groupName: "Bri Leith: Gate 4" },
-      { bossRaceId: 7603, groupName: "Bri Leith: Gate 3" },
-      { bossRaceId: 7600, partnerRaceId: 7601, groupName: "Bri Leith: Gate 1" }
-    ];
 
     const targetList = computed(() => {
       const totalDamageByTarget: Record<string, number> = {};
