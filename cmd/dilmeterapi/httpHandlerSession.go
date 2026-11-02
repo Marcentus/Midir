@@ -230,12 +230,16 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 	targetSeenAppear := make(map[string]bool)
 	targetDisappeared := make(map[string]bool)
 	targetSeenDead := make(map[string]bool)
-	// Skill Uses Data Structure
+	// Independent observed uses, NOT the per-second damage groups.
+	skillActivationsByPlayer := make(map[string][]SkillActivation)
+	skillObservationsByPlayer := make(map[string][]SkillObservation)
+	// Retained for legacy condition-stat calculations; not a cast counter.
 	skillUsesByPlayer := make(map[string][]SkillUseEvent)
 	// HP history tracking by Target/Entity ID
 	hpHistoryByTarget := make(map[string][]TargetHPPoint)
 	// Player deaths history by Player ID
 	playerDeaths := make(map[string][]int64)
+	playerRevives := make(map[string][]int64)
 
 	for scanner.Scan() {
 		line := scanner.Bytes()
@@ -245,6 +249,26 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 		}
 
 		switch baseEvent.EventId {
+		case eventIdSkillObservation:
+			var observation eventSkillObservation
+			if json.Unmarshal(line, &observation) == nil {
+				skillObservationsByPlayer[observation.Id] = append(skillObservationsByPlayer[observation.Id], SkillObservation{
+					AtMs: observation.AtMs, Opcode: observation.Opcode, SkillID: observation.SkillId,
+					Subtype: observation.Subtype, ActionType: observation.ActionType, ActorVerified: observation.ActorVerified, Fields: observation.Fields, FieldTypes: observation.FieldTypes,
+				})
+			}
+		case eventIdSkillUse:
+			var use eventSkillUse
+			if err := json.Unmarshal(line, &use); err == nil {
+				atMs := use.AtMs
+				if atMs == 0 {
+					atMs = use.At * 1000
+				}
+				skillActivationsByPlayer[use.Id] = append(skillActivationsByPlayer[use.Id], SkillActivation{
+					AtMs: atMs, SkillID: use.SkillId, TargetID: use.TargetId,
+				})
+			}
+
 		case eventIdDamage:
 			var damageEvent eventDamage
 			if err := json.Unmarshal(line, &damageEvent); err == nil {
@@ -336,6 +360,7 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 			var revive eventEntityRevive
 			if err := json.Unmarshal(line, &revive); err == nil {
 				targetSeenDead[revive.Id] = false
+				playerRevives[revive.Id] = append(playerRevives[revive.Id], baseEvent.At)
 			}
 
 		case eventIdCharacterConditionEnable:
@@ -388,8 +413,8 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 	// STEP 1: Process the collected events to generate the main summary tables.
 	playerStats, damageTaken, talents, talentNames, talentColors, targets, startTime, endTime, targetTimestamps := processEventsForSummary(allDamageEvents, entitiesInLog)
 
-	// Ensure players who only used skills but did no damage are in playerStats
-	for playerIDStr := range skillUsesByPlayer {
+	// Ensure verified players who only used skills but dealt no damage can be reported.
+	for playerIDStr := range skillActivationsByPlayer {
 		if _, exists := playerStats[playerIDStr]; !exists {
 			playerID := parseUint64(playerIDStr)
 			if playerInfo, isPlayer := playerCache.Get(playerID); isPlayer {
@@ -443,12 +468,26 @@ func GenerateSummaryFromFile(logPath string) (*FightSummary, error) {
 		skillUsesByPlayer,
 		hpHistoryByTarget,
 		playerDeaths,
+		playerRevives,
 	)
 	summary.GraphData = graphDataByTarget
 
 	// Older session logs do not contain SkillUse events. Rebuild the scatter
 	// chart from the durable damage events when loading a saved session.
 	attachSkillGroupsFromDamageEvents(&summary, allDamageEvents, startTime)
+	for playerID, player := range summary.Players {
+		if uses := skillActivationsByPlayer[playerID]; len(uses) > 0 {
+			sort.SliceStable(uses, func(i, j int) bool { return uses[i].AtMs < uses[j].AtMs })
+			player.SkillActivations = uses
+			summary.Players[playerID] = player
+		}
+	}
+	for playerID, observations := range skillObservationsByPlayer {
+		if player, exists := summary.Players[playerID]; exists {
+			player.SkillObservations = observations
+			summary.Players[playerID] = player
+		}
+	}
 	applySavedSupportAndSkillData(&summary, savedSessionSummary)
 
 	return &summary, nil
@@ -493,7 +532,10 @@ func applySavedSupportAndSkillData(summary *FightSummary, saved *SessionSummaryD
 			current.VeilDMR = stored.VeilDMR
 			current.VeilPeakDMR = stored.VeilPeakDMR
 		}
-		if len(stored.SkillUses) > 0 {
+		// Reconstructed packet evidence has authoritative TargetID and a
+		// single session time origin. Old saved summaries are targetless and
+		// may use a different start timestamp; restore only as a last resort.
+		if len(current.SkillUses) == 0 && len(stored.SkillUses) > 0 {
 			current.SkillUses = stored.SkillUses
 		}
 		summary.Players[currentID] = current
@@ -501,8 +543,9 @@ func applySavedSupportAndSkillData(summary *FightSummary, saved *SessionSummaryD
 }
 
 // attachSkillGroupsFromDamageEvents reconstructs the per-player timeline used by
-// DamageScatterChart. It ignores healing (negative damage values) and groups
-// hits by second to match the existing live chart data format.
+// DamageScatterChart and the independent packet-level timeline.
+// It ignores healing (negative damage) and groups hits by second for the
+// legacy chart while retaining AtMs, skill ID and target for the use timeline.
 func attachSkillGroupsFromDamageEvents(summary *FightSummary, events []eventDamage, encounterStart int64) {
 	if summary == nil {
 		return
@@ -525,6 +568,19 @@ func attachSkillGroupsFromDamageEvents(summary *FightSummary, events []eventDama
 			groupsByPlayer[event.Id] = make(map[int64]*SkillGroupEvent)
 			skillsByGroup[event.Id] = make(map[skillGroupKey]int)
 		}
+		// Preserve the original packet-level evidence independently of plotting
+		// buckets. Use the post-attribution actor ID and target ID.
+		if player, ok := summary.Players[event.Id]; ok {
+			atMs := event.AtMs
+			if atMs <= 0 {
+				atMs = event.At * 1000
+			}
+			player.DamageEvents = append(player.DamageEvents, PreciseDamageEvent{
+				AtMs: atMs, SkillID: event.SkillId, TargetID: event.TargetId,
+				Damage: event.Damage, Critical: event.IsCritical, Delayed: event.IsDelayed,
+			})
+			summary.Players[event.Id] = player
+		}
 		group := groupsByPlayer[event.Id][timestamp]
 		if group == nil {
 			group = &SkillGroupEvent{Timestamp: timestamp, Skills: []SkillHitMeta{}}
@@ -538,6 +594,26 @@ func attachSkillGroupsFromDamageEvents(summary *FightSummary, events []eventDama
 			group.Skills = append(group.Skills, SkillHitMeta{SkillID: event.SkillId})
 			index = len(group.Skills) - 1
 			skillsByGroup[event.Id][key] = index
+		}
+		targetIndex := -1
+		for i := range group.Targets {
+			if group.Targets[i].TargetID == event.TargetId && group.Targets[i].SkillID == event.SkillId {
+				targetIndex = i
+				break
+			}
+		}
+		if targetIndex < 0 {
+			group.Targets = append(group.Targets, TargetHitMeta{TargetID: event.TargetId, SkillID: event.SkillId})
+			targetIndex = len(group.Targets) - 1
+		}
+		targetHit := &group.Targets[targetIndex]
+		targetHit.Damage += damage
+		targetHit.HitCount++
+		if damage > targetHit.MaxDamage {
+			targetHit.MaxDamage = damage
+		}
+		if event.IsCritical {
+			targetHit.CritCount++
 		}
 		meta := &group.Skills[index]
 		meta.HitCount++
@@ -1069,6 +1145,7 @@ func finalizeSummaryFromLog(
 	skillUsesByPlayer map[string][]SkillUseEvent,
 	hpHistoryByTarget map[string][]TargetHPPoint, // NEW
 	playerDeaths map[string][]int64, // NEW
+	playerRevives map[string][]int64,
 ) FightSummary {
 	summary := FightSummary{
 		Players:     make(map[string]PlayerStats),
@@ -1086,6 +1163,7 @@ func finalizeSummaryFromLog(
 		finalizedPstats := *pStats
 		finalizedPstats.MissingAppearPacket = !seenAppear[pStats.ID]
 		finalizedPstats.Deaths = playerDeaths[pStats.ID]
+		finalizedPstats.Revives = playerRevives[pStats.ID]
 
 		playerSkillUses := skillUsesByPlayer[pStats.ID]
 

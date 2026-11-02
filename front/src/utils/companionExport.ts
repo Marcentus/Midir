@@ -1,7 +1,12 @@
 import type { FightSummary, ConditionStats } from '@/protocols';
 import { findGate1Attempts, gate1EffectiveHp } from './gate1Encounter';
+import { findGlennOpenings } from './glennOpening';
+import { findAlbyRuns } from './albyShineseeker';
 import { findGlennAttempts } from './glennEncounter';
+import { findCromAttempts, findCromMechanics, CROM_GLAS_NAMES } from './cromEncounter';
 import { getGroupMemberTargetIds } from './targetGrouping';
+import { identifyBossScatterSources } from './enemyScatter';
+import { findReportEncounters } from './reportEncounters';
 
 // Versioned, intentionally conservative exchange format. All times are seconds
 // relative to the encounter start; null means the source cannot establish it.
@@ -24,12 +29,16 @@ function conditions(source: Record<number, ConditionStats> | undefined, origin: 
 export function buildCompanionExport(summary: FightSummary, title: string, scope: string, names: Record<number,string>, targetId = '') {
   const start = finite(summary.startTime);
   const duration = finite(summary.encounterDuration);
+  // Outgoing boss attack tracks do not represent party players or achievement
+  // candidates; boss identity and HP evidence remain in companion.targets.
+  const bossActorIds = identifyBossScatterSources(summary);
   const selected = Object.values(summary.players || {}).filter(p => (scope === 'all' || p.id === scope) &&
-    !/^(?:Unknown Caster|Misc\. Anonymous Healing)$/i.test(p.name.trim()));
+    !bossActorIds.has(p.id) && !/^(?:Unknown Caster|Misc\. Anonymous Healing)$/i.test(p.name.trim()));
   const targetMembers=targetId?getGroupMemberTargetIds(targetId,summary):[];
   const players = selected.map(p => ({
     entityId: String(p.id), name: p.name, arcana: p.talentName || null,
     deathTimes: (p.deaths || []).map(at => relative(at, start)).filter((at): at is number => at !== null && at >= 0 && (duration === null || at <= duration)),
+    reviveTimes: (p.revives || []).map(at => relative(at, start)).filter((at): at is number => at !== null && at >= 0 && (duration === null || at <= duration)),
     conditions: conditions(p.overallStats?.conditions, start),
     skills: Object.entries(targetId ? targetMembers.reduce((acc,id)=>{
       const by=p.damageByTarget?.[id];for(const [k,v] of Object.entries(by?.skills||{})) {
@@ -70,7 +79,16 @@ export function buildCompanionExport(summary: FightSummary, title: string, scope
     session: {title, scope, targetScope:targetId?'selected-target':'all-targets', targetId:targetId||null, targetEntityIds:targetMembers, startUnixSeconds: start, durationSeconds: duration},
     provenance: {skillEvents: 'damage-hit-groups-not-verified-casts', conditions: 'saved-intervals',
       encounterCompletion: 'per-entity-evidence-and-matched-gate1-replacement-zero-hp'},
-    // Per-attempt logical identity; raw entities and their conditions remain independent.
+    // Canonical recognized attempts shared with the HTML viewer. Never infer
+    // a clear from despawn alone; preserve observed evidence status.
+    encounterSchemaVersion: 1,
+    encounters: findReportEncounters(summary).map(e=>({
+      id:e.id,label:e.label,entityIds:e.entityIds,
+      start:e.start,end:e.end,completion:e.clear,
+      phases:e.phases.map(ph=>({raceId:ph.raceId,name:ph.name}))
+    })),
+    // Legacy logical encounter identities retained for older consumers.
+
     logicalEncounters: [
     ...findGate1Attempts(summary.targets || {}).map((attempt, index) => ({
       type: 'bri-gate-1-vertrag', attemptIndex: index + 1,
@@ -97,6 +115,21 @@ export function buildCompanionExport(summary: FightSummary, title: string, scope
       // HP plateau boundaries alone do not prove the exact giant spawn time.
       phaseIntervals: null
     })),
+    ...findGlennOpenings(summary.targets || {}).map((opening,index)=>({
+      type:'glenn-bearna-cailleach-opening',attemptIndex:index+1,
+      entityIds:opening.entityIds,barrierIds:opening.barrierIds,spriteIds:opening.spriteIds,
+      start:relative(opening.startUnixSeconds,start),end:relative(opening.endUnixSeconds,start),
+      completion:'opening-checkpoint',evidence:'cailleach-100-to-90-transition-not-a-defeat'
+    })),
+    ...findAlbyRuns(summary.targets || {}).map(run=>({
+      type:'alby-shineseeker-waves',attemptIndex:run.index,
+      entityIds:run.entityIds,waveEntityIds:run.waveIds,
+      start:relative(run.startUnixSeconds,start),end:relative(run.endUnixSeconds,start),
+      completion:run.completion,
+      evidence:run.completion==='final-wave-defeated'?'all-recorded-final-followers-zero-hp-and-death':'final-wave-completion-unverified',
+      // Not a final boss; this is a wave objective reconstructed from entities.
+      effectiveHp:null,phaseIntervals:null
+    })),
     ...findGlennAttempts(summary.targets || {}).map((attempt, index) => ({
       type: 'glenn-bearna-primeval-winter', encounterName: 'Glenn Bearna: Primeval Winter', attemptIndex: index + 1,
       entityIds: attempt.entityIds, firstEntityId: attempt.firstEntityId,
@@ -104,8 +137,18 @@ export function buildCompanionExport(summary: FightSummary, title: string, scope
       completion: attempt.completion, evidence: attempt.completion === 'verified-clear' ? 'winter-tyrant-observed-zero-hp' : 'phase-transition-or-clear-unverified',
       effectiveHp: null, phaseIntervals: null
     })),
+    ...findCromAttempts(summary.targets || {}).map((attempt,index)=>({
+      type:'crom-bas-normal-run',encounterName:'Crom Bas Normal',attemptIndex:index+1,
+      firstEntityId:attempt.firstEntityId,entityIds:attempt.entityIds,
+      irusanEntityId:attempt.irusanId,glasEntityId:attempt.glasId,
+      glasVariantRaceId:attempt.glasId ? Number(summary.targets?.[attempt.glasId]?.raceId) : null,
+      glasVariantName:attempt.glasId ? CROM_GLAS_NAMES[Number(summary.targets?.[attempt.glasId]?.raceId)] || null : null,
+      mechanics:findCromMechanics(summary.targets || {},attempt),
+      start:relative(attempt.startUnixSeconds,start),end:relative(attempt.endUnixSeconds,start),
+      completion:attempt.completion,effectiveHp:null,phaseIntervals:null
+    })),
     ...Object.entries(summary.targets || {})
-      .filter(([,t]) => [195012,193359,193364].includes(Number(t.raceId)))
+      .filter(([,t]) => Number(t.raceId)===195012)
       .sort((a,b)=>Number(a[1].startTime)-Number(b[1].startTime))
       .map(([entityId,t]) => ({
         type: Number(t.raceId)===195012 ? 'rabbie-phantasm-temptations-path' : 'crom-bas-normal',

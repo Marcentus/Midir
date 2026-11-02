@@ -1,6 +1,7 @@
 import type { FightSummary, TargetStats } from '@/protocols';
 import { findGate1Attempts } from './gate1Encounter';
 import { findGlennAttempts } from './glennEncounter';
+import { findCromAttempts, CROM_GLAS_NAMES } from './cromEncounter';
 import { getGroupMemberTargetIds } from './targetGrouping';
 
 export type BossReportEncounter = {
@@ -18,7 +19,7 @@ export function targetHP(t: TargetStats | undefined, origin: number, start = ori
 }
 const BOSS_RACES: Record<number,string> = {
   7602:'Gate 2 — Bronntanas', 7603:'Gate 3 — Midir the Beloved', 7615:'Gate 4',
-  195012:'Succubus Queen', 193364:'Crom Bas — Irusan', 193359:'Crom Bas — Giga Glas Ghaibhleann',
+  195012:'Succubus Queen',
   193810:'Crom Bas Abyss'
 };
 /** A timeline of *observed* bosses, not a claim that every dungeon mechanic was detected. */
@@ -51,7 +52,10 @@ export function findReportEncounters(summary: FightSummary, selectedTargetId = '
     }
   }
   for (const [index,a] of findGlennAttempts(targets).entries())
-    append(a.firstEntityId,`Glenn Bearna — Primeval Winter · Attempt ${index+1}`,a.entityIds,
+    append(a.firstEntityId,`Glenn Bearna — Reverie / Winter Tyrant · Attempt ${index+1}`,a.entityIds,
+      a.startUnixSeconds,a.endUnixSeconds || 0,a.completion==='verified-clear',a.entityIds);
+  for (const [index,a] of findCromAttempts(targets).entries())
+    append(a.firstEntityId,`Crom Bas — ${a.irusanId ? 'Irusan / ' : ''}${a.glasId ? (CROM_GLAS_NAMES[Number(targets[a.glasId]?.raceId)] || 'Glas') : 'Irusan'} · Attempt ${index+1}`,a.entityIds,
       a.startUnixSeconds,a.endUnixSeconds || 0,a.completion==='verified-clear',a.entityIds);
   const raceCount: Record<number,number> = {};
   for (const [id,t] of Object.entries(targets).sort((a,b)=>seconds(a[1].startTime)-seconds(b[1].startTime))) {

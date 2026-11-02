@@ -1,8 +1,11 @@
 import type { TargetStats } from '@/protocols';
 
-// Each 7585 spawn begins a distinct Glenn Bearna boss attempt. Phase entities
-// must join directly at the preceding phase's disappearance, not merely be the
-// next entity with a matching race ID somewhere later in the session.
+// Each 7585 spawn begins a distinct Glenn Bearna boss attempt. 7585 and
+// 7586 are Unfinished Reverie; 7587 is The Winter Tyrant (final phase).
+// Phase transitions can include an animation/despawn gap. Never join across
+// another 7585 spawn or reuse the same phase entity in two attempts.
+export const GLENN_PHASE_TRANSITION_TOLERANCE_SECONDS = 30;
+
 export function findGlennAttempts(targets: Record<string, TargetStats>) {
   const candidates = Object.entries(targets)
     .filter(([, t]) => [7585, 7586, 7587].includes(Number(t.raceId)) && Number(t.startTime) > 0)
@@ -19,7 +22,8 @@ export function findGlennAttempts(targets: Record<string, TargetStats>) {
       const match = candidates.find(([candidateId, target]) => !used.has(candidateId) &&
         Number(target.raceId) === raceId && Number(target.startTime) < nextStart &&
         Number(target.startTime) >= Number(first.startTime) &&
-        Math.abs(Number(target.startTime) - end) <= 2);
+        Number(target.startTime) >= end - 2 &&
+        Number(target.startTime) <= end + GLENN_PHASE_TRANSITION_TOLERANCE_SECONDS);
       if (!match) break;
       ids.push(match[0]);
       used.add(match[0]);
