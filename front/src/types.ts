@@ -13,6 +13,8 @@ export interface SessionSummaryPlayer {
   arcanaName: string;
   arcanaIcon: string;
   totalDamage: number;
+  overallHealing?: any; // Injected to prevent historical save drops
+  healingByTarget?: any; // Injected to preserve historical targets
 }
 
 export interface SessionSummaryEnemy {

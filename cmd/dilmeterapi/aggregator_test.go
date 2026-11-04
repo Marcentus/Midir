@@ -859,6 +859,12 @@ func TestProcessEventsForSummary_PetAndPuppetDamage(t *testing.T) {
 			Damage:     1500,
 			IsCritical: false,
 		},
+		{
+			eventBase: eventBase{EventId: eventIdDamage, Id: playerIDStr, At: 1005},
+			TargetId:  monsterIDStr,
+			SkillId:   0, // Healing packet currently does not identify the skill.
+			Damage:    -125,
+		},
 	}
 
 	// Apply the same resolution logic that httpHandlerSession uses
@@ -898,6 +904,12 @@ func TestProcessEventsForSummary_PetAndPuppetDamage(t *testing.T) {
 	// Verify overall damage is 17000 (5000 pet + 12000 puppet)
 	if stats.OverallStats.TotalDamage != 17000 {
 		t.Errorf("Expected total damage of 17000, got %f", stats.OverallStats.TotalDamage)
+	}
+	if stats.OverallHealing.TotalDamage != 125 {
+		t.Errorf("Expected healing total of 125 after damage events, got %f", stats.OverallHealing.TotalDamage)
+	}
+	if _, ok := stats.HealingByTarget[monsterIDStr]; !ok {
+		t.Errorf("Expected target healing breakdown to be initialized after a damage-first event sequence")
 	}
 
 	// Verify pet hits and crits are excluded from player's overall hit/crit counts, while puppet is included

@@ -15,7 +15,7 @@ fi
 
 echo "[1/5] Installing frontend dependencies..."
 cd "$FRONT_DIR"
-npm install
+npm install --no-fund
 
 echo "[2/5] Building frontend..."
 npm run build

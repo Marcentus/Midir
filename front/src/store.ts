@@ -49,6 +49,42 @@ export const fightSummary = reactive<FightSummary>({
   graphData: {},
 });
 
+// Personal Best Progress: user-controlled historical session scan and directory.
+// Kept in localStorage; no changes to session files or live parsing.
+// --- PERSONAL BEST PROGRESS HISTORY SETTINGS ---
+const historySettingsKey = "midir_personal_best_history_v1";
+const savedHistorySettings = (() => {
+  try { return JSON.parse(localStorage.getItem(historySettingsKey) || "{}"); }
+  catch { return {}; }
+})();
+export const personalBestSessionLimit = ref<number>(
+  Math.max(5, Math.min(200, Math.round(Number(savedHistorySettings.sessionLimit) || 5)))
+);
+// Empty string means Midir's normal saved-session directory.
+export const personalBestHistoryFolder = ref<string>(
+  typeof savedHistorySettings.folder === "string" ? savedHistorySettings.folder : ""
+);
+watch([personalBestSessionLimit, personalBestHistoryFolder], () => {
+  try {
+    localStorage.setItem(historySettingsKey, JSON.stringify({
+      sessionLimit: personalBestSessionLimit.value,
+      folder: personalBestHistoryFolder.value,
+    }));
+  } catch (error) { console.warn("Unable to save Personal Best settings", error); }
+});
+
+// Experimental Healing Done tab: presentation-only preference. Disabling the tab
+// does not disable healing packet capture, aggregation, or saved-session data.
+const HEALING_TAB_KEY = "midir_show_experimental_healing_v1";
+export const showHealingTab = ref<boolean>((() => {
+  try { return localStorage.getItem(HEALING_TAB_KEY) === "true"; }
+  catch { return false; }
+})());
+watch(showHealingTab, (enabled) => {
+  try { localStorage.setItem(HEALING_TAB_KEY, String(enabled)); }
+  catch (error) { console.warn("Unable to save Healing tab preference", error); }
+});
+
 // --- CONDITION PREFERENCES ---
 const COND_PREFS_KEY = "midir_cond_prefs";
 

@@ -5,6 +5,7 @@ export interface SkillStats {
   count: number;
   critCount: number;
   totalDamage: number;
+  overshieldProvided?: number;
   totalDamageCrit: number;
   totalDamageNonCrit: number;
   maxDamage: number;
@@ -43,10 +44,39 @@ export interface DamageBreakdown {
   critCount: number;
   dps: number;
   critRate: number;
+  overshieldProvided?: number;
   startTime?: number;
   endTime?: number;
   skills: { [skillId: number]: SkillStats };
   conditions?: { [id: number]: ConditionStats };
+}
+
+// Observed 0x6988 uses, distinct from damage-hit groups in `skillUses`.
+export interface SkillActivation {
+  atMs: number; // Absolute Unix milliseconds
+  skillId: number;
+  targetId?: string;
+}
+
+// Packet-level damage hits used by the portable Skill Use Timeline.
+export interface PreciseDamageEvent {
+  atMs: number;
+  skillId: number;
+  targetId: string;
+  damage: number;
+  critical?: boolean;
+  delayed?: boolean;
+}
+
+export interface SkillObservation {
+  atMs: number;
+  opcode: number;
+  skillId?: number;
+  subtype?: number;
+  actionType?: number;
+  actorVerified?: boolean;
+  fields?: string[];
+  fieldTypes?: number[];
 }
 
 export interface PlayerStats {
@@ -57,8 +87,19 @@ export interface PlayerStats {
   talentColor?: string;
   missingAppearPacket: boolean; // NEW: Cache warning flag
   overallStats: DamageBreakdown;
+  overallHealing: DamageBreakdown;
+  veilCurrent?: number;
+  veilPeak?: number;
+  veilDmr?: number;
+  veilPeakDmr?: number;
+  healingByTarget: { [targetID: string]: DamageBreakdown};
   damageByTarget: { [targetId: string]: DamageBreakdown };
+  skillUses?: any[];
+  skillActivations?: SkillActivation[];
+  skillObservations?: SkillObservation[];
+  damageEvents?: PreciseDamageEvent[];
   deaths?: number[];
+  revives?: number[];
 }
 
 // --- START: NEW INTERFACES FOR DAMAGE TAKEN ---

@@ -35,37 +35,38 @@
                     :color="(globalHideMode || hiddenPlayers.has(item.id)) ? 'grey' : ''"></v-icon>
         </v-btn>
     </template>
+  <template v-slot:[`item.name`]="{ item }">
+    <div 
+      @dblclick="isolateSinglePlayer(item.id)" 
+      class="cursor-pointer d-flex align-center select-none w-100 h-100"
+      title="Double-click to isolate this player & open scatter plot"
+      style="min-height: 28px;"
+    >
+      <span v-if="item.talentIdentities?.length" class="d-inline-flex align-center mr-2 ga-1" :title="item.talentIdentities.map((a: any) => a.name).join(' / ')">
+        <img v-for="arcana in item.talentIdentities" :key="arcana.name" :src="arcana.icon" :alt="arcana.name" width="28" height="28" />
+      </span>
+      <span class="text-h6" style="color: white">
+        {{ (globalHideMode || hiddenPlayers.has(item.id)) ? (item.talentName || 'Hidden') : item.name }}
+      </span>
 
-    <template v-slot:[`item.name`]="{ item }">
-      <div class="d-flex align-center">
-        <img
-          v-if="item.talentIcon"
-          :src="item.talentIcon"
-          width="28"
-          height="28"
-          class="mr-2"
-        />
-        <span class="text-h6" style="color: white">
-          {{ (globalHideMode || hiddenPlayers.has(item.id)) ? (item.talentName || 'Hidden') : item.name }}
-        </span>
-        <!-- Warning Icon for Missing Appear Packet -->
-        <v-tooltip
-          v-if="item.missingAppearPacket"
-          location="top"
-          text="Entity appearance not recorded. Condition uptime may be inaccurate."
-        >
-          <template v-slot:activator="{ props }">
-            <v-icon
-              v-bind="props"
-              icon="mdi-alert-circle-outline"
-              color="warning"
-              size="small"
-              class="ml-2"
-            ></v-icon>
-          </template>
-        </v-tooltip>
-      </div>
-    </template>
+      <!-- Warning Icon for Missing Appear Packet -->
+      <v-tooltip
+        v-if="item.missingAppearPacket"
+        location="top"
+        text="Entity appearance not recorded. Condition uptime may be inaccurate."
+      >
+        <template v-slot:activator="{ props }">
+          <v-icon
+            v-bind="props"
+            icon="mdi-alert-circle-outline"
+            color="warning"
+            size="small"
+            class="ml-2"
+          ></v-icon>
+        </template>
+      </v-tooltip>
+    </div>
+  </template>
 
     <template v-slot:[`item.dps`]="{ item }">
       <span class="font-weight-bold text-h6">{{ formatNumber(item.dps) }}</span>
@@ -77,13 +78,16 @@
           {{ formatAbbreviated(item.totalDamage) }}
         </span>
         <div class="damage-bar-wrapper">
-          <div
-            class="damage-bar-fill"
-            :style="{
-              width: (playerDisplayData[0]?.totalDamage ? (item.totalDamage / playerDisplayData[0].totalDamage) * 100 : 0) + '%',
-              backgroundColor: getPlayerColor(item)
-            }"
-          ></div>
+          <v-tooltip v-if="savedAnalysis && showGhostRunner" location="top">
+            <template #activator="{ props: ghostProps }">
+              <div v-bind="ghostProps" class="ghost-column-zone">
+                <div class="ghost-column-fill" :style="{width: playerGhostWidth(item.id) + '%',zIndex: ghostDps(item.id) <= item.dps ? 2 : 0}"></div>
+                <div class="damage-bar-fill ghost-current-fill" :style="{width: playerAverageWidth(item) + '%',background:getPlayerBarBackground(item, 100)}"></div>
+              </div>
+            </template>
+            <span><v-icon size="x-small">mdi-ghost</v-icon> {{ formatNumber(ghostDps(item.id)) }} productive DPS · {{ formatNumber(item.dps) }} average DPS</span>
+          </v-tooltip>
+          <div v-else class="damage-bar-fill" :style="{width:(playerDisplayData[0]?.totalDamage ? (item.totalDamage / playerDisplayData[0].totalDamage) * 100 : 0) + '%',background:getPlayerBarBackground(item, 100)}"></div>
         </div>
         <span class="damage-bar-pct">
           {{ totalDamageForView > 0 ? ((item.totalDamage / totalDamageForView) * 100).toFixed(1) : '0.0' }}%
@@ -115,6 +119,29 @@
                 class="ml-0"
               />
            </div>
+
+          <div v-if="savedAnalysis" class="ma-3 pa-3 rounded border-sm">
+            <div v-if="showGhostRunner" class="text-subtitle-2 mb-2"><v-icon size="small" class="mr-1">mdi-ghost</v-icon> Ghost Runner · {{ formatNumber(ghostDps(item.id)) }} productive DPS</div>
+            <div class="d-flex flex-wrap ga-2 mb-2">
+              <v-menu v-for="(flag, index) in deathSnapshots(item.id)" :key="index" open-on-hover :close-on-content-click="false" location="bottom" :max-width="'min(90vw, 650px)'">
+                <template #activator="{ props: menuProps }">
+                  <v-btn v-bind="menuProps" size="small" variant="tonal" color="error" prepend-icon="mdi-flag">Death {{ index + 1 }}</v-btn>
+                </template>
+                <v-card class="death-snapshot-card" max-height="min(75vh, 550px)" style="overflow-y:auto">
+                  <v-card-title>Death {{ index + 1 }} · {{ flag.time.toFixed(1) }}s</v-card-title>
+                  <v-card-text>
+                    <div class="font-weight-bold">{{ formatNumber(flag.dps) }} DPS · {{ flag.hpm.toFixed(1) }} hits/min</div>
+                    <div class="death-snapshot-details mt-2">
+                      <div v-for="skill in flag.skills" :key="skill.id" class="d-flex justify-space-between ga-4 text-caption py-1">
+                        <span>{{ getSkillName(skill.id) }}</span><span>{{ formatNumber(skill.dps) }} DPS · {{ skill.hpm.toFixed(1) }} HPM</span>
+                      </div>
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-menu>
+            </div>
+            <div v-if="showGhostRunner" class="text-caption text-medium-emphasis">Dark bar = productive Ghost DPS; normal bar = session average DPS. Hover the ghost marker to compare.</div>
+          </div>
 
           <!-- Skill Breakdown Table -->
           <v-data-table
@@ -151,6 +178,19 @@
                   "
                 />
                 <span>{{ getSkillName(skillItem.id) }}</span>
+                <v-tooltip v-if="skillProgress(item.id, skillItem.id)" location="top" open-delay="150">
+                  <template #activator="{ props: progressProps }">
+                    <v-icon v-bind="progressProps" color="success" size="small" class="ml-1" aria-label="New per-skill DPS personal best">mdi-arrow-up-bold</v-icon>
+                  </template>
+                  <div class="font-weight-bold"><v-icon color="success" size="small">mdi-arrow-up-bold</v-icon> New skill DPS personal best!</div>
+                  <div>Previous best: {{ formatNumber(skillProgress(item.id, skillItem.id)!.previousBest) }} DPS</div>
+                  <div>Current: {{ formatNumber(skillProgress(item.id, skillItem.id)!.current) }} DPS</div>
+                  <div>Improved by {{ skillProgress(item.id, skillItem.id)!.percent.toFixed(1) }}%</div>
+                </v-tooltip>
+                <v-tooltip v-if="savedAnalysis && showGhostRunner" location="top">
+                  <template #activator="{ props: ghostProps }"><v-icon v-bind="ghostProps" size="x-small" class="ml-2 ghost-mark">mdi-ghost</v-icon></template>
+                  <span><v-icon size="x-small">mdi-ghost</v-icon> {{ formatNumber(ghostDps(item.id, skillItem.id)) }} productive DPS · {{ formatNumber(skillItem.totalDamage / Math.max(currentEncounterDuration, 0.001)) }} average DPS</span>
+                </v-tooltip>
               </div>
             </template>
 
@@ -164,13 +204,16 @@
                   {{ formatNumber(skillItem.totalDamage) }}
                 </span>
                 <div class="damage-bar-wrapper">
-                  <div
-                    class="damage-bar-fill"
-                    :style="{
-                      width: (getSkillBreakdown(item)[0]?.totalDamage ? (skillItem.totalDamage / getSkillBreakdown(item)[0].totalDamage) * 100 : 0) + '%',
-                      backgroundColor: getPlayerColor(item)
-                    }"
-                  ></div>
+                  <v-tooltip v-if="savedAnalysis && showGhostRunner" location="top">
+                    <template #activator="{ props: ghostProps }">
+                      <div v-bind="ghostProps" class="ghost-column-zone">
+                        <div class="ghost-column-fill" :style="{width: ghostBarWidth(item.id, skillItem.id, item) + '%',zIndex: ghostDps(item.id, skillItem.id) <= skillItem.totalDamage / Math.max(currentEncounterDuration, 0.001) ? 2 : 0}"></div>
+                        <div class="damage-bar-fill ghost-current-fill" :style="{width: averageBarWidth(skillItem, item) + '%',background:getSkillBarPaint(skillItem.id, item)}"></div>
+                      </div>
+                    </template>
+                    <span><v-icon size="x-small">mdi-ghost</v-icon> {{ formatNumber(ghostDps(item.id,skillItem.id)) }} productive DPS · {{ formatNumber(skillItem.totalDamage / Math.max(currentEncounterDuration,0.001)) }} average DPS</span>
+                  </v-tooltip>
+                  <div v-else class="damage-bar-fill" :style="{width:(getSkillBreakdown(item)[0]?.totalDamage ? (skillItem.totalDamage / getSkillBreakdown(item)[0].totalDamage) * 100 : 0)+'%',background:getSkillBarPaint(skillItem.id, item)}"></div>
                 </div>
                 <span class="damage-bar-pct">
                   {{ item.totalDamage > 0 ? ((skillItem.totalDamage / item.totalDamage) * 100).toFixed(1) : '0.0' }}%
@@ -263,13 +306,9 @@
                         size="small"></v-icon>
             </v-btn>
             
-            <img
-              v-if="item.talentIcon"
-              :src="item.talentIcon"
-              width="32"
-              height="32"
-              class="mr-2"
-            />
+            <span v-if="item.talentIdentities?.length" class="d-inline-flex align-center mr-2 ga-1" :title="item.talentIdentities.map((a: any) => a.name).join(' / ')">
+              <img v-for="arcana in item.talentIdentities" :key="arcana.name" :src="arcana.icon" :alt="arcana.name" width="32" height="32" />
+            </span>
             <span class="text-subtitle-1 font-weight-bold text-truncate" style="color: white">
               {{ (globalHideMode || hiddenPlayers.has(item.id)) ? (item.talentName || 'Hidden') : item.name }}
             </span>
@@ -319,6 +358,13 @@
                    </div>
               </div>
 
+              <div v-if="savedAnalysis" class="mb-3">
+                <div v-if="showGhostRunner" class="text-caption"><v-icon size="x-small">mdi-ghost</v-icon> Ghost Runner: {{ formatNumber(ghostDps(item.id)) }} productive DPS</div>
+                <v-menu v-for="(flag, index) in deathSnapshots(item.id)" :key="index" open-on-hover location="bottom" :max-width="'min(90vw, 650px)'">
+                  <template #activator="{ props: menuProps }"><v-btn v-bind="menuProps" size="x-small" color="error" variant="tonal" class="mr-2 mt-1" prepend-icon="mdi-flag">Death {{ index + 1 }}</v-btn></template>
+                  <v-card class="death-snapshot-card" max-height="min(75vh, 550px)" style="overflow-y:auto"><v-card-title>Death {{ index + 1 }} · {{ flag.time.toFixed(1) }}s</v-card-title><v-card-text><div>{{ formatNumber(flag.dps) }} DPS · {{ flag.hpm.toFixed(1) }} HPM</div><div class="death-snapshot-details"><div v-for="skill in flag.skills" :key="skill.id" class="d-flex justify-space-between ga-3 text-caption py-1"><span>{{ getSkillName(skill.id) }}</span><span>{{ formatNumber(skill.dps) }} DPS · {{ skill.hpm.toFixed(1) }} HPM</span></div></div></v-card-text></v-card>
+                </v-menu>
+              </div>
               <!-- Skill Table -->
               <div style="max-height: 500px; overflow-y: auto; overflow-x: auto;">
                 <v-data-table
@@ -356,6 +402,17 @@
                                    />
                               </template>
                               <span>{{ getSkillName(skillItem.id) }}</span>
+                          </v-tooltip>
+                          <v-tooltip v-if="skillProgress(item.id, skillItem.id)" location="top">
+                            <template #activator="{ props: progressProps }"><v-icon v-bind="progressProps" size="small" color="success" class="ml-1">mdi-arrow-up-bold</v-icon></template>
+                            <div class="font-weight-bold">New skill DPS personal best!</div>
+                            <div>Previous best: {{ formatNumber(skillProgress(item.id, skillItem.id)!.previousBest) }} DPS</div>
+                            <div>Current: {{ formatNumber(skillProgress(item.id, skillItem.id)!.current) }} DPS</div>
+                            <div>Improved by {{ skillProgress(item.id, skillItem.id)!.percent.toFixed(1) }}%</div>
+                          </v-tooltip>
+                          <v-tooltip v-if="savedAnalysis && showGhostRunner" location="top">
+                            <template #activator="{ props: ghostProps }"><v-icon v-bind="ghostProps" size="x-small" class="ghost-mark">mdi-ghost</v-icon></template>
+                            <span><v-icon size="x-small">mdi-ghost</v-icon> {{ formatNumber(ghostDps(item.id, skillItem.id)) }} productive DPS · {{ formatNumber(skillItem.totalDamage / Math.max(currentEncounterDuration, 0.001)) }} average DPS</span>
                           </v-tooltip>
                     </template>
 
@@ -438,6 +495,11 @@
   <div class="view-controls-fab">
     <div class="fab-blur-bg"></div>
     <div class="fab-content">
+      <v-btn v-if="savedAnalysis" size="small" variant="tonal" :color="showGhostRunner ? 'primary' : undefined"
+        prepend-icon="mdi-ghost"
+        @click="showGhostRunner = !showGhostRunner" class="mr-2">
+        Ghost {{ showGhostRunner ? 'On' : 'Off' }}
+      </v-btn>
       <!-- Hide All Button (Card Mode) -->
       <v-tooltip v-if="viewMode === 'cards'" location="top" :text="globalHideMode ? 'Global Hide Active' : (areAllHidden ? 'Session Hide Active' : 'Hide All')">
         <template v-slot:activator="{ props }">
@@ -587,7 +649,7 @@
 }
 
 .pb-16 {
-  padding-bottom: 80px !important;
+  padding-bottom: 420px !important;
 }
 
 /* Modern Table Styling with Gaps and Rounded Bars */
@@ -714,13 +776,16 @@
 
 <script lang="ts" setup>
 import { inject, ref, computed, watch } from "vue";
+import { getPersonalBestHistoricalSummary, getPersonalBestHistorySessions } from "@/apicall";
+import { sessions, personalBestSessionLimit, personalBestHistoryFolder } from "@/store";
 import { getMabiNameColor, getClassColor } from "@/util";
 import {
   fightSummary,
   activeSessionId,
   selectedTargetId,
 } from "@/store";
-import { SkillStats, DamageBreakdown } from "@/protocols";
+import { SkillStats, DamageBreakdown, type PlayerStats } from "@/protocols";
+import { resolvePlayerArcana, arcanaBarBackground, getSkillArcana } from "@/utils/arcanaEncounter";
 import {
   isGroupTargetId,
   getGroupMemberTargetIds,
@@ -734,6 +799,26 @@ const props = defineProps<{
   attackerNameMap?: { [id: string]: string };
 }>();
 
+// A mixed bar is used only when class colors are enabled; otherwise preserve
+// the user's selected character-name coloring mode.
+const getPlayerBarBackground = (item: any, percentage: number) => {
+  const isHidden = globalHideMode.value || hiddenPlayers.has(item.id);
+  if ((isHidden || showClassColorsForVisiblePlayers.value) && item.talentIdentities?.length > 1)
+    return arcanaBarBackground(item.talentIdentities, percentage);
+  return arcanaBarBackground([], percentage, getPlayerColor(item));
+};
+
+// A mapped Arcana skill always gets its own customized Arcana color.
+// Shared skills follow the current player's resolved Arcana or mixed gradient.
+const getSkillBarPaint = (skillId: number, playerItem: any): string => {
+  const arcana = getSkillArcana(skillId);
+  if (arcana) return arcana.color;
+  const identities = playerItem?.talentIdentities || [];
+  if (identities.length > 1) return arcanaBarBackground(identities);
+  if (identities.length === 1) return identities[0].color;
+  return playerItem ? getPlayerColor(playerItem) : '#808080';
+};
+
 const getPlayerColor = (item: any) => {
   const isHidden = globalHideMode.value || hiddenPlayers.has(item.id);
   const shouldUseClassColor = isHidden || showClassColorsForVisiblePlayers.value;
@@ -744,9 +829,79 @@ const getPlayerColor = (item: any) => {
 const skillNameMap = inject("skillNameMap") as any;
 const condNameMap = inject("condNameMap") as any;
 const expanded = ref<string[]>([]);
+const savedAnalysis = computed(() => activeSessionId.value !== "live");
+const showGhostRunner = ref(false);
+
+const rawPlayer = (id: string) => (fightSummary.players as any)[id] as any;
+const skillEvents = (id: string) => (rawPlayer(id)?.skillUses || []) as any[];
+const median = (numbers: number[]) => {
+  const sorted = numbers.filter(n => n > 0).sort((a, b) => a - b);
+  if (!sorted.length) return 0;
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+};
+// Ghost Runner: productive (nonzero) 15-second damage buckets, median DPS.
+// Shared visual comparison for the overall player bar and each skill bar.
+const ghostCache = new Map<string, { events: any[]; length: number; value: number }>();
+const ghostDps = (playerId: string, skillId?: number): number => {
+  const events = skillEvents(playerId);
+  const key = `${activeSessionId.value}:${playerId}:${skillId === undefined ? 'all' : skillId}`;
+  const cached = ghostCache.get(key);
+  if (cached && cached.events === events && cached.length === events.length) return cached.value;
+  const buckets = new Map<number, number>();
+  for (const event of events) {
+    const damage = skillId === undefined ? Number(event.totalDmg || 0)
+      : (event.skills || []).filter((skill: any) => Number(skill.skillId) === Number(skillId)).reduce((sum: number, skill: any) => sum + Number(skill.damage || 0), 0);
+    if (damage <= 0) continue;
+    const bucket = Math.floor(Number(event.timestamp || 0) / 15);
+    buckets.set(bucket, (buckets.get(bucket) || 0) + damage);
+  }
+  const value = median([...buckets.values()].map(d => d / 15));
+  ghostCache.set(key, { events, length: events.length, value });
+  return value;
+};
+const ghostSkillMax = (playerId: string, playerItem: any): number => {
+  const avgMax = (getSkillBreakdown(playerItem) || []).reduce((max: number, sk: any) =>
+    Math.max(max, Number(sk.totalDamage || 0) / Math.max(currentEncounterDuration.value, 0.001)), 0);
+  const ghostMax = (getSkillBreakdown(playerItem) || []).reduce((max: number, sk: any) =>
+    Math.max(max, ghostDps(playerId, sk.id)), 0);
+  return Math.max(avgMax, ghostMax, 0.001);
+};
+const averageBarWidth = (skill: any, playerItem: any): number =>
+  100 * (Number(skill.totalDamage || 0) / Math.max(currentEncounterDuration.value, 0.001)) / ghostSkillMax(playerItem.id, playerItem);
+const ghostBarWidth = (playerId: string, skillId: number, playerItem: any): number =>
+  100 * ghostDps(playerId, skillId) / ghostSkillMax(playerId, playerItem);
+
+const topPlayerDps = (): number => Math.max(0.001, ...playerDisplayData.value.flatMap((p: any) => [Number(p.dps || 0), ghostDps(p.id)]));
+const playerGhostWidth = (id: string): number => 100 * ghostDps(id) / topPlayerDps();
+const playerAverageWidth = (player: any): number => 100 * Number(player.dps || 0) / topPlayerDps();
+const deathSnapshots = (playerId: string) => {
+  const player = rawPlayer(playerId);
+  if (!player) return [];
+  const start = Number(fightSummary.startTime || 0);
+  const events = skillEvents(playerId);
+  return [...(player.deaths || [])].sort((a: number, b: number) => a - b).map((death: number) => {
+    const time = Math.max(0.001, Number(death) - start);
+    const skills = new Map<number, { id: number; damage: number; hits: number }>();
+    for (const event of events) {
+      if (Number(event.timestamp) > time) continue;
+      for (const sk of event.skills || []) {
+        const id = Number(sk.skillId);
+        const entry = skills.get(id) || { id, damage: 0, hits: 0 };
+        entry.damage += Number(sk.damage || 0);
+        entry.hits += Number(sk.hitCount || 0);
+        skills.set(id, entry);
+      }
+    }
+    const breakdown = [...skills.values()].map(sk => ({ id: sk.id, dps: sk.damage / time, hpm: sk.hits * 60 / time }));
+    return { time, dps: breakdown.reduce((sum, sk) => sum + sk.dps, 0), hpm: breakdown.reduce((sum, sk) => sum + sk.hpm, 0), skills: breakdown.sort((a, b) => b.dps - a.dps) };
+  });
+};
 const viewMode = ref<"table" | "cards">("table"); 
 
 watch(activeSessionId, () => {
+  ghostCache.clear();
+  showGhostRunner.value = false;
   expanded.value = [];
 });
 
@@ -900,6 +1055,8 @@ const getConditionIcon = (id: number): string => {
 // --- COMPUTED PROPERTIES ---
 
 const playerDisplayData = computed(() => {
+  // Arcana follows the selected encounter, not the first skill of the session.
+  const arcanaFor = (p: PlayerStats) => resolvePlayerArcana(p, fightSummary, selectedTargetId.value);
   const players = Object.values(fightSummary.players);
   if (!selectedTargetId.value) {
     // Overall view
@@ -908,9 +1065,10 @@ const playerDisplayData = computed(() => {
         ...p.overallStats,
         id: p.id,
         name: p.name,
-        talentIcon: p.talentIcon,
-        talentName: p.talentName,
-        talentColor: p.talentColor,
+        talentIcon: arcanaFor(p).icon,
+        talentIdentities: arcanaFor(p).identities,
+        talentName: arcanaFor(p).name,
+        talentColor: arcanaFor(p).color,
         missingAppearPacket: p.missingAppearPacket,
       }))
       .filter((p) => p.totalDamage > 0)
@@ -931,9 +1089,10 @@ const playerDisplayData = computed(() => {
           ...breakdown,
           id: p.id,
           name: p.name,
-          talentIcon: p.talentIcon,
-          talentName: p.talentName,
-          talentColor: p.talentColor,
+          talentIcon: arcanaFor(p).icon,
+          talentIdentities: arcanaFor(p).identities,
+          talentName: arcanaFor(p).name,
+          talentColor: arcanaFor(p).color,
           missingAppearPacket: p.missingAppearPacket,
         };
       })
@@ -979,6 +1138,146 @@ const currentEncounterDuration = computed(() => {
   return 0;
 });
 
+// Personal Best Progress: saved fights only; annotate skill rows, never the player total.
+// Scan configurable prior sessions for the same player/target, ignore Harmonic Saint,
+// and celebrate only skill-DPS increases over the best eligible prior value.
+type SkillProgress = { current: number; previousBest: number; percent: number; samples: number };
+const progressByPlayer = ref<Record<string, Record<number, SkillProgress>>>({});
+const summaryPromises = new Map<string, Promise<any>>();
+const historyListPromises = new Map<string, Promise<any[]>>();
+let progressGeneration = 0;
+const isHarmonicSaint = (name?: string): boolean =>
+  (name || "").trim().toLowerCase() === "harmonic saint";
+const getHistoricalSummary = (id: string, folder: string): Promise<any> => {
+  const key = folder + "\0" + id;
+  if (!summaryPromises.has(key)) summaryPromises.set(key, getPersonalBestHistoricalSummary(id, folder));
+  return summaryPromises.get(key)!;
+};
+// For the overall table, compare against the player's most-damaged target.
+// Explicit target selections always take priority. Multi-target groups are
+// deliberately excluded: they cannot be matched reliably by one target name.
+const targetForProgress = (player: any): { name: string; breakdown: any } | null => {
+  if (!player || (selectedTargetId.value && isGroupTargetId(selectedTargetId.value))) return null;
+  const entries = Object.entries(player.damageByTarget || {}) as [string, any][];
+  const selected = selectedTargetId.value
+    ? entries.find(([id]) => id === selectedTargetId.value)
+    : entries.sort((a, b) => Number(b[1]?.totalDamage || 0) - Number(a[1]?.totalDamage || 0))[0];
+  if (!selected) return null;
+  const targetName = fightSummary.targets?.[selected[0]]?.name?.trim();
+  if (!targetName) return null;
+  return { name: targetName, breakdown: selected[1] };
+};
+const durationForTarget = (summary: any, targetId: string): number => {
+  let begin = Infinity, end = -Infinity;
+  for (const player of Object.values(summary.players || {}) as any[]) {
+    const target = player.damageByTarget?.[targetId];
+    if (Number.isFinite(target?.startTime) && Number.isFinite(target?.endTime) && target.endTime > target.startTime) {
+      begin = Math.min(begin, target.startTime);
+      end = Math.max(end, target.endTime);
+    }
+  }
+  return end > begin ? end - begin : Number(summary.encounterDuration || 0);
+};
+const calculateProgress = async (): Promise<void> => {
+  const generation = ++progressGeneration;
+  progressByPlayer.value = {};
+  if (!savedAnalysis.value) return;
+  const active = sessions.value.find(session => session.id === activeSessionId.value);
+  if (!active) return;
+  const folder = personalBestHistoryFolder.value.trim();
+  let historicalSessions = sessions.value;
+  if (folder) {
+    try {
+      if (!historyListPromises.has(folder)) historyListPromises.set(folder, getPersonalBestHistorySessions(folder));
+      historicalSessions = await historyListPromises.get(folder)!;
+    } catch (error) {
+      console.warn('Personal Best history folder could not be read', folder, error);
+      historyListPromises.delete(folder);
+      return;
+    }
+    if (generation !== progressGeneration) return;
+  }
+  const candidates = historicalSessions
+    .filter(session => session.id !== active.id && session.id !== 'live' && session.startTime < active.startTime)
+    .sort((a, b) => b.startTime - a.startTime);
+  const computedProgress: Record<string, Record<number, SkillProgress>> = {};
+  // A selected fight is analysed once. Historical summaries are cached across players.
+  for (const player of Object.values(fightSummary.players) as any[]) {
+    if (generation !== progressGeneration) return;
+    if (!player?.name || isHarmonicSaint(player.talentName)) continue;
+    const currentTarget = targetForProgress(player);
+    if (!currentTarget) continue;
+    const currentDuration = durationForTarget(fightSummary, Object.keys(player.damageByTarget || {}).find(id =>
+      fightSummary.targets?.[id]?.name === currentTarget.name && player.damageByTarget[id] === currentTarget.breakdown) || '');
+    if (!(currentDuration > 0)) continue;
+    const earlierBest = new Map<number, number>();
+    let qualifyingSessions = 0;
+    // The setting controls how many previous saved sessions to inspect, even
+    // when a player only appears rarely. Preserve the earlier HS-only extension:
+    // if we reach the limit without a non-HS appearance, continue five at a
+    // time until that player is absent for a whole window or plays non-HS.
+    const scanLimit = Math.max(5, Math.min(200, Number(personalBestSessionLimit.value) || 5));
+    let extendHsOnly = false;
+    for (let offset = 0; offset < candidates.length && qualifyingSessions < 5; offset += 5) {
+      if (offset >= scanLimit && !extendHsOnly) break;
+      if (generation !== progressGeneration) return;
+      const window = candidates.slice(offset, Math.min(offset + 5, offset < scanLimit ? scanLimit : candidates.length));
+      let seenPlayer = false;
+      let seenNonHSPlayer = false;
+      for (const session of window) {
+        if (generation !== progressGeneration) return;
+        // Metadata can identify absence, but the saved full summary is still
+        // authoritative for class and per-skill damage.
+        if (session.summary?.players?.length && !session.summary.players.some(p => p.name === player.name)) continue;
+        let previous: any;
+        try { previous = await getHistoricalSummary(session.id, folder); }
+        catch (error) { console.warn('Unable to compare saved session', session.id, error); continue; }
+        if (generation !== progressGeneration) return;
+        const appearances = (Object.values(previous.players || {}) as any[]).filter(p => p.name === player.name);
+        if (!appearances.length) continue;
+        seenPlayer = true;
+        const priorPlayer = appearances.find(p => !isHarmonicSaint(p.talentName));
+        if (!priorPlayer) continue;
+        seenNonHSPlayer = true;
+        const matchingTargets = Object.entries(previous.targets || {}) as [string, any][];
+        const match = matchingTargets.find(([, target]) => (target?.name || '').trim() === currentTarget.name);
+        if (!match) continue;
+        const priorBreakdown = priorPlayer.damageByTarget?.[match[0]];
+        if (!priorBreakdown || !Number(priorBreakdown.totalDamage)) continue;
+        const duration = durationForTarget(previous, match[0]);
+        if (!(duration > 0)) continue;
+        qualifyingSessions++;
+        for (const skill of Object.values(priorBreakdown.skills || {}) as any[]) {
+          const id = Number(skill.id);
+          if (!Number.isFinite(id) || !(Number(skill.totalDamage) > 0)) continue;
+          const dps = Number(skill.totalDamage) / duration;
+          earlierBest.set(id, Math.max(earlierBest.get(id) || 0, dps));
+        }
+        if (qualifyingSessions >= 5) break;
+      }
+      // Do not stop early on missing-player windows inside the configured
+      // lookback. Beyond that limit, preserve the HS-only continuation rule.
+      if (offset + window.length >= scanLimit && qualifyingSessions === 0 && seenPlayer && !seenNonHSPlayer) {
+        extendHsOnly = true;
+      }
+      if (offset >= scanLimit && (!seenPlayer || seenNonHSPlayer)) break;
+    }
+    const improvements: Record<number, SkillProgress> = {};
+    for (const skill of Object.values(currentTarget.breakdown.skills || {}) as any[]) {
+      const id = Number(skill.id);
+      const prior = earlierBest.get(id);
+      if (!prior || !(Number(skill.totalDamage) > 0)) continue;
+      const current = Number(skill.totalDamage) / currentDuration;
+      if (current > prior) improvements[id] = { current, previousBest: prior, percent: (current / prior - 1) * 100, samples: qualifyingSessions };
+    }
+    if (Object.keys(improvements).length) computedProgress[player.id] = improvements;
+  }
+  if (generation === progressGeneration) progressByPlayer.value = computedProgress;
+};
+const skillProgress = (playerId: string, skillId: number): SkillProgress | undefined =>
+  savedAnalysis.value ? progressByPlayer.value[playerId]?.[Number(skillId)] : undefined;
+watch([activeSessionId, selectedTargetId, sessions, personalBestSessionLimit, personalBestHistoryFolder, () => fightSummary.players], () => { void calculateProgress(); }, { immediate: true });
+
 const getSkillName = (skillId: number): string => {
   if (skillId === 9999) return "Pets";
   return skillNameMap.value[skillId]?.name || `unknownSkill:${skillId}`;
@@ -1003,10 +1302,24 @@ const getSkillBreakdown = (playerData: DamageBreakdown): SkillStats[] => {
     const percentage = (item.totalDamage / topDamage) * 100;
     const bgColor = getPlayerColor(item);
 
+    if (savedAnalysis.value && showGhostRunner.value) {
+      const avg = playerAverageWidth(item);
+      const ghost = playerGhostWidth(item.id);
+      return {
+        class: "character-row",
+        style: {
+          background: ghost <= avg
+            ? `linear-gradient(to right, color-mix(in srgb, ${bgColor}, black 55%) ${ghost}%, transparent ${ghost}%), linear-gradient(to right, ${bgColor} ${avg}%, transparent ${avg}%)`
+            : `linear-gradient(to right, ${bgColor} ${avg}%, transparent ${avg}%), linear-gradient(to right, color-mix(in srgb, ${bgColor}, black 55%) ${ghost}%, transparent ${ghost}%)`,
+          backgroundClip: 'padding-box',
+        },
+        title: `Ghost: ${formatNumber(ghostDps(item.id))} productive DPS | Average: ${formatNumber(item.dps)} DPS`,
+      };
+    }
     return {
       class: "character-row",
       style: {
-        background: `linear-gradient(to right, ${bgColor} ${percentage}%, transparent ${percentage}%)`,
+        background: getPlayerBarBackground(item, percentage),
         backgroundClip: 'padding-box',
       },
     };
@@ -1024,29 +1337,36 @@ const getSkillRowProps = (
   playerItem?: any,
   index?: number
 ) => {
-  if (dpsMeterFillMode.value === "full") {
-    if (!topSkillDamage || !skillItem.totalDamage) return { style: {} };
-    const percentage = (skillItem.totalDamage / topSkillDamage) * 100;
-    
-    let color = getMabiNameColor(playerName);
-    if (playerItem) {
-      color = getPlayerColor(playerItem);
-    }
-
-    let bgColor = color;
-    if (index !== undefined && index % 2 !== 0) {
-      bgColor = `color-mix(in srgb, ${color}, black 10%)`;
-    }
-
+  if (dpsMeterFillMode.value !== "full") return {};
+  if (!topSkillDamage || !skillItem.totalDamage) return { style: {} };
+  const percentage = (skillItem.totalDamage / topSkillDamage) * 100;
+  // Compute the fill inside the painted region: gradients always cover the
+  // complete damage bar, never continue into the empty percentage.
+  const paint = playerItem ? getSkillBarPaint(skillItem.id, playerItem) : getMabiNameColor(playerName);
+  // CSS background-size confines a continuous multi-Arcana gradient to the
+  // measured part of the row, keeping the existing length convention.
+  const paintImage = paint.startsWith('linear-gradient(') ? paint : `linear-gradient(to right, ${paint}, ${paint})`;
+  if (savedAnalysis.value && showGhostRunner.value && playerItem) {
+    const ghostPercent = ghostBarWidth(playerItem.id, skillItem.id, playerItem);
+    const avgPercent = averageBarWidth(skillItem, playerItem);
     return {
       style: {
-        background: `linear-gradient(to right, ${bgColor} ${percentage}%, transparent ${percentage}%)`,
+        backgroundImage: `${paintImage}, linear-gradient(to right, rgba(0,0,0,.36) 0% ${ghostPercent}%, transparent ${ghostPercent}%)`,
+        backgroundSize: `${Math.max(0, Math.min(100, avgPercent))}% 100%, 100% 100%`,
+        backgroundRepeat: 'no-repeat',
         backgroundClip: 'padding-box',
       },
+      title: `Ghost: ${formatNumber(ghostDps(playerItem.id, skillItem.id))} productive DPS | Average: ${formatNumber(Number(skillItem.totalDamage || 0) / Math.max(currentEncounterDuration.value, 0.001))} DPS`,
     };
   }
-  
-  return {};
+  return {
+    style: {
+      backgroundImage: paintImage,
+      backgroundSize: `${Math.max(0, Math.min(100, percentage))}% 100%`,
+      backgroundRepeat: 'no-repeat',
+      backgroundClip: 'padding-box',
+    },
+  };
 };
 
 // Helper for Hex -> RGBA
@@ -1083,8 +1403,26 @@ const toggleAllPlayersVisibility = () => {
         setAllHiddenPlayers(allIds, true);
     }
 };
-
-
+  
+  const isolateSinglePlayer = (targetPlayerId: string) => {
+  // Clear any active global hiding configurations
+  globalHideMode.value = false;
+  
+  // Set all players to hidden first
+  const allIds = playerDisplayData.value.map((p: any) => p.id);
+  setAllHiddenPlayers(allIds, true);
+  
+  // Remove our specific chosen character from the hidden list to keep them visible
+  hiddenPlayers.delete(targetPlayerId);
+};
 
 // (Old static headers removed, using computed headers now)
 </script>
+
+<style scoped>
+ .ghost-column-zone {position:relative;width:100%;height:100%;cursor:help}
+ .ghost-column-fill {position:absolute;left:0;top:0;height:100%;background:rgba(0,0,0,.58);border-radius:9999px}
+ .ghost-current-fill {position:absolute;left:0;top:0;height:100%}
+ .ghost-mark {opacity:.8;cursor:help}
+@media (max-width: 600px) { .death-snapshot-details { display: none; } .death-snapshot-card { max-width: 90vw; } }
+</style>

@@ -1,5 +1,6 @@
 import { FightSummary } from "./protocols";
 import { Session } from "./types";
+import { loadingCount } from "@/store";
 
 // A simple interface to describe the shape of our embedded JSON data.
 interface DataItem {
@@ -7,7 +8,6 @@ interface DataItem {
   iconUrl?: string;
 }
 
-let loadingCount: any;
 
 // --- SESSION API FUNCTIONS ---
 
@@ -20,6 +20,22 @@ export async function getSessionSummary(
   sessionId: string
 ): Promise<FightSummary> {
   return httpCall<FightSummary>(`/api/sessions/${sessionId}/summary`);
+}
+
+// Read-only comparison history; a blank directory uses ordinary saved sessions.
+export async function getPersonalBestHistorySessions(folder: string): Promise<Session[]> {
+  if (!folder.trim()) return getSessions();
+  return httpCall<Session[]>(`/api/sessions/history?folder=${encodeURIComponent(folder.trim())}`);
+}
+
+export async function getPersonalBestHistoricalSummary(sessionId: string, folder: string): Promise<FightSummary> {
+  if (!folder.trim()) return getSessionSummary(sessionId);
+  return httpCall<FightSummary>(`/api/sessions/history/summary?folder=${encodeURIComponent(folder.trim())}&id=${encodeURIComponent(sessionId)}`);
+}
+
+export async function pickPersonalBestHistoryFolder(): Promise<string> {
+  const result = await httpCall<{ folder: string }>("/api/sessions/history/pick-folder", { method: "POST" });
+  return result.folder;
 }
 
 export async function getSessionLog(sessionId: string): Promise<string> {
@@ -53,6 +69,10 @@ export async function renameSession(
     body: JSON.stringify(payload),
     headers: { "Content-Type": "application/json" },
   });
+}
+
+export async function revealSessionFile(sessionId: string): Promise<void> {
+  await httpCall<void>(`/api/sessions/${encodeURIComponent(sessionId)}/reveal`, { method: "POST" });
 }
 
 export async function deleteSession(sessionId: string): Promise<void> {
@@ -134,8 +154,6 @@ async function fetchWithOpts(
   url: string,
   opt?: HttpCallOpt
 ): Promise<Response> {
-  await setLoadingCount();
-
   try {
     if (!opt?.disableLoading) {
       loadingCount.value++;
@@ -162,11 +180,3 @@ async function fetchWithOpts(
   }
 }
 
-// Helper to avoid circular dependencies
-async function setLoadingCount() {
-  if (loadingCount) {
-    return;
-  }
-  const { loadingCount: _loadingCount } = await import("@/store");
-  loadingCount = _loadingCount;
-}

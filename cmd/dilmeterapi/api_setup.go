@@ -26,10 +26,11 @@ var autodetectMu sync.Mutex
 const configFile = "settings.json"
 
 type CaptureConfig struct {
-	NicName     string `json:"nicName"`
-	ExitLag     bool   `json:"exitlag"`
-	Mudfish     bool   `json:"mudfish"`
-	Promiscuous bool   `json:"promiscuous"`
+	NicName                string `json:"nicName"`
+	ExitLag                bool   `json:"exitlag"`
+	Mudfish                bool   `json:"mudfish"`
+	Promiscuous            bool   `json:"promiscuous"`
+	PreCombatBufferSeconds int    `json:"preCombatBufferSeconds"`
 }
 
 func loadConfig() *CaptureConfig {
@@ -41,10 +42,22 @@ func loadConfig() *CaptureConfig {
 	if err := json.Unmarshal(data, &config); err != nil {
 		return nil
 	}
+	if config.PreCombatBufferSeconds < 0 {
+		config.PreCombatBufferSeconds = 0
+	}
+	if config.PreCombatBufferSeconds > 30 {
+		config.PreCombatBufferSeconds = 30
+	}
 	return &config
 }
 
 func saveConfig(config *CaptureConfig) {
+	if config.PreCombatBufferSeconds < 0 {
+		config.PreCombatBufferSeconds = 0
+	}
+	if config.PreCombatBufferSeconds > 30 {
+		config.PreCombatBufferSeconds = 30
+	}
 	data, err := json.MarshalIndent(config, "", "  ")
 	if err == nil {
 		os.WriteFile(configFile, data, 0644)
@@ -79,6 +92,12 @@ func setupRouter() http.Handler {
 			"exitlag":     exitlag,
 			"mudfish":     mudfish,
 			"promiscuous": promiscuous,
+			"preCombatBufferSeconds": func() int {
+				if cfg != nil {
+					return cfg.PreCombatBufferSeconds
+				}
+				return 0
+			}(),
 		})
 	})
 
@@ -125,6 +144,9 @@ func setupRouter() http.Handler {
 
 		// Save the requested settings permanently
 		saveConfig(&config)
+		if globalPub != nil {
+			globalPub.preCombatBufferSeconds.Store(int32(config.PreCombatBufferSeconds))
+		}
 
 		filter := buildPcapFilter("", "", config.ExitLag, config.Mudfish)
 
@@ -151,6 +173,9 @@ func setupRouter() http.Handler {
 
 		// Save settings, but preserve current aggregator/session data.
 		saveConfig(&config)
+		if globalPub != nil {
+			globalPub.preCombatBufferSeconds.Store(int32(config.PreCombatBufferSeconds))
+		}
 
 		filter := buildPcapFilter("", "", config.ExitLag, config.Mudfish)
 

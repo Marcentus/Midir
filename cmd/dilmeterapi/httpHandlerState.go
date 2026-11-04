@@ -13,6 +13,7 @@ func stateRouter(pub *eventPublisher, sm *SessionManager) http.Handler {
 	// CORRECTED: Pass the SessionManager to the handler.
 	r.Post("/clear", handleClearState(pub, sm))
 	r.Get("/summary", handleGetLiveSummary(pub))
+
 	return r
 }
 
