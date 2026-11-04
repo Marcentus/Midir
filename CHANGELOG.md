@@ -1,70 +1,92 @@
-# Midir — Consolidated Changelog
+# Midir — Changelog
 
-**Source audited:** `Midir-41.zip` (the latest Midir package supplied in this project). This file replaces the 26 historical `RELEASE-*.md` notes and older `FEATURE-CHANGELOG.md` bundled in that package; the older release files are removed from this source archive. It is an **audited description of the latest source**, not a claim that all features passed a complete production build. The program's source code, assets, and report logic are unchanged in this tidy-up.
+A concise record of **what changed and why**. Features are grouped by purpose rather than by individual hotfix. Source references appear as numbered notes at the end. For current packet layouts, skill-observation rules, and HTML data contracts, see [Skill and Export Reference](SKILL-AND-EXPORT-REFERENCE.md).
 
-## Current functionality, by area
+## Build and dependency maintenance
 
-### Early fork features (relative to pinned upstream snapshot)
-- The earlier source comparison (`FEATURE-CHANGELOG.md`, pinned upstream commit `6f264b407dbd842fbafeef8d14cc1cff5f505af4` versus Midir-07) documented the in-app **Damage Scatter Chart**, linked player visibility controls, and saved-session hit reconstruction. These are distinct from the later standalone HTML scatter exporter. The old comparison was **source-based, not a verified Git-history diff**.
-- **Ghost Runner**: a typical productive-DPS reference computed from the median of 15-second nonzero-damage buckets, graphed as a reference and optionally shown as comparative fills for saved-session Damage Dealt. It is not an observed player's perfect rotation.
-- **Death Flags**: staggered death markers and at-death skill/DPS approximations reconstructed from the recorded history, not guaranteed exact snapshots.
-- **Personal Best Progress**: per-skill (not per-player) improvement indicators based on earlier sessions for the same player/target; Harmonic Saint excluded, configurable lookback (5–200 sessions) and optional read-only historical session folder. Historical comparisons cannot be assumed available for every past file.
-- An **experimental Healing Done** UI was introduced with packet decoder tests, unknown/anonymous source handling and optional Settings visibility. Attribution/shield estimation remained explicitly heuristic; later work improved presentation and capture safeguards rather than solving skill-level packet attribution.
+- **Capture-mode safety:** CLI capture now honors the saved Npcap promiscuous-mode opt-in instead of forcing it on; absent preferences default off, and offline playback stays non-promiscuous. UI capture, restart, and autodetection retain their existing setting propagation. Added startup regression coverage. [^22]
 
-### Combat parsing, healing, and saved sessions
-- Combat target, player, skills, damage and healing summaries use recorded packet data; multi-hit damage packets are **not** proof of individual skill casts. Healing packets may remain unattributed (`Unknown Caster` or anonymous); skill-level healing attribution is not considered reliably solvable with the currently available packet information. [18, 20–21]
-- Displays largest heal in Healing Done; preserves existing split presentation and recipient / ordinary-HP sanity checks. Harmonic Saint identified-caster priority for recognized skills and Veil of Life condition 999 shield contributions is represented in backend source; it is heuristic rather than per-packet proof. [18, 20]
-- Saved-session readers accept 32 MiB NDJSON lines, avoiding the former 64 KiB scanner-limit failure. Recording avoids indefinitely capturing background events outside active target presence, uses incremental counters, buffered writes, synchronization and temp-file publication. [20–21]
-- Diagnostic healing recorder and its UI/settings endpoints were **removed**, not a current feature. Existing external diagnostic files are not automatically deleted. [21 diagnostic cleanup]
-- Saved-session actions include opening the exact `.ndjson` in the file manager and batch deleting selected sessions (with confirmation and per-file failure reporting). [32]
-- Windows build script is intended to stop on errors, reject stale outputs and report failures honestly. [33]
+- **Frontend dependency maintenance:** Raise Vue and Vite to patched compatible release ranges; require patched transitive dependency families identified by the npm audit, and approve only the reviewed `esbuild` installation script version. Build scripts synchronize the frontend lockfile during installation. Replace two ineffective dynamic imports with static imports, keeping loading state and condition-combination behavior unchanged. [^21]
 
-### Offline HTML reporting
-- Standalone self-contained HTML with player/party selection, damage scatter, player toggles, pan/zoom and hover details, boss HP timeline/search, skill summary and Arcana-colored collapsible/reorderable player panels. The scatter and HP controls appear above the player breakdown; sortable handles support pointer and keyboard movements. [20–26]
-- Excludes anonymous healing/numeric-only empty contributor panels from human-facing HTML displays where appropriate; this does **not** remove underlying healing data. [22–23]
-- Embedded `midir-companion` v1 metadata includes player death times, condition intervals, damage-hit groups, original target entity IDs and their raw HP samples, logical encounter metadata, provenance, and conservative clear evidence. The **separate companion JSON download button was later removed**; embedded HTML metadata remains supported. [27, 31]
-- A selected Combat Target export filters to boss target member IDs and excludes adds. Target-scoped scatter may be omitted because aggregated skill-hit scatter does not reliably retain target identity. Unfiltered all-target reports retain full scatter. [29–30]
-- Can batch-export multiple saved sessions to an HTML-report ZIP; the batch action does not inherit another session's selected target. [31]
+## Combat analysis and player progress
 
-### Boss groupings and export interpretation
-- **Bri Leitt Gate 1 — Vertrag of the Deep Roots:** attempt-safe 7600 → 7601 association (at most one replacement, bounded by the next 7600, up to 30 seconds of transition tolerance and 2 seconds timestamp skew); an expandable boss row retains each original form. Group damageable HP is the combined damageable halves, but the **mechanic timeline is 100→50→0**. Gate 1 Ancient Giants at 70% and 25% are expandable and remain distinct from the boss damage; miscellaneous adds are collapsed. [28–30, 35, 39–40]
-- **Gate 1 HTML correction:** All Targets and selected logical boss exports retain both form HP histories as `boss.phases` and `logicalEncounters[].phaseHp` while the main graph follows the continuous phase scale. Prior All Targets selection of highest-max-HP 7601 alone is a **superseded defect**, not expected current behavior. The paired attempt / clear remains evidence-bound. [41]
-- **Bri Leitt Gate 3:** Shards of Solace grouped using recorded HP families (~38.3M for 80%/40%, ~63.8M for 60%, ~23.5M ambient), timestamp alignment with the boss, and approximate threshold crossings. Ambiguous entities are kept outside named wave groups. These are visual UI groups, not invented Companion mechanic intervals. [28, 35, 38]
-- **Glenn Bearna: Primeval Winter:** attempt-aware 7585→7586→7587 grouping; individual identities stay raw, nominal group damageable HP uses 90%/40%/60% of the settled form maxima, and boss-only reports exclude mobs. [36–37]
-- **Rabbie Phantasm: Temptation's Path:** Succubus Queen 195012 per attempt, with the four named succubi shown as supporting enemies but excluded from boss-only damage. [37]
-- **Crom Bas Normal:** Irusan 193364 and Giga Glas Ghaibhleann 193359 separately selectable; distinct from Crom Bas Abyss. [37]
+- **Arcana appearance consistency:** Respect customized Appearance Settings colors in multi-Arcana gradients and encounter views. Use each recognized skill’s Arcana color for its damage bar, while shared skills inherit the player’s scoped solid color or mixed gradient in the application and HTML report; keep damage lengths unchanged. [^20]
 
-## Superseded changes removed from the running history
-- Early versions lacked HTML export entirely [18] or companion data / logical encounter merges [20, 27]; later versions added them. Those gaps do not describe Midir-41.
-- Mouse-native drag-and-drop was replaced by pointer-based and keyboard-enabled panel sorting [25→26].
-- First-pass Gate 1 phase matching, generic single-entity HP selection and interim nesting issues were revised through releases 28–41. Do not interpret the sequence of hotfix release notes as multiple independent features.
-- Gate 3 early spawn-placeholder HP assumptions were replaced by recorded HP-family identification and aligned timestamps [28→38].
-- The temporary player-facing companion JSON control is not part of the latest intended HTML-only workflow [27→31].
-- Debug healing recording was removed [21 cleanup].
+- **Multi-Arcana session display:** Show all observed Arcana icons and blended Arcana colors in session-wide player bars; encounter selections use their scoped single Arcana when identifiable. Preserve character-name colors when that display mode is chosen. Gradients denote identities, not damage or playtime proportions. [^20]
 
-## Source verification and known limitations
-This consolidation was compared against all **26 bundled historical release notes** and the latest archive's source inventory. It preserves the distinction between a feature documented in source, a verified sample result, and an actual compiled/runtime result. The previously supplied three Gate 1 HTML reports supported the split-phase fix and observed replacement zero-HP evidence; they do not prove correctness for every recording. Historical notes repeatedly document TypeScript transpile/syntax checks and ZIP validation, **not** a full Vue/Vite compile, Go test suite, Windows build, or live combat regression. Such verification remains necessary after the user's next local build. Exact target-scoped scatter/hit identification and inferred mechanic intervals remain constrained by saved data; absent timestamps cannot be manufactured.
+- **Damage analysis:** Added interactive damage scatter, boss HP timelines, per-player skill breakdowns, and collapsible, reorderable player panels to make damage patterns easier to compare. [^1]
+- **Ghost Runner:** Added a reference pace based on the median of nonzero 15-second damage buckets, shown on the graph and optionally as comparison fills in Damage Dealt. It represents a typical productive stretch, not an ideal rotation. [^1]
+- **Death markers:** Added timeline markers and approximate damage/skill context around deaths. Values reconstructed from saved samples are estimates, not exact death-time snapshots. [^1]
+- **Personal Best Progress:** Added per-skill comparisons against previous sessions for the same player and target, with a 5–200-session lookback and an optional read-only history folder. Comparisons are not an overall DPS ranking. [^1] [^13]
+- **Healing Done:** Added healing summaries, largest-heal display, and defensive-effect estimates, including recognized Harmonic Saint caster handling and Veil of Life condition `999`. Suspicious values are screened; caster, skill, and shield attribution can remain uncertain. [^2]
 
-## Release trace (consolidated, no duplicate feature entries)
-| Historical source notes | Current outcome |
-|---|---|
-| Pinned upstream comparison (old FEATURE-CHANGELOG) | In-app scatter, Ghost Runner, death markers, per-skill personal best, experimental healing foundation |
-| 18; 20 and its HS/save patches; 21 and diagnostic cleanup | Healing display/heuristic ownership, recording safeguards, larger saved-session scans; diagnostic recorder removed |
-| 20–26 | Single offline report, interactive scatter and HP chart, collapsible/reorderable player breakdown |
-| 27–31 | Structured Companion data embedded in HTML, target filtering and batch HTML exports; separate JSON button removed |
-| 28–30, 35, 39–41 | Gate 1 attempt pairing, nested UI, effective HP, correct two-form export |
-| 28, 35, 38–39 | Gate 3 halo groups by HP family and approximate timing |
-| 32–34 | Session management, fail-fast Windows build, frontend TypeScript hotfix |
-| 36–37 | Glenn and additional encounter registry entries |
+- **Encounter-scoped Arcana:** Detect distinct Arcanas used during a session from observed skill evidence; resolve each selectable encounter independently. Full-session multi-Arcana views no longer retain the first Arcana label, and uncertain scopes stay unassigned rather than borrowing a different encounter’s identity. [^20]
 
-## Legacy-note reconciliation (Midir-41 authoritative; 2026-10-20)
+- **Multi-Arcana presentation:** The Arcana registry is loaded through Vite raw JSON with an explicit TypeScript shape, avoiding the `resolveJsonModule` build error. Mixed player bars and portable-report headers now blend observed Arcana colors smoothly, including three or more Arcanas, in first-observed order when timestamps exist. Individual encounter colors and icons remain scoped to observed skills; gradients represent identity, not proportional damage. [^20]
 
-Seven old, standalone documentation files were reviewed against the Midir-41 package and removed from this distribution. The following are **current principles or historical context**, not new implementation claims:
+## Recording and saved sessions
 
-- **Healing and shield attribution:** The currently retained healing parser may have unknown casters and unattributed skills. Veil of Life condition 999 uses observed `SBBV` capacity-change evidence and `SBBDDR` mitigation-rate observations, not proof of all shielding created, absorbed damage, or verified effective healing. Recipient filtering and suspicious-value quarantine are safeguards; overlapping casts and skill attribution still require controlled evidence. Early experimental inference from stat 31 (`AdditionalHP`) is superseded and must not be presented as verified Veil generation. Historical saved estimates are not retroactively upgraded.
-- **Removed diagnostic workflow:** Historical Midir-13/Midir-16 directions to enable a 'Record healing diagnostics' setting and capture `healing-diagnostics-*.ndjson` are **obsolete**. Midir-41 removed the diagnostic recorder and related UI/endpoints. The former windows for matching skills to healing packets (including 59002/59003/59004) were unverified experiments; do not treat them as present features or definitive evidence.
-- **Graph versus Damage Dealt:** The two Ghost Runner presentations are separate; chart-only hide controls must not alter Damage Dealt rankings. Graph death markers from saved DPS samples and damage-detail per-skill history provide different levels of granularity and are not duplicate dead code. Per-skill Personal Best has configurable historical lookback, not a fixed five-session scan.
-- **Source comparison history:** An early archive-to-archive comparison of a pinned upstream source snapshot (`6f264b407dbd842fbafeef8d14cc1cff5f505af4`) and Midir-07 reported 1,326 byte-identical paths, 14 changed paths, nine added paths, and none removed. This was a ZIP content comparison, not a verified Git ancestry or claim about current Midir-41 upstream differences.
-- **Verification still required:** `go test ./...`, `go build ./...`, and `front` build (`npm ci`, `npm run build`) are recommended for a reproducible local build; saved-session compatibility, charts, damage history, and ambiguous multi-healer cases require runtime tests. Their mention here does **not** mean they passed during this documentation cleanup. No source-code removal or dead-code audit is implied.
+- **More reliable recordings:** Improved buffered NDJSON writes, capture boundaries, session counters, large-record reading (up to 32 MiB per line), and temporary-file publication to reduce incomplete saved sessions. [^3]
+- **Session management:** Added opening a recording in the file manager, batch deletion with confirmation, and batch HTML export without leaking target selection between sessions. [^3]
+- **Skill and hit evidence:** Recorded explicit local uses and remote observations with millisecond timestamps, plus damage-hit timing and target IDs where available. Older session records remain readable; multi-hit packets and effect cues do **not** automatically represent completed casts. [^4]
+- **Pre-combat skill buffer:** Added an optional 0–30-second window (off by default) that carries up to 512 recent skill-use events into a new combat encounter, capturing preparation without continuously recording inactive combat. [^14]
+- **Pet and puppet damage:** Attributed recognized pets and puppets to their owners so their damage contributes to the appropriate player totals; pet damage uses a dedicated skill category. [^15]
+- **Enemy attack separation:** Named recognized boss attacks and exact-entity-matched minor-enemy sources (including numerically named Glenn Gwyllgi), with corroborated Race ID fallbacks; kept enemy attacks outside player DPS and Companion damage records. [^16]
+- **Removed temporary diagnostics:** Retired the experimental healing diagnostic recorder and its UI. Historical diagnostic recordings remain independent files. [^2]
 
-The removed files were `REVIEW-NOTES.md`, `CONTRIBUTING-CHANGES.md`, `HEALING-CORRELATION-M13.md`, `HEALING-REWORK-M16.md`, `HEALING-REWORK-NOTES.md`, `OVERSHIELD-ATTRIBUTION-NOTES.md`, and `PINNED-UPSTREAM-DIFF.md`. Historical details incompatible with the current implementation were deliberately **not** preserved as operational guidance.
+## Portable HTML export and Companion data
+
+- **Self-contained reports:** Added portable HTML reports with damage scatter, boss HP search, Arcana-colored player panels, drag and keyboard reordering, and embedded Companion-compatible data. The separate JSON download control was retired; its data remains in the HTML. [^5]
+- **Target-aware reporting:** Added boss-only and all-target scopes using recorded entity IDs, with separate damage and HP calculations. Gate 1 exports preserve both Vertrag forms’ raw HP histories as well as the continuous logical timeline. Missing historical target details cannot be reconstructed. [^5] [^6]
+- **Skill evidence export:** Added distinct streams for explicit skill uses, damage hits, and typed skill observations (`0x6988`, `0x7926`, `0x9093`, `0x9095`), allowing the Companion to correlate evidence without inventing cast counts. [^4]
+- **Clearer report controls:** Replaced duplicate encounter entries with an encounter selector and a separate target-scope selector; labeled outcomes **Cleared** or **Attempted**; removed the visible Skill Use Timeline and redundant boss chart checkboxes while retaining the underlying data. [^5]
+- **Encounter compatibility:** Embedded logical boss encounters, phase HP, death/revival evidence, entity provenance, per-encounter Arcana evidence, mixed-color/multi-icon Arcana summaries, and conservative clear evidence without removing older Companion fields. [^5] [^20]
+
+## Dungeon encounters and target grouping
+
+- **Bri Leith — Gate 1:** Associated Vertrag's two forms (`7600` → `7601`) within each attempt, displaying a continuous 100%→50%→0 HP progression. The combined Vertrag row and each form are selectable; Ancient Giants and other mechanics stay outside boss-only HP. [^6]
+- **Bri Leith — Gate 3:** Grouped Shards of Solace using observed HP families and timing near boss thresholds, keeping ambiguous entities outside named wave groups. [^7]
+- **Glenn Bearna:** Separated Unfinished Reverie (`7585`, 100%→10%) from the shared 100%→0% boss encounter comprising Reverie (`7586`, 100%→60%) and The Winter Tyrant (`7587`, 60%→0%). Kept all-boss and individual views. Cailleach (`7575`, 100%→90%) and her entrance barriers belong to the opening encounter; Icicle Sprites belong with minor enemies. [^8]
+- **Crom Bas:** Grouped Irusan (`193364`) with the recorded Glas variant—Completed (`193358`) or Giga (`193359`). Merch Diafol and all colored Disciples are selectable mechanics, excluded from boss HP. [^9]
+- **High-tier dungeon grouping:** Kept Crom Bas Abyss Folamh (`193810`) and Bri Leith Gate 4 Midir the Lost (`7615`) as boss-only, attempt-bounded selections. Grouped known associated enemies by name and approximate run segment under provisional Minor Enemies folders, without asserting HP phases or mechanics. Additional possible boss forms remain unassigned. [^7] [^19]
+- **Unified dungeon runs:** Combined each Crom Bas or Glenn Bearna run's bosses, opening encounters (where present), and minor enemies into a numbered run folder while retaining individual selections. Run assignment follows recorded entities and timing rather than assuming every similarly named enemy belongs to one attempt. Shared-race Phantasm Wraiths no longer create false Crom Bas combat segments. [^10]
+- **Fahmes Ruin:** Organized independently enterable stages into selectable stage and sequential level views. Each level aggregates its recorded enemies, including overlapping waves, without imposing an invented boss or stage-clear packet. Complete 150-enemy stages retain all five level selections even when delayed spawns defeat the initial timing heuristic. [^18]
+- **Alby Shineseeker:** Organized enemies into five waves, from rats and bats through Cichol's Followers, with individual-wave and complete-run views. The final-wave status reflects the defeat of recorded Followers, not a separate dungeon-clear packet. [^11]
+- **Rabbie Phantasm:** Grouped each recorded run with selectable Queen boss and minor-enemy sections. The four named Succubi appearing with the Queen form one boss-mechanics selection, separate from boss-only damage and HP; earlier colored Succubi remain minor enemies. Confirmed Normal and Temptation's Path Queens are recognized separately; other Queen race IDs require supporting dungeon context and remain unverified. Queen-only runs omit the named-Succubi mechanics group; Fiends and Wraiths summoned in the Normal Queen room remain selectable under Boss-room Enemies. [^17]
+
+## Build and project maintenance
+
+- **Frontend typing:** Kept optional paired-boss Race IDs typed consistently when merging established encounter definitions with provisional Succubus Queen variants. [^19]
+- **Build safeguards:** Added Node-version checks and automated build validation to reduce stale or misleading build outputs. [^12]
+- **Documentation:** Consolidated release notes, routine grouping updates, and overlapping skill/export notes. Detailed protocol findings now belong in the dedicated technical reference rather than the changelog.
+
+## Source references
+
+References identify relevant files in the Midir source, not specific commits. The historical feature descriptions were also reconciled with the earlier Midir-41 changelog; older `RELEASE-*.md` and `FEATURE-CHANGELOG.md` notes are not treated as independently current documentation.
+
+[^1]: Combat UI, graph, and player comparisons: [`DamageMeterView.vue`](front/src/components/DamageMeterView.vue), [`DamageGraph.vue`](front/src/components/DamageGraph.vue), [`applyDamageBySkill.vue`](front/src/components/applyDamageBySkill.vue). Earlier development notes also document Ghost Runner, death markers, and Personal Best Progress.
+[^2]: Healing and defensive-effect handling: [`healingPacket.go`](packet/healingPacket.go), [`aggregator.go`](cmd/dilmeterapi/aggregator.go), [`applyHealingBySkill.vue`](front/src/components/applyHealingBySkill.vue).
+[^3]: Saved sessions: [`sessionManager.go`](cmd/dilmeterapi/sessionManager.go), [`httpHandlerSession.go`](cmd/dilmeterapi/httpHandlerSession.go), [`SessionPanel.vue`](front/src/components/SessionPanel.vue).
+[^4]: Skill recording, timestamps, and observations: [`eventPublisher.go`](cmd/dilmeterapi/eventPublisher.go), [`event.go`](cmd/dilmeterapi/event.go), [`portableReport.ts`](front/src/utils/portableReport.ts).
+[^5]: HTML reporting and Companion metadata: [`portableReport.ts`](front/src/utils/portableReport.ts), [`companionExport.ts`](front/src/utils/companionExport.ts).
+[^6]: Gate 1: [`gate1Encounter.ts`](front/src/utils/gate1Encounter.ts), [`targetGrouping.ts`](front/src/utils/targetGrouping.ts).
+[^7]: Earlier encounter recognition: [`reportEncounters.ts`](front/src/utils/reportEncounters.ts), [`targetGrouping.ts`](front/src/utils/targetGrouping.ts).
+[^8]: Glenn Bearna: [`glennEncounter.ts`](front/src/utils/glennEncounter.ts), [`glennOpening.ts`](front/src/utils/glennOpening.ts), [`glennMinorEnemies.ts`](front/src/utils/glennMinorEnemies.ts).
+[^9]: Crom Bas: [`cromEncounter.ts`](front/src/utils/cromEncounter.ts), [`mechanicGroups.ts`](front/src/utils/mechanicGroups.ts).
+[^10]: Run association: [`dungeonRunFolders.ts`](front/src/utils/dungeonRunFolders.ts), [`instanceMinorGrouping.ts`](front/src/utils/instanceMinorGrouping.ts), [`targetGrouping.ts`](front/src/utils/targetGrouping.ts).
+[^11]: Alby Shineseeker: [`albyShineseeker.ts`](front/src/utils/albyShineseeker.ts).
+[^12]: Build automation: [`.github/workflows/build-validation.yml`](.github/workflows/build-validation.yml), [`scripts/check-node-security.cjs`](scripts/check-node-security.cjs).
+[^13]: Personal Best history controls: [`SettingsView.vue`](front/src/components/SettingsView.vue), [`store.ts`](front/src/store.ts), [`httpHandlerSession.go`](cmd/dilmeterapi/httpHandlerSession.go).
+[^14]: Pre-combat buffer and configuration: [`eventPublisher.go`](cmd/dilmeterapi/eventPublisher.go), [`api_setup.go`](cmd/dilmeterapi/api_setup.go), [`SettingsView.vue`](front/src/components/SettingsView.vue).
+[^15]: Pet and puppet attribution: [`aggregator.go`](cmd/dilmeterapi/aggregator.go), [`aggregator_test.go`](cmd/dilmeterapi/aggregator_test.go).
+[^16]: Enemy attack separation: [`DamageScatterChart.vue`](front/src/components/DamageScatterChart.vue), [`enemyScatter.ts`](front/src/utils/enemyScatter.ts), [`companionExport.ts`](front/src/utils/companionExport.ts).
+
+[^17]: Rabbie Phantasm run grouping: [`phantasmEncounter.ts`](front/src/utils/phantasmEncounter.ts), [`targetGrouping.ts`](front/src/utils/targetGrouping.ts), [`DamageMeterView.vue`](front/src/components/DamageMeterView.vue).
+
+[^18]: Fahmes Ruin stage and level reconstruction: [`fahmesRuin.ts`](front/src/utils/fahmesRuin.ts), [`targetGrouping.ts`](front/src/utils/targetGrouping.ts), [`DamageMeterView.vue`](front/src/components/DamageMeterView.vue).
+
+[^19]: Conservative Abyss and Gate 4 grouping: [`targetGrouping.ts`](front/src/utils/targetGrouping.ts), [`DamageMeterView.vue`](front/src/components/DamageMeterView.vue), [`reportEncounters.ts`](front/src/utils/reportEncounters.ts), [`highTierMinorGrouping.ts`](front/src/utils/highTierMinorGrouping.ts), and bundled [`races.json`](cmd/dilmeterapi/static_data/races.json).
+[^20]: Encounter Arcana resolution: [`arcanaEncounter.ts`](front/src/utils/arcanaEncounter.ts), [`applyDamageBySkill.vue`](front/src/components/applyDamageBySkill.vue), [`DamageGraph.vue`](front/src/components/DamageGraph.vue), [`portableReport.ts`](front/src/utils/portableReport.ts), [`companionExport.ts`](front/src/utils/companionExport.ts), and [`talents.json`](cmd/dilmeterapi/static_data/talents.json).
+[^21]: Frontend build configuration: [`front/package.json`](front/package.json), [`front/src/apicall.ts`](front/src/apicall.ts), [`front/src/App.vue`](front/src/App.vue), [`build.bat`](build.bat), and [`build.sh`](build.sh).
+
+[^22]: Npcap capture-mode preference: [`cmd/dilmeterapi/main.go`](cmd/dilmeterapi/main.go), [`cmd/dilmeterapi/api_setup.go`](cmd/dilmeterapi/api_setup.go), [`cmd/dilmeterapi/capture_promiscuous_test.go`](cmd/dilmeterapi/capture_promiscuous_test.go), and [`packet/gamePacketReader.go`](packet/gamePacketReader.go).

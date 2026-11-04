@@ -14,7 +14,7 @@ if not exist "front\package.json" (
 echo [1/5] Installing frontend dependencies...
 pushd front
 if errorlevel 1 goto :fail
-call npm install
+call npm install --no-fund
 if errorlevel 1 (
   popd
   echo ERROR: Frontend dependency installation failed.

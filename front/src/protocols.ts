@@ -51,6 +51,34 @@ export interface DamageBreakdown {
   conditions?: { [id: number]: ConditionStats };
 }
 
+// Observed 0x6988 uses, distinct from damage-hit groups in `skillUses`.
+export interface SkillActivation {
+  atMs: number; // Absolute Unix milliseconds
+  skillId: number;
+  targetId?: string;
+}
+
+// Packet-level damage hits used by the portable Skill Use Timeline.
+export interface PreciseDamageEvent {
+  atMs: number;
+  skillId: number;
+  targetId: string;
+  damage: number;
+  critical?: boolean;
+  delayed?: boolean;
+}
+
+export interface SkillObservation {
+  atMs: number;
+  opcode: number;
+  skillId?: number;
+  subtype?: number;
+  actionType?: number;
+  actorVerified?: boolean;
+  fields?: string[];
+  fieldTypes?: number[];
+}
+
 export interface PlayerStats {
   id: string;
   name: string;
@@ -67,7 +95,11 @@ export interface PlayerStats {
   healingByTarget: { [targetID: string]: DamageBreakdown};
   damageByTarget: { [targetId: string]: DamageBreakdown };
   skillUses?: any[];
+  skillActivations?: SkillActivation[];
+  skillObservations?: SkillObservation[];
+  damageEvents?: PreciseDamageEvent[];
   deaths?: number[];
+  revives?: number[];
 }
 
 // --- START: NEW INTERFACES FOR DAMAGE TAKEN ---

@@ -4,9 +4,11 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"runtime"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Marcentus/Midir/packet"
@@ -49,9 +51,12 @@ type eventPublisher struct {
 	damageLogMu sync.Mutex
 
 	// HP tracking and spam prevention
-	hpLogStates         map[uint64]*entityHPLogState
-	lastCombatAt        map[uint64]time.Time
-	lastHealingCasterID uint64
+	hpLogStates            map[uint64]*entityHPLogState
+	lastCombatAt           map[uint64]time.Time
+	lastHealingCasterID    uint64
+	preCombatBufferSeconds atomic.Int32
+	preCombatUses          []*eventSkillUse
+	preCombatMu            sync.Mutex
 
 	// Condition tracking to prevent redundant log spam
 	activeConditions map[uint64]map[uint32]string
@@ -108,7 +113,8 @@ func newEventPublisher(ctx context.Context, packetCh <-chan *packet.GamePacket, 
 		playerUpdateBatch: make([]*PlayerInfo, 0),
 		logCh:             make(chan iEvent, 1000), // Buffered channel for events
 
-		hpLogStates:      make(map[uint64]*entityHPLogState),
+		hpLogStates: make(map[uint64]*entityHPLogState),
+
 		lastCombatAt:     make(map[uint64]time.Time),
 		activeConditions: make(map[uint64]map[uint32]string),
 
@@ -116,6 +122,9 @@ func newEventPublisher(ctx context.Context, packetCh <-chan *packet.GamePacket, 
 		flushCh:         make(chan string, 1000),
 	}
 
+	if cfg := loadConfig(); cfg != nil {
+		v.preCombatBufferSeconds.Store(int32(cfg.PreCombatBufferSeconds))
+	}
 	v.aggregator.SetLive(isLive)
 
 	go v.loop()
@@ -126,6 +135,9 @@ func newEventPublisher(ctx context.Context, packetCh <-chan *packet.GamePacket, 
 
 func (t *eventPublisher) ClearCache() {
 	t.aggregator.Clear()
+	t.preCombatMu.Lock()
+	t.preCombatUses = nil
+	t.preCombatMu.Unlock()
 	t.Lock()
 	t.lastHealingCasterID = 0
 	t.Unlock()
@@ -470,6 +482,7 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 						At:      p.At.Unix(),
 						Id:      strconv.FormatUint(attackerId, 10),
 					},
+					AtMs:       p.At.UnixMilli(),
 					TargetId:   strconv.FormatUint(sub.EntityId, 10),
 					SkillId:    attackSkillId, // Use the correct, captured skill ID here
 					Damage:     sub.Hit.Damage,
@@ -506,7 +519,7 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 				if t.lastHealingCasterID != 0 && heal.Amount > 0 {
 					e := &eventDamage{
 						eventBase: eventBase{EventId: eventIdDamage, At: p.At.Unix(), Id: strconv.FormatUint(t.lastHealingCasterID, 10)},
-						TargetId:  strconv.FormatUint(heal.EntityID, 10), SkillId: 0, Damage: -float32(heal.Amount), ManaDamage: 0,
+						TargetId:  strconv.FormatUint(heal.EntityID, 10), AtMs: p.At.UnixMilli(), SkillId: 0, Damage: -float32(heal.Amount), ManaDamage: 0,
 					}
 					events = append(events, e)
 				}
@@ -540,6 +553,7 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 				At:      p.At.Unix(),
 				Id:      strconv.FormatUint(attackerId, 10),
 			},
+			AtMs:       p.At.UnixMilli(),
 			TargetId:   strconv.FormatUint(targetId, 10),
 			SkillId:    skillId,
 			Damage:     damage,
@@ -575,6 +589,7 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 				At:      p.At.Unix(),
 				Id:      strconv.FormatUint(attackerId, 10),
 			},
+			AtMs:       p.At.UnixMilli(),
 			TargetId:   strconv.FormatUint(targetId, 10),
 			SkillId:    skillId,
 			Damage:     damage,
@@ -747,6 +762,19 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		if targetID != 0 {
 			t.lastCombatAt[targetID] = p.At
 		}
+		// Record ONLY observed uses, and only from verified player entities.
+		// Skill Start still supports combat timing but does not generate events.
+		// The final CombatRecordingActive gate below avoids town/idle capture.
+		if p.Op == opcodeSkillUse && t.aggregator.IsPlayerSafe(p.Id) {
+			use := &eventSkillUse{
+				eventBase: eventBase{EventId: eventIdSkillUse, At: p.At.Unix(), Id: strconv.FormatUint(p.Id, 10)},
+				AtMs:      p.At.UnixMilli(), SkillId: p.Msg[0].Data().(uint16),
+			}
+			if targetID != 0 {
+				use.TargetId = strconv.FormatUint(targetID, 10)
+			}
+			events = append(events, use)
+		}
 
 	case opcodePublicStatUpdate:
 		var statPack *packet.PublicStatUpdatePacket
@@ -845,14 +873,115 @@ func (t *eventPublisher) logPacketAsEvent(p *packet.GamePacket) {
 		logger.Printf("Packet parsing error for logging (Op: 0x%X): %v", p.Op, err)
 	}
 
+	// A few structural fields are captured in combat only. No skill matching,
+	// temporal grouping, name lookup, or per-skill inference happens live.
+	if (p.Op == opcodeCombatAction || p.Op == opcodeEffect || p.Op == opcodeEffectDelayed) && t.aggregator.CombatRecordingActive() {
+		if p.Op == opcodeCombatAction {
+			if pack, parseErr := packet.ParseCombatActionPackPacket(p); parseErr == nil {
+				for _, sub := range pack.SubPackets {
+					if sub.SkillId == 0 || sub.Type&packet.CombatActionTypeAttacker == 0 || !t.aggregator.IsPlayerSafe(sub.EntityId) {
+						continue
+					}
+					events = append(events, &eventSkillObservation{
+						eventBase: eventBase{EventId: eventIdSkillObservation, At: p.At.Unix(), Id: strconv.FormatUint(sub.EntityId, 10)},
+						AtMs:      p.At.UnixMilli(), Opcode: p.Op, SkillId: sub.SkillId, ActionType: uint8(sub.Type), ActorVerified: true,
+					})
+				}
+			}
+		} else if p.Op == opcodeEffect || p.Op == opcodeEffectDelayed {
+			// Use only player-attributed messages; other sources/targets are not guessed.
+			// Every field is bounded, with binary payloads deliberately excluded.
+			if t.aggregator.IsPlayerSafe(p.Id) && len(p.Msg) > 0 {
+				fields := make([]string, 0, 12)
+				fieldTypes := make([]uint8, 0, 12)
+				for _, element := range p.Msg {
+					if len(fields) >= 12 {
+						break
+					}
+					fieldTypes = append(fieldTypes, uint8(element.Type()))
+					switch element.Type() {
+					case packet.MessageElemTypeByte, packet.MessageElemTypeShort, packet.MessageElemTypeInt, packet.MessageElemTypeLong, packet.MessageElemTypeFloat:
+						fields = append(fields, fmt.Sprint(element.Data()))
+					case packet.MessageElemTypeString:
+						v := fmt.Sprint(element.Data())
+						if len(v) > 160 {
+							v = v[:160]
+						}
+						fields = append(fields, v)
+					default:
+						fields = append(fields, "")
+					}
+				}
+				if len(fields) > 0 {
+					var subtype uint32
+					if p.Msg[0].Type() == packet.MessageElemTypeInt {
+						subtype = p.Msg[0].Data().(uint32)
+					}
+					events = append(events, &eventSkillObservation{
+						eventBase: eventBase{EventId: eventIdSkillObservation, At: p.At.Unix(), Id: strconv.FormatUint(p.Id, 10)},
+						AtMs:      p.At.UnixMilli(), Opcode: p.Op, Subtype: subtype, Fields: fields, FieldTypes: fieldTypes,
+					})
+				}
+			}
+		}
+	}
+
 	// Bound the saved event log to active combat targets. Decide at packet time,
 	// not when the asynchronous logger drains its queue after the boss dies.
 	if !t.aggregator.CombatRecordingActive() {
+		// Keep only a small, bounded cache of observed player uses. The
+		// regular logger, encounter gate and encounter shutdown are unchanged.
+		if t.preCombatBufferSeconds.Load() > 0 && p.Op == opcodeSkillUse {
+			t.preCombatMu.Lock()
+			cutoff := p.At.Add(-time.Duration(t.preCombatBufferSeconds.Load()) * time.Second).UnixMilli()
+			kept := t.preCombatUses[:0]
+			for _, use := range t.preCombatUses {
+				if use.AtMs >= cutoff {
+					kept = append(kept, use)
+				}
+			}
+			t.preCombatUses = kept
+			for _, e := range events {
+				if use, ok := e.(*eventSkillUse); ok {
+					t.preCombatUses = append(t.preCombatUses, use)
+				}
+			}
+			if len(t.preCombatUses) > 512 {
+				t.preCombatUses = t.preCombatUses[len(t.preCombatUses)-512:]
+			}
+			t.preCombatMu.Unlock()
+		}
 		return
 	}
+	// Flush buffered actions only after the original combat gate opens.
+	// A buffered event is persisted at most once; never record town activity.
+	t.preCombatMu.Lock()
+	if len(t.preCombatUses) > 0 {
+		cutoff := p.At.Add(-time.Duration(t.preCombatBufferSeconds.Load()) * time.Second).UnixMilli()
+		for _, use := range t.preCombatUses {
+			if use.AtMs < cutoff {
+				continue
+			}
+			select {
+			case t.logCh <- use:
+				t.aggregator.RecordSkillActivation(parseUint64(use.Id), SkillActivation{AtMs: use.AtMs, SkillID: use.SkillId, TargetID: use.TargetId})
+			default:
+				logger.Println("Log channel full, dropping buffered skill use!")
+			}
+		}
+		t.preCombatUses = nil
+	}
+	t.preCombatMu.Unlock()
 	for _, e := range events {
 		select {
 		case t.logCh <- e:
+			// Match the durable combat-recording gate. A town/idle packet
+			// must not leak into the live report if it was not saved.
+			if use, ok := e.(*eventSkillUse); ok && t.aggregator != nil {
+				t.aggregator.RecordSkillActivation(p.Id, SkillActivation{
+					AtMs: use.AtMs, SkillID: use.SkillId, TargetID: use.TargetId,
+				})
+			}
 		default:
 			logger.Println("Log channel full, dropping event!")
 		}
@@ -966,6 +1095,10 @@ func getEventName(id eventId) string {
 		return "Entity Disappear"
 	case eventIdDamage:
 		return "Damage"
+	case eventIdSkillObservation:
+		return "Skill Observation"
+	case eventIdSkillUse:
+		return "Skill Use"
 	case eventIdCharacterConditionEnable:
 		return "Condition Enable"
 	case eventIdCharacterConditionDisable:

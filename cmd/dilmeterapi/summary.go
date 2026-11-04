@@ -89,11 +89,56 @@ type SkillUseEvent struct {
 	Timestamp int64
 }
 
+// SkillActivation is one observed 0x6988 Skill Use packet. It is NOT a damage
+// group or proof of a unique completed cast. Absolute timestamps allow future
+// reporting across encounters without losing pre/post-damage use packets.
+type SkillActivation struct {
+	AtMs     int64  `json:"atMs"`
+	SkillID  uint16 `json:"skillId"`
+	TargetID string `json:"targetId,omitempty"`
+}
+
+// PreciseDamageEvent is one observed positive damage hit (not a per-second bucket).
+// Its timestamp uses the same Unix-millisecond clock as SkillActivation.
+// Historic logs without AtMs fall back to whole-second precision.
+type SkillObservation struct {
+	AtMs          int64    `json:"atMs"`
+	Opcode        uint32   `json:"opcode"`
+	SkillID       uint16   `json:"skillId,omitempty"`
+	Subtype       uint32   `json:"subtype,omitempty"`
+	ActionType    uint8    `json:"actionType,omitempty"`
+	ActorVerified bool     `json:"actorVerified,omitempty"`
+	Fields        []string `json:"fields,omitempty"`
+	FieldTypes    []uint8  `json:"fieldTypes,omitempty"`
+}
+
+type PreciseDamageEvent struct {
+	AtMs     int64   `json:"atMs"`
+	SkillID  uint16  `json:"skillId"`
+	TargetID string  `json:"targetId"`
+	Damage   float32 `json:"damage"`
+	Critical bool    `json:"critical,omitempty"`
+	Delayed  bool    `json:"delayed,omitempty"`
+}
+
 // Replace your singular event struct with a secondary grouped layout
 type SkillGroupEvent struct {
 	Timestamp int64          `json:"timestamp"` // Relative fight second (e.g., 14)
 	TotalDmg  uint64         `json:"totalDmg"`  // Summed damage during this second
 	Skills    []SkillHitMeta `json:"skills"`    // List of all unique skills inside this second
+	// Targets retains verified recipient identity; nil on legacy summaries.
+	Targets []TargetHitMeta `json:"targets,omitempty"`
+}
+
+// TargetHitMeta aggregates a single player/second/skill/recipient combination.
+// It does not claim that multiple hits mean a single skill activation.
+type TargetHitMeta struct {
+	TargetID  string `json:"targetId"`
+	SkillID   uint16 `json:"skillId"`
+	HitCount  uint32 `json:"hitCount"`
+	Damage    uint64 `json:"damage"`
+	MaxDamage uint64 `json:"maxDamage"`
+	CritCount uint32 `json:"critCount"`
 }
 
 type SkillHitMeta struct {
@@ -123,7 +168,11 @@ type PlayerStats struct {
 	HealingSkills       map[uint16]SkillStats      `json:"healingSkills"`
 	DamageByTarget      map[string]DamageBreakdown `json:"damageByTarget"` // Key is Target ID
 	SkillUses           []SkillGroupEvent          `json:"skillUses"`
+	SkillActivations    []SkillActivation          `json:"skillActivations,omitempty"`
+	SkillObservations   []SkillObservation         `json:"skillObservations,omitempty"`
+	DamageEvents        []PreciseDamageEvent       `json:"damageEvents,omitempty"`
 	Deaths              []int64                    `json:"deaths,omitempty"`
+	Revives             []int64                    `json:"revives,omitempty"`
 }
 
 // --- (Structs for Damage Taken remain the same) ---

@@ -42,13 +42,9 @@
       title="Double-click to isolate this player & open scatter plot"
       style="min-height: 28px;"
     >
-      <img
-        v-if="item.talentIcon"
-        :src="item.talentIcon"
-        width="28"
-        height="28"
-        class="mr-2"
-      />
+      <span v-if="item.talentIdentities?.length" class="d-inline-flex align-center mr-2 ga-1" :title="item.talentIdentities.map((a: any) => a.name).join(' / ')">
+        <img v-for="arcana in item.talentIdentities" :key="arcana.name" :src="arcana.icon" :alt="arcana.name" width="28" height="28" />
+      </span>
       <span class="text-h6" style="color: white">
         {{ (globalHideMode || hiddenPlayers.has(item.id)) ? (item.talentName || 'Hidden') : item.name }}
       </span>
@@ -86,12 +82,12 @@
             <template #activator="{ props: ghostProps }">
               <div v-bind="ghostProps" class="ghost-column-zone">
                 <div class="ghost-column-fill" :style="{width: playerGhostWidth(item.id) + '%',zIndex: ghostDps(item.id) <= item.dps ? 2 : 0}"></div>
-                <div class="damage-bar-fill ghost-current-fill" :style="{width: playerAverageWidth(item) + '%',backgroundColor:getPlayerColor(item)}"></div>
+                <div class="damage-bar-fill ghost-current-fill" :style="{width: playerAverageWidth(item) + '%',background:getPlayerBarBackground(item, 100)}"></div>
               </div>
             </template>
             <span><v-icon size="x-small">mdi-ghost</v-icon> {{ formatNumber(ghostDps(item.id)) }} productive DPS · {{ formatNumber(item.dps) }} average DPS</span>
           </v-tooltip>
-          <div v-else class="damage-bar-fill" :style="{width:(playerDisplayData[0]?.totalDamage ? (item.totalDamage / playerDisplayData[0].totalDamage) * 100 : 0) + '%',backgroundColor:getPlayerColor(item)}"></div>
+          <div v-else class="damage-bar-fill" :style="{width:(playerDisplayData[0]?.totalDamage ? (item.totalDamage / playerDisplayData[0].totalDamage) * 100 : 0) + '%',background:getPlayerBarBackground(item, 100)}"></div>
         </div>
         <span class="damage-bar-pct">
           {{ totalDamageForView > 0 ? ((item.totalDamage / totalDamageForView) * 100).toFixed(1) : '0.0' }}%
@@ -212,12 +208,12 @@
                     <template #activator="{ props: ghostProps }">
                       <div v-bind="ghostProps" class="ghost-column-zone">
                         <div class="ghost-column-fill" :style="{width: ghostBarWidth(item.id, skillItem.id, item) + '%',zIndex: ghostDps(item.id, skillItem.id) <= skillItem.totalDamage / Math.max(currentEncounterDuration, 0.001) ? 2 : 0}"></div>
-                        <div class="damage-bar-fill ghost-current-fill" :style="{width: averageBarWidth(skillItem, item) + '%',backgroundColor:getPlayerColor(item)}"></div>
+                        <div class="damage-bar-fill ghost-current-fill" :style="{width: averageBarWidth(skillItem, item) + '%',background:getSkillBarPaint(skillItem.id, item)}"></div>
                       </div>
                     </template>
                     <span><v-icon size="x-small">mdi-ghost</v-icon> {{ formatNumber(ghostDps(item.id,skillItem.id)) }} productive DPS · {{ formatNumber(skillItem.totalDamage / Math.max(currentEncounterDuration,0.001)) }} average DPS</span>
                   </v-tooltip>
-                  <div v-else class="damage-bar-fill" :style="{width:(getSkillBreakdown(item)[0]?.totalDamage ? (skillItem.totalDamage / getSkillBreakdown(item)[0].totalDamage) * 100 : 0)+'%',backgroundColor:getPlayerColor(item)}"></div>
+                  <div v-else class="damage-bar-fill" :style="{width:(getSkillBreakdown(item)[0]?.totalDamage ? (skillItem.totalDamage / getSkillBreakdown(item)[0].totalDamage) * 100 : 0)+'%',background:getSkillBarPaint(skillItem.id, item)}"></div>
                 </div>
                 <span class="damage-bar-pct">
                   {{ item.totalDamage > 0 ? ((skillItem.totalDamage / item.totalDamage) * 100).toFixed(1) : '0.0' }}%
@@ -310,13 +306,9 @@
                         size="small"></v-icon>
             </v-btn>
             
-            <img
-              v-if="item.talentIcon"
-              :src="item.talentIcon"
-              width="32"
-              height="32"
-              class="mr-2"
-            />
+            <span v-if="item.talentIdentities?.length" class="d-inline-flex align-center mr-2 ga-1" :title="item.talentIdentities.map((a: any) => a.name).join(' / ')">
+              <img v-for="arcana in item.talentIdentities" :key="arcana.name" :src="arcana.icon" :alt="arcana.name" width="32" height="32" />
+            </span>
             <span class="text-subtitle-1 font-weight-bold text-truncate" style="color: white">
               {{ (globalHideMode || hiddenPlayers.has(item.id)) ? (item.talentName || 'Hidden') : item.name }}
             </span>
@@ -792,7 +784,8 @@ import {
   activeSessionId,
   selectedTargetId,
 } from "@/store";
-import { SkillStats, DamageBreakdown } from "@/protocols";
+import { SkillStats, DamageBreakdown, type PlayerStats } from "@/protocols";
+import { resolvePlayerArcana, arcanaBarBackground, getSkillArcana } from "@/utils/arcanaEncounter";
 import {
   isGroupTargetId,
   getGroupMemberTargetIds,
@@ -805,6 +798,26 @@ import { hiddenPlayers, toggleHiddenPlayer, setAllHiddenPlayers, globalHideMode,
 const props = defineProps<{
   attackerNameMap?: { [id: string]: string };
 }>();
+
+// A mixed bar is used only when class colors are enabled; otherwise preserve
+// the user's selected character-name coloring mode.
+const getPlayerBarBackground = (item: any, percentage: number) => {
+  const isHidden = globalHideMode.value || hiddenPlayers.has(item.id);
+  if ((isHidden || showClassColorsForVisiblePlayers.value) && item.talentIdentities?.length > 1)
+    return arcanaBarBackground(item.talentIdentities, percentage);
+  return arcanaBarBackground([], percentage, getPlayerColor(item));
+};
+
+// A mapped Arcana skill always gets its own customized Arcana color.
+// Shared skills follow the current player's resolved Arcana or mixed gradient.
+const getSkillBarPaint = (skillId: number, playerItem: any): string => {
+  const arcana = getSkillArcana(skillId);
+  if (arcana) return arcana.color;
+  const identities = playerItem?.talentIdentities || [];
+  if (identities.length > 1) return arcanaBarBackground(identities);
+  if (identities.length === 1) return identities[0].color;
+  return playerItem ? getPlayerColor(playerItem) : '#808080';
+};
 
 const getPlayerColor = (item: any) => {
   const isHidden = globalHideMode.value || hiddenPlayers.has(item.id);
@@ -1042,6 +1055,8 @@ const getConditionIcon = (id: number): string => {
 // --- COMPUTED PROPERTIES ---
 
 const playerDisplayData = computed(() => {
+  // Arcana follows the selected encounter, not the first skill of the session.
+  const arcanaFor = (p: PlayerStats) => resolvePlayerArcana(p, fightSummary, selectedTargetId.value);
   const players = Object.values(fightSummary.players);
   if (!selectedTargetId.value) {
     // Overall view
@@ -1050,9 +1065,10 @@ const playerDisplayData = computed(() => {
         ...p.overallStats,
         id: p.id,
         name: p.name,
-        talentIcon: p.talentIcon,
-        talentName: p.talentName,
-        talentColor: p.talentColor,
+        talentIcon: arcanaFor(p).icon,
+        talentIdentities: arcanaFor(p).identities,
+        talentName: arcanaFor(p).name,
+        talentColor: arcanaFor(p).color,
         missingAppearPacket: p.missingAppearPacket,
       }))
       .filter((p) => p.totalDamage > 0)
@@ -1073,9 +1089,10 @@ const playerDisplayData = computed(() => {
           ...breakdown,
           id: p.id,
           name: p.name,
-          talentIcon: p.talentIcon,
-          talentName: p.talentName,
-          talentColor: p.talentColor,
+          talentIcon: arcanaFor(p).icon,
+          talentIdentities: arcanaFor(p).identities,
+          talentName: arcanaFor(p).name,
+          talentColor: arcanaFor(p).color,
           missingAppearPacket: p.missingAppearPacket,
         };
       })
@@ -1302,7 +1319,7 @@ const getSkillBreakdown = (playerData: DamageBreakdown): SkillStats[] => {
     return {
       class: "character-row",
       style: {
-        background: `linear-gradient(to right, ${bgColor} ${percentage}%, transparent ${percentage}%)`,
+        background: getPlayerBarBackground(item, percentage),
         backgroundClip: 'padding-box',
       },
     };
@@ -1320,44 +1337,36 @@ const getSkillRowProps = (
   playerItem?: any,
   index?: number
 ) => {
-  if (dpsMeterFillMode.value === "full") {
-    if (!topSkillDamage || !skillItem.totalDamage) return { style: {} };
-    const percentage = (skillItem.totalDamage / topSkillDamage) * 100;
-    
-    let color = getMabiNameColor(playerName);
-    if (playerItem) {
-      color = getPlayerColor(playerItem);
-    }
-
-    let bgColor = color;
-    if (index !== undefined && index % 2 !== 0) {
-      bgColor = `color-mix(in srgb, ${color}, black 10%)`;
-    }
-
-    if (savedAnalysis.value && showGhostRunner.value && playerItem) {
-      const ghostPercent = ghostBarWidth(playerItem.id, skillItem.id, playerItem);
-      const avgPercent = averageBarWidth(skillItem, playerItem);
-      // Both values use one shared scale so the dark ghost can extend beyond
-      // the current bar without changing the measured session average.
-      return {
-        style: {
-          background: ghostPercent <= avgPercent
-            ? `linear-gradient(to right, color-mix(in srgb, ${bgColor}, black 55%) ${ghostPercent}%, transparent ${ghostPercent}%), linear-gradient(to right, ${bgColor} ${avgPercent}%, transparent ${avgPercent}%)`
-            : `linear-gradient(to right, ${bgColor} ${avgPercent}%, transparent ${avgPercent}%), linear-gradient(to right, color-mix(in srgb, ${bgColor}, black 55%) ${ghostPercent}%, transparent ${ghostPercent}%)`,
-          backgroundClip: 'padding-box',
-        },
-        title: `Ghost: ${formatNumber(ghostDps(playerItem.id, skillItem.id))} productive DPS | Average: ${formatNumber(Number(skillItem.totalDamage || 0) / Math.max(currentEncounterDuration.value, 0.001))} DPS`,
-      };
-    }
+  if (dpsMeterFillMode.value !== "full") return {};
+  if (!topSkillDamage || !skillItem.totalDamage) return { style: {} };
+  const percentage = (skillItem.totalDamage / topSkillDamage) * 100;
+  // Compute the fill inside the painted region: gradients always cover the
+  // complete damage bar, never continue into the empty percentage.
+  const paint = playerItem ? getSkillBarPaint(skillItem.id, playerItem) : getMabiNameColor(playerName);
+  // CSS background-size confines a continuous multi-Arcana gradient to the
+  // measured part of the row, keeping the existing length convention.
+  const paintImage = paint.startsWith('linear-gradient(') ? paint : `linear-gradient(to right, ${paint}, ${paint})`;
+  if (savedAnalysis.value && showGhostRunner.value && playerItem) {
+    const ghostPercent = ghostBarWidth(playerItem.id, skillItem.id, playerItem);
+    const avgPercent = averageBarWidth(skillItem, playerItem);
     return {
       style: {
-        background: `linear-gradient(to right, ${bgColor} ${percentage}%, transparent ${percentage}%)`,
+        backgroundImage: `${paintImage}, linear-gradient(to right, rgba(0,0,0,.36) 0% ${ghostPercent}%, transparent ${ghostPercent}%)`,
+        backgroundSize: `${Math.max(0, Math.min(100, avgPercent))}% 100%, 100% 100%`,
+        backgroundRepeat: 'no-repeat',
         backgroundClip: 'padding-box',
       },
+      title: `Ghost: ${formatNumber(ghostDps(playerItem.id, skillItem.id))} productive DPS | Average: ${formatNumber(Number(skillItem.totalDamage || 0) / Math.max(currentEncounterDuration.value, 0.001))} DPS`,
     };
   }
-  
-  return {};
+  return {
+    style: {
+      backgroundImage: paintImage,
+      backgroundSize: `${Math.max(0, Math.min(100, percentage))}% 100%`,
+      backgroundRepeat: 'no-repeat',
+      backgroundClip: 'padding-box',
+    },
+  };
 };
 
 // Helper for Hex -> RGBA

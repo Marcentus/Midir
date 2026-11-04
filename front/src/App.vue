@@ -180,6 +180,7 @@
 import { defineComponent, onMounted, onUnmounted, inject, ref, watch, computed, provide, reactive, nextTick } from "vue";
 import { socket } from "@/store"; // Static import
 import { FightSummary } from "./protocols";
+import { CONDITION_COMBINATIONS } from "@/conditionCombinations";
 import { initPlayerCache } from "@/playerCache";
 import DamageMeterView from "@/components/DamageMeterView.vue";
 import SettingsView from "@/components/SettingsView.vue";
@@ -428,7 +429,6 @@ export default defineComponent({
         }
 
         // Register virtual combined conditions
-        const { CONDITION_COMBINATIONS } = await import("@/conditionCombinations");
         for (const combo of CONDITION_COMBINATIONS) {
           const baseCond = condNameMap.value[combo.iconId];
           condNameMap.value[combo.id] = {

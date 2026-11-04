@@ -1,5 +1,5 @@
 <template>
-  <div v-if="chartData.labels.length > 0 || scatterPlayers.length > 0" class="graph-container">
+  <div v-if="chartData.labels.length > 0 || scatterPlayers.length > 0 || scatterEnemies.length > 0" class="graph-container">
     <div class="pa-4">
       <div class="d-flex ga-4 align-center mb-4 flex-wrap">
         <div v-if="conditionItems.length > 0" style="max-width: 320px; flex-grow: 1;">
@@ -63,7 +63,7 @@
             class="pa-4 border-card elevation-4"
             style="background: #1e293b; border: 1px solid rgba(255,255,255,0.08); width: 100%; min-height: 380px;"
           >
-            <DamageScatterChart :players="scatterPlayers" />
+            <DamageScatterChart :players="scatterPlayers" :enemies="scatterEnemies" :target-ids="scatterTargetIds" />
           </v-card>
         </v-col>
       </v-row>
@@ -89,6 +89,8 @@
 <script lang="ts">
 import { defineComponent, computed, inject, ref, watch } from "vue";
 import DamageScatterChart from "./DamageScatterChart.vue";
+import { identifyBossScatterSources } from "@/utils/enemyScatter";
+import { resolvePlayerArcana } from "@/utils/arcanaEncounter";
 import { Line as LineChart } from "vue-chartjs";
 import ConditionTimeline from "./ConditionTimeline.vue";
 import {
@@ -628,16 +630,17 @@ export default defineComponent({
         const playerData = graphDataForView[playerId];
         const isHidden = globalHideMode.value;
         const player = fightSummary.players[playerId];
+        const arcana = player ? resolvePlayerArcana(player, fightSummary, selectedTargetId.value) : null;
 
         let displayLabel = player?.name ?? "Unknown";
         let displayColor = getMabiNameColor(displayLabel);
 
         if (isHidden) {
-          displayLabel = player?.talentName || "Hidden";
-          displayColor = getClassColor(player?.talentName, player?.talentColor || "#808080");
+          displayLabel = arcana?.name || "Hidden";
+          displayColor = getClassColor(arcana?.name, arcana?.color || "#808080");
         } else {
           if (showClassColorsForVisiblePlayers.value) {
-            displayColor = getClassColor(player?.talentName, player?.talentColor);
+            displayColor = getClassColor(arcana?.name, arcana?.color);
           }
         }
 
@@ -689,16 +692,32 @@ export default defineComponent({
     // visibility toggles are independent from the main Damage Graph's filters.
     // Scatter plot: receives skill hits for multiple players; shared hide state
     // also filters their rolling DPS, Ghost Runner, and Death Flags above.
+    const enemyActorInfo = computed(() => identifyBossScatterSources(fightSummary));
     const scatterPlayers = computed(() => {
       return Object.values(fightSummary.players)
-        .filter((player: any) => Array.isArray(player.skillUses) && player.skillUses.length > 0)
+        .filter((player: any) => !enemyActorInfo.value.has(player.id) && Array.isArray(player.skillUses) && player.skillUses.length > 0)
         .map((player: any) => ({
           stats: player,
-          color: getClassColor(player.talentName, player.talentColor) || getMabiNameColor(player.name),
+          color: (() => { const arcana = resolvePlayerArcana(player, fightSummary, selectedTargetId.value);
+            return getClassColor(arcana.name, arcana.color) || getMabiNameColor(player.name); })(),
         }));
     });
+    const scatterEnemies = computed(() => {
+      return Object.values(fightSummary.players)
+        .filter((player: any) => enemyActorInfo.value.has(player.id) && Array.isArray(player.skillUses) && player.skillUses.length > 0)
+        .map((player: any) => {
+          const enemy = enemyActorInfo.value.get(player.id)!;
+          return {stats: {...player, name: enemy.name}, color: enemy.color, kind: 'enemy'};
+        });
+    });
+    const scatterTargetIds = computed(() => {
+      const id = selectedTargetId.value;
+      return id ? getGroupMemberTargetIds(id, fightSummary) : [];
+    });
     return {
+      scatterTargetIds,
       scatterPlayers,
+      scatterEnemies,
       chartData,
       chartOptions,
       selectedTargetConditions,

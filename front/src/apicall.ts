@@ -1,5 +1,6 @@
 import { FightSummary } from "./protocols";
 import { Session } from "./types";
+import { loadingCount } from "@/store";
 
 // A simple interface to describe the shape of our embedded JSON data.
 interface DataItem {
@@ -7,7 +8,6 @@ interface DataItem {
   iconUrl?: string;
 }
 
-let loadingCount: any;
 
 // --- SESSION API FUNCTIONS ---
 
@@ -154,8 +154,6 @@ async function fetchWithOpts(
   url: string,
   opt?: HttpCallOpt
 ): Promise<Response> {
-  await setLoadingCount();
-
   try {
     if (!opt?.disableLoading) {
       loadingCount.value++;
@@ -182,11 +180,3 @@ async function fetchWithOpts(
   }
 }
 
-// Helper to avoid circular dependencies
-async function setLoadingCount() {
-  if (loadingCount) {
-    return;
-  }
-  const { loadingCount: _loadingCount } = await import("@/store");
-  loadingCount = _loadingCount;
-}

@@ -190,6 +190,12 @@ func main() {
 	}
 }
 
+// startupPromiscuousMode preserves the saved user choice for CLI NIC capture.
+// Missing settings and offline file playback always use non-promiscuous mode.
+func startupPromiscuousMode(nicName, fileName string, cfg *CaptureConfig) bool {
+	return nicName != "" && fileName == "" && cfg != nil && cfg.Promiscuous
+}
+
 func run(ctx context.Context, nicName string, fileName string, exitlagEnabled, mudfishEnabled bool, filter string, recordPcap bool) {
 	activePcapRecord = recordPcap
 
@@ -214,7 +220,11 @@ func run(ctx context.Context, nicName string, fileName string, exitlagEnabled, m
 	playerCache.OnPlayerUpdate = pub.QueuePlayerUpdate
 
 	if nicName != "" || fileName != "" {
-		err := startPacketCapture(nicName, fileName, exitlagEnabled, mudfishEnabled, filter, true, true)
+		// The UI has an explicit opt-in for promiscuous capture. CLI NIC capture
+		// must honor the same saved preference rather than silently enabling it.
+		// File playback does not open a live NIC and never needs promiscuous mode.
+		promiscuous := startupPromiscuousMode(nicName, fileName, loadConfig())
+		err := startPacketCapture(nicName, fileName, exitlagEnabled, mudfishEnabled, filter, promiscuous, true)
 		if err != nil {
 			logger.Println("Failed to start capture from CLI arguments:", err)
 		}

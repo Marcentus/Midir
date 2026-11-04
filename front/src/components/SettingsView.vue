@@ -95,6 +95,13 @@
                     </template>
                   </v-select>
 
+                  <v-slider
+                    v-model="captureConfig.preCombatBufferSeconds"
+                    :min="0" :max="30" :step="5" thumb-label
+                    label="Pre-combat Skill Use buffer (seconds)"
+                    color="primary" class="mt-4 mb-3" hide-details
+                  ></v-slider>
+                  <div class="text-caption text-medium-emphasis mb-3">0 disables buffering. Only observed player Skill Use events are held temporarily; normal encounter start/stop rules do not change. Apply capture settings to take effect.</div>
                   <v-switch
                     v-model="captureConfig.promiscuous"
                     label="Enable Npcap Promiscuous Mode"
@@ -606,7 +613,7 @@ export default defineComponent({
     };
     // --- CAPTURE SETTINGS ---
     const nics = ref<any[]>([]);
-    const captureStatus = ref({ is_running: false, nic: '', exitlag: false, mudfish: false, promiscuous: false });
+    const captureStatus = ref({ is_running: false, nic: '', exitlag: false, mudfish: false, promiscuous: false, preCombatBufferSeconds: 0 });
     const packetStatus = ref<{
       total: number;
       perSecond: number;
@@ -649,7 +656,8 @@ export default defineComponent({
       nicName: "",
       exitlag: false,
       mudfish: false,
-      promiscuous: false
+      promiscuous: false,
+      preCombatBufferSeconds: 0
     });
 
     const onExitLagToggle = (enabled: boolean | null) => {
@@ -686,6 +694,7 @@ export default defineComponent({
           captureConfig.value.exitlag = data.exitlag || false;
           captureConfig.value.mudfish = data.mudfish || false;
           captureConfig.value.promiscuous = data.promiscuous || false;
+          captureConfig.value.preCombatBufferSeconds = Number(data.preCombatBufferSeconds || 0);
         }
       } catch (err) {
         console.error("Failed to fetch capture status:", err);

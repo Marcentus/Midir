@@ -145,6 +145,22 @@ func NewAggregator() *Aggregator {
 	}
 }
 
+// RecordSkillActivation keeps observed use packets available to live HTML
+// exports as well as to the durable NDJSON log. It does not infer casts.
+func (a *Aggregator) RecordSkillActivation(actorID uint64, use SkillActivation) {
+	if use.AtMs <= 0 {
+		return
+	}
+	info, ok := playerCache.Get(actorID)
+	if !ok || info == nil {
+		return
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	stats := a.getOrCreatePlayerStats(info)
+	stats.SkillActivations = append(stats.SkillActivations, use)
+}
+
 func (a *Aggregator) SetLive(live bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -897,6 +913,12 @@ func (a *Aggregator) processCombatAction(p *packet.GamePacket) {
 			// Pull the player stats context into the scope of this subpacket capture loop
 			if playerInfo, isPlayer := playerCache.Get(attackerId); isPlayer {
 				pStats := a.getOrCreatePlayerStats(playerInfo)
+				pStats.DamageEvents = append(pStats.DamageEvents, PreciseDamageEvent{
+					AtMs: p.At.UnixMilli(), SkillID: attackSkillId,
+					TargetID: strconv.FormatUint(sub.EntityId, 10),
+					Damage:   sub.Hit.Damage,
+					Critical: (sub.Hit.Options & packet.CombatActionHitOptionsCritical) != 0,
+				})
 
 				// 1. Locate or append the bucket for the current flight second
 				var targetGroup *SkillGroupEvent
@@ -920,9 +942,38 @@ func (a *Aggregator) processCombatAction(p *packet.GamePacket) {
 				packetDmgVal := uint64(sub.Hit.Damage)
 				targetGroup.TotalDmg += packetDmgVal
 
+				// Preserve recipient identity before skill-level grouping loses it.
+				// A multi-target skill can have several TargetHitMeta entries.
+				packetIsCrit := (sub.Hit.Options & packet.CombatActionHitOptionsCritical) != 0
+				targetID := strconv.FormatUint(sub.EntityId, 10)
+				foundTarget := false
+				for i := range targetGroup.Targets {
+					hit := &targetGroup.Targets[i]
+					if hit.TargetID == targetID && hit.SkillID == attackSkillId {
+						hit.HitCount++
+						hit.Damage += packetDmgVal
+						if packetDmgVal > hit.MaxDamage {
+							hit.MaxDamage = packetDmgVal
+						}
+						if packetIsCrit {
+							hit.CritCount++
+						}
+						foundTarget = true
+						break
+					}
+				}
+				if !foundTarget {
+					crits := uint32(0)
+					if packetIsCrit {
+						crits = 1
+					}
+					targetGroup.Targets = append(targetGroup.Targets, TargetHitMeta{
+						TargetID: targetID, SkillID: attackSkillId, HitCount: 1,
+						Damage: packetDmgVal, MaxDamage: packetDmgVal, CritCount: crits,
+					})
+				}
 				// 3. Track or insert subpacket skill specifications inside this second
 				foundSubSkill := false
-				packetIsCrit := (sub.Hit.Options & packet.CombatActionHitOptionsCritical) != 0
 
 				for i := range targetGroup.Skills {
 					if targetGroup.Skills[i].SkillID == attackSkillId {
@@ -1367,6 +1418,8 @@ func (a *Aggregator) GetSummary() FightSummary {
 			DamageByTarget:      make(map[string]DamageBreakdown),
 			MissingAppearPacket: !a.playerSeenAppear[playerID],
 			SkillUses:           pStats.SkillUses,
+			DamageEvents:        pStats.DamageEvents,
+			SkillActivations:    pStats.SkillActivations,
 			HealingSkills:       pStats.HealingSkills,      // Sync healing skill logs to frontend
 			OvershieldProvided:  pStats.OvershieldProvided, // Condition 999 observed increases
 			VeilCurrent:         pStats.VeilCurrent,

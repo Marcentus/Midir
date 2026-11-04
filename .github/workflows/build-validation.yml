@@ -1,0 +1,61 @@
+name: Midir build validation
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Node ${{ matrix.node }} / Go 1.24.4
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        # The newest Node.js security release is the primary build target.
+        # Check the latest patched LTS as a supported fallback.
+        node: ['26.12.1', '24.22.1']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install libpcap headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpcap-dev
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: front/package-lock.json
+      - name: Verify exact Node.js version
+        run: |
+          test "$(node --version)" = "v${{ matrix.node }}"
+          node scripts/check-node-security.cjs
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.4'
+          cache: true
+      - name: Install and synchronize patched frontend dependencies
+        working-directory: front
+        run: npm install --no-fund
+      - name: Frontend typecheck
+        working-directory: front
+        run: npm run typecheck
+      - name: Build frontend
+        working-directory: front
+        run: npm run build
+      - name: Populate Go embedded UI
+        run: |
+          rm -rf cmd/dilmeterapi/static
+          mkdir -p cmd/dilmeterapi/static
+          cp -a front/dist/. cmd/dilmeterapi/static/
+          test -f cmd/dilmeterapi/static/index.html
+      - name: Run Go tests
+        run: go test ./...
+      - name: Compile Go backend
+        run: go build ./...
